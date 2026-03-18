@@ -2211,36 +2211,42 @@ function showModelDiagram() {
     titulo='SEM — Modelo Estructural Completo';
     nivel='Posgrado · AMOS, Mplus, lavaan';
     nota='CFA (modelo de medición) + modelo estructural. Índices: CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08.';
-    const v=[...vars]; while(v.length<4) v.push('η'+(v.length));
-    // Measurement model box left
-    svg+=`<rect x="8" y="8" width="128" height="${H-16}" rx="8" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg+=`<text x="72" y="23" text-anchor="middle" font-size="8" fill="#1D4ED8" font-weight="600" font-family="system-ui">MEDICIÓN</text>`;
-    svg+=ellipse(72, 90,44,28,'ξ₁',Cl.s,'white',12);
-    svg+=ellipse(72,190,44,28,'ξ₂',Cl.s,'white',12);
-    svg+=box(14, 52,40,22,'x₁x₂',Cl.s,'#F8FAFF',8);
-    svg+=box(14,155,40,22,'x₃x₄',Cl.s,'#F8FAFF',8);
-    svg+=arrow(54, 63,60, 70,Cl.s,'');
-    svg+=arrow(54,158,60,168,Cl.s,'');
+    // Use real variable names — assign roles: exógenas = primeras vars, endógena = última
+    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
+    const ex1=v[0], ex2=v[1], end1=v[2], end2=v[v.length-1];
+
+    // Measurement model left — exógenas
+    svg+=`<rect x="8" y="8" width="138" height="${H-16}" rx="8" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="73" y="22" text-anchor="middle" font-size="8" fill="#1D4ED8" font-weight="600" font-family="system-ui">VARIABLES EXÓGENAS</text>`;
+    svg+=ellipse(73, 88,62,28,trunc(ex1,10),Cl.s,'white',10);
+    svg+=ellipse(73,192,62,28,trunc(ex2,10),Cl.s,'white',10);
+    svg+=box(10, 50,38,20,'x₁x₂',Cl.s,'#F8FAFF',8);
+    svg+=box(10,155,38,20,'x₃x₄',Cl.s,'#F8FAFF',8);
+    svg+=arrow(48, 60,52, 68,Cl.s,'');
+    svg+=arrow(48,158,52,172,Cl.s,'');
+
     // Structural model center
-    svg+=`<rect x="148" y="8" width="278" height="${H-16}" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg+=`<text x="287" y="23" text-anchor="middle" font-size="8" fill="#059669" font-weight="600" font-family="system-ui">MODELO ESTRUCTURAL</text>`;
-    svg+=ellipse(200, 90,42,26,'ξ₁',Cl.s,Cl.f,11);
-    svg+=ellipse(200,195,42,26,'ξ₂',Cl.s,Cl.f,11);
-    svg+=ellipse(300,140,46,28,'η₁',Cm.s,Cm.f,11);
-    svg+=ellipse(400,140,44,26,'η₂',Cy.s,Cy.f,11);
-    svg+=arrow(116, 90,160, 90,Cl.s,'');
-    svg+=arrow(116,180,160,188,Cl.s,'');
-    svg+=arrow(242, 95,258,120,Cl.s,'γ₁');
-    svg+=arrow(242,188,258,158,Cl.s,'γ₂');
-    svg+=arrow(346,140,358,140,Cm.s,'β');
-    // Output CFA right
-    svg+=`<rect x="440" y="8" width="132" height="${H-16}" rx="8" fill="#FFF8F5" stroke="#993C1D" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg+=`<text x="506" y="23" text-anchor="middle" font-size="8" fill="#993C1D" font-weight="600" font-family="system-ui">INDICADORES Y</text>`;
-    svg+=ellipse(506, 90,44,26,'η₂',Cy.s,Cy.f,11);
-    svg+=box(460,148,42,22,'y₁y₂',Cy.s,'#FFF8F5',8);
-    svg+=box(516,148,42,22,'y₃y₄',Cy.s,'#FFF8F5',8);
-    svg+=arrow(444,140,446,140,Cy.s,'');
-    svg+=arrow(444,100,506, 68,Cy.s,'');
+    svg+=`<rect x="158" y="8" width="262" height="${H-16}" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="289" y="22" text-anchor="middle" font-size="8" fill="#059669" font-weight="600" font-family="system-ui">MODELO ESTRUCTURAL</text>`;
+    svg+=ellipse(205, 88,55,26,trunc(ex1,9),Cl.s,Cl.f,10);
+    svg+=ellipse(205,192,55,26,trunc(ex2,9),Cl.s,Cl.f,10);
+    svg+=ellipse(305,140,55,28,trunc(end1,9),Cm.s,Cm.f,10);
+    svg+=ellipse(403,140,52,26,trunc(end2,9),Cy.s,Cy.f,10);
+    svg+=arrow(136, 88,152, 88,Cl.s,'');
+    svg+=arrow(136,182,152,188,Cl.s,'');
+    svg+=arrow(260, 95,255,120,Cl.s,'γ₁');
+    svg+=arrow(260,188,255,158,Cl.s,'γ₂');
+    svg+=arrow(360,140,355,140,Cm.s,'β');
+
+    // Output CFA right — endógena
+    svg+=`<rect x="432" y="8" width="140" height="${H-16}" rx="8" fill="#FFF8F5" stroke="#993C1D" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="502" y="22" text-anchor="middle" font-size="8" fill="#993C1D" font-weight="600" font-family="system-ui">VARIABLE ENDÓGENA</text>`;
+    svg+=ellipse(502, 80,58,26,trunc(end2,9),Cy.s,Cy.f,10);
+    svg+=box(458,148,42,20,'y₁y₂',Cy.s,'#FFF8F5',8);
+    svg+=box(508,148,42,20,'y₃y₄',Cy.s,'#FFF8F5',8);
+    svg+=arrow(455,130,460,130,Cy.s,'');
+    svg+=arrow(455,100,502, 68,Cy.s,'');
+
     svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">CFI≥.95 · TLI≥.95 · RMSEA≤.06 · SRMR≤.08</text>`;
   }
 
