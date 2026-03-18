@@ -1063,7 +1063,7 @@ function renderContent(){
       <div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div>
       <ul>
         <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social)</li>
-        <li><strong>Marco teórico:</strong> Busca 5-10 artículos recientes (últimos 5 años) sobre tu tema en Google Académico, Redalyc o SciELO</li>
+        <li><strong>Marco teórico:</strong> Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO</li>
         <li><strong>Metodología:</strong> Define tu muestra, instrumentos de medición y procedimiento de recolección</li>
         <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase de tu investigación</li>
       </ul>
@@ -1513,7 +1513,7 @@ async function downloadDoc() {
           imageBytes = await svgToBase64Png(svgStr, 600, 300);
           imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
           imageXml  = `
-            ${heading('4. MODELO TEÓRICO PROPUESTO','059669')}
+            ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
             <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
               <w:r><w:rPr></w:rPr>
                 <w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -1542,7 +1542,68 @@ async function downloadDoc() {
       } catch(e){ console.warn('Diagram image skipped:', e.message); }
     }
 
-    const nextN = imageXml ? 5 : 4;
+    // ── Instrumentos sugeridos por variable ─────────────────────
+    const INSTRUMENTOS = {
+      'Ansiedad':           {nombre:'Escala de Ansiedad de Beck (BAI)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = En absoluto · 3 = Severamente. Ej: "Entumecimiento u hormigueo"'},
+      'Estrés percibido':   {nombre:'Escala de Estrés Percibido (PSS-14, Cohen)', items:'14 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Muy a menudo. Ej: "¿Con qué frecuencia se ha sentido incapaz de controlar las cosas importantes de su vida?"'},
+      'Burnout':            {nombre:'Inventario de Burnout de Maslach (MBI)', items:'22 ítems, escala Likert 0-6', ejemplo:'0 = Nunca · 6 = Todos los días. Ej: "Me siento emocionalmente agotado/a por mi trabajo"'},
+      'Autoeficacia':       {nombre:'Escala de Autoeficacia General (Schwarzer & Bäßler)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Incorrecto · 4 = Totalmente correcto. Ej: "Siempre logro resolver problemas difíciles si me esfuerzo"'},
+      'Depresión':          {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = No me siento triste · 3 = Estoy tan triste o tan desdichado que no puedo soportarlo'},
+      'Autoestima':         {nombre:'Escala de Autoestima de Rosenberg (EAR)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Muy en desacuerdo · 4 = Muy de acuerdo. Ej: "En general estoy satisfecho/a conmigo mismo/a"'},
+      'Bienestar psicológico':{nombre:'Escala de Bienestar Psicológico de Ryff (versión española)', items:'39 ítems, escala Likert 1-6', ejemplo:'1 = Totalmente en desacuerdo · 6 = Totalmente de acuerdo. Ej: "Me siento bien cuando pienso en lo que he hecho en el pasado"'},
+      'Satisfacción laboral':{nombre:'Escala de Satisfacción Laboral (SL-SPC, Palma)', items:'27 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Mi trabajo me permite desarrollarme profesionalmente"'},
+      'Motivación':         {nombre:'Escala de Motivación en el Trabajo (R-MAWS)', items:'19 ítems, escala Likert 1-7', ejemplo:'1 = No corresponde en absoluto · 7 = Corresponde exactamente. Ej: "Porque encuentro que es un trabajo interesante"'},
+      'Resiliencia':        {nombre:'Escala de Resiliencia de Connor-Davidson (CD-RISC)', items:'25 ítems, escala Likert 0-4', ejemplo:'0 = En absoluto · 4 = Siempre. Ej: "Soy capaz de adaptarme a los cambios"'},
+      'Apoyo social':       {nombre:'Escala de Apoyo Social Percibido de Zimet (MSPSS)', items:'12 ítems, escala Likert 1-7', ejemplo:'1 = Muy en desacuerdo · 7 = Muy de acuerdo. Ej: "Hay una persona especial que se alegra de mis logros"'},
+      'Calidad de vida':    {nombre:'WHOQOL-BREF (OMS, versión española)', items:'26 ítems, escala Likert 1-5', ejemplo:'1 = Nada · 5 = Completamente. Ej: "¿En qué medida piensa que el dolor le impide hacer lo que necesita?"'},
+      'Inteligencia emocional':{nombre:'TMMS-24 (Trait Meta-Mood Scale)', items:'24 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Presto mucha atención a los sentimientos"'},
+      'Clima organizacional':{nombre:'Escala de Clima Organizacional (EDCO)', items:'40 ítems, escala Likert 1-5', ejemplo:'1 = Nunca · 5 = Siempre. Ej: "En esta empresa se reconoce el buen desempeño"'},
+      'Liderazgo':          {nombre:'Cuestionario Multifactorial de Liderazgo (MLQ-5X)', items:'45 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Frecuentemente, sino siempre. Ej: "Me siento bien cuando estoy cerca de él/ella"'},
+      'Rendimiento académico':{nombre:'Escala de Estrategias de Aprendizaje (ACRA)', items:'118 ítems, escala Likert 1-4', ejemplo:'1 = Nunca o casi nunca · 4 = Siempre o casi siempre. Ej: "Cuando estudio hago esquemas o resúmenes"'},
+      'Cohesión familiar':  {nombre:'FACES-III (Olson)', items:'20 ítems, escala Likert 1-5', ejemplo:'1 = Casi nunca · 5 = Casi siempre. Ej: "Los miembros de la familia se piden ayuda entre sí"'},
+      'Estrés laboral':     {nombre:'Escala de Estrés Laboral de la OIT-OMS', items:'25 ítems, escala Likert 1-7', ejemplo:'1 = Si la condición nunca es fuente de estrés · 7 = Si la condición es una fuente muy frecuente de estrés'},
+      'Satisfacción marital':{nombre:'Escala de Satisfacción Marital (ESM, Pick y Andrade)', items:'24 ítems, escala Likert 1-3', ejemplo:'1 = Me disgusta · 3 = Me gusta mucho. Ej: "La forma en que mi pareja me demuestra su amor"'},
+      'Bullying':           {nombre:'Escala de Victimización entre Iguales (VIE)', items:'15 ítems, escala Likert 1-4', ejemplo:'1 = Nunca · 4 = Muchas veces. Ej: "Mis compañeros me ignoran o no me hacen caso"'},
+    };
+
+    // Find instruments for selected variables
+    const instrXml_list = vars.map(v => {
+      // Try exact match first, then partial
+      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      if(!instr) return null;
+      return `
+        ${tableRow(xe(v), xe(instr.nombre))}`;
+    }).filter(Boolean);
+
+    const instrDetailXml = vars.map(v => {
+      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      if(!instr) return '';
+      return `
+        ${fieldLabel('Variable: '+v)}
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>Instrumento: </w:t></w:r>
+          <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="111827"/></w:rPr><w:t>${xe(instr.nombre)}</w:t></w:r></w:p>
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Formato: ${xe(instr.items)}</w:t></w:r></w:p>
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+          <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Ejemplo: "${xe(instr.ejemplo)}"</w:t></w:r></w:p>`;
+    }).join('');
+
+    const hasInstruments = instrDetailXml.trim().length > 0;
+    // Section numbers: 1=Elementos, 2=Metodológico, 3=Modelo(si hay), 4=Próximos pasos(si no hay modelo)
+    // With model: 1,2,3(modelo),4(pasos),5(instrumentos si hay)
+    // Without model: 1,2,3(pasos),4(instrumentos si hay)
+    const secModelo   = imageXml     ? 3 : 0;
+    const secPasos    = imageXml     ? 4 : 3;
+    const secInstr    = hasInstruments ? (imageXml ? 5 : 4) : 0;
+    const instrSectionXml = hasInstruments ? `
+      ${heading(secInstr+'. INSTRUMENTOS SUGERIDOS','7C3AED')}
+      <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
+          <w:t>Los siguientes instrumentos han sido validados en población hispanohablante y son coherentes con las variables seleccionadas. Verifique la validez y confiabilidad para su contexto específico.</w:t></w:r></w:p>
+      ${instrDetailXml}` : '';
+
+    const nextN = secPasos;
 
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1587,12 +1648,13 @@ async function downloadDoc() {
   ${imageXml}
 
   ${emptyPara(200)}
-  ${heading(`${nextN}. PRÓXIMOS PASOS`,'D97706')}
+  ${heading(secPasos+'. PRÓXIMOS PASOS','D97706')}
   ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del tema.')}
-  ${stepItem(2,'Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.')}
+  ${stepItem(2,'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO.')}
   ${stepItem(3,'Metodología: Define tu muestra, instrumentos y procedimiento de recolección.')}
   ${stepItem(4,'Cronograma: Establece tiempos realistas para cada fase del proyecto.')}
 
+  ${instrSectionXml}
   ${emptyPara(480)}
   <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
     <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
@@ -1768,6 +1830,17 @@ async function svgToBase64Png(svgStr, w=600, h=300) {
   });
 }
 
+function downloadDiagram() {
+  if(!window._lastDiagramSVG) return;
+  const blob = new Blob([window._lastDiagramSVG], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='modelo_teorico.svg';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+
 // ── Build diagram SVG without showing modal ───────────────────────
 function buildDiagramSVG() {
   if(!DISENOS_CON_DIAGRAMA.includes(state.tecnica)) return null;
@@ -1850,267 +1923,300 @@ const DC = {
 // ════════════════════════════════════════════════════════════════════════
 function showModelDiagram() {
   const vars = getVarsList();
-  const d = state.tecnica; // Diagrama basado en técnica, no en diseño
-  const W=600, H=300;
+  const d = state.tecnica;
+  const W=580, H=290;
   let svg='', titulo='', nota='', nivel='';
 
-  // ── REGRESIÓN SIMPLE ────────────────────────────────────────────────
-  if(d === 'regresion-simple') {
-    titulo = 'Modelo de Regresión Simple';
-    nivel  = 'Pregrado · OLS — Un predictor, una variable dependiente';
-    nota   = 'X predice linealmente a Y. La recta de regresión minimiza los errores al cuadrado (OLS). Se reporta R², β y su significancia.';
-    const X = vars[0]||'Variable X (predictor)', Y = vars[1]||'Variable Y (criterio)';
-    // Eje X e Y con recta de regresión visual
-    const pad=50, gW=W-pad*2, gH=H-pad*2;
-    // Ejes
-    svg += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#E5E7EB" stroke-width="2"/>`;
-    svg += `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#E5E7EB" stroke-width="2"/>`;
-    // Etiquetas ejes
-    svg += `<text x="${pad-8}" y="${H-pad}" text-anchor="end" font-size="11" fill="${DC.y.s}" font-weight="600" font-family="system-ui">${Y.substring(0,14)}</text>`;
-    svg += `<text x="${W-pad}" y="${H-pad+18}" text-anchor="middle" font-size="11" fill="${DC.x.s}" font-weight="600" font-family="system-ui">${X.substring(0,14)}</text>`;
-    // Puntos dispersos simulados
-    const pts = [[80,200],[110,175],[140,195],[170,155],[200,165],[230,140],[260,130],[280,145],[310,115],[340,100],[370,120],[400,90],[430,80],[460,95],[490,70]];
-    pts.forEach(([px,py])=>{
-      svg += `<circle cx="${px}" cy="${py}" r="5" fill="${DC.x.s}" opacity="0.55"/>`;
+  // ── Shared helpers ────────────────────────────────────────────
+  const f = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Truncate label to fit in box
+  const trunc = (s, n=16) => s.length > n ? s.substring(0,n-1)+'…' : s;
+
+  // Box with 1-2 line label
+  function box(x,y,w,h,label,sc,fc,fs=11){
+    const words = trunc(label,20).split(' ');
+    let L1='', L2='';
+    for(const w of words){
+      if((L1+' '+w).trim().length<=16) L1=(L1+' '+w).trim();
+      else { L2=(L2+' '+w).trim(); }
+    }
+    const tY = L2 ? y+h/2-7 : y+h/2+4;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fc}" stroke="${sc}" stroke-width="2"/>
+      <text x="${x+w/2}" y="${tY}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${sc}" font-family="system-ui,sans-serif">${f(L1)}</text>
+      ${L2?`<text x="${x+w/2}" y="${tY+14}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${sc}" font-family="system-ui,sans-serif">${f(L2)}</text>`:''}`;
+  }
+
+  // Ellipse with label
+  function ellipse(cx,cy,rx,ry,label,sc,fc,fs=11){
+    const t = trunc(label,18);
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fc}" stroke="${sc}" stroke-width="2"/>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${sc}" font-family="system-ui,sans-serif">${f(t)}</text>`;
+  }
+
+  // Arrow with label
+  function arrow(x1,y1,x2,y2,sc,lbl='',dashed=false){
+    const id='ar'+((x1*7+y1*13+x2*5+y2*3)&0xFFFF);
+    const mk=`<marker id="${id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${sc}"/></marker>`;
+    const dash=dashed?'stroke-dasharray="6,3"':'';
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const line=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sc}" stroke-width="2" ${dash} marker-end="url(#${id})"/>`;
+    const tag=lbl?`<rect x="${mx-22}" y="${my-9}" width="44" height="16" rx="3" fill="white" opacity=".9"/>
+      <text x="${mx}" y="${my+4}" text-anchor="middle" font-size="10" fill="${sc}" font-weight="600" font-family="system-ui">${f(lbl)}</text>`:'';
+    return `<defs>${mk}</defs>${line}${tag}`;
+  }
+
+  // Color palette
+  const Cx={s:"#4F46E5",f:"#EEF2FF"}, Cy={s:"#993C1D",f:"#FAECE7"},
+        Cm={s:"#059669",f:"#ECFDF5"}, Cw={s:"#7C3AED",f:"#F3E8FF"},
+        Cl={s:"#1D4ED8",f:"#EFF6FF"};
+
+  // ── REGRESIÓN SIMPLE ─────────────────────────────────────────
+  if(d==='regresion-simple'){
+    titulo='Modelo de Regresión Simple';
+    nivel='Pregrado · OLS';
+    nota='X predice linealmente a Y. Se reporta β, R² y la significancia del modelo.';
+    const X=vars[0]||'Predictor (X)', Y=vars[1]||'Criterio (Y)';
+    const px=50, py=30, gh=H-py-40;
+    // Axes
+    svg+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${py+gh}" stroke="#CBD5E1" stroke-width="2"/>`;
+    svg+=`<line x1="${px}" y1="${py+gh}" x2="${W-30}" y2="${py+gh}" stroke="#CBD5E1" stroke-width="2"/>`;
+    // Axis arrows
+    svg+=arrow(px,py+gh,W-30,py+gh,'#94A3B8');
+    svg+=arrow(px,py+gh,px,py,'#94A3B8');
+    // Axis labels
+    svg+=`<text x="${W-25}" y="${py+gh+5}" font-size="11" fill="${Cx.s}" font-weight="600" font-family="system-ui">${f(trunc(X,12))}</text>`;
+    svg+=`<text x="${px-6}" y="${py-6}" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="600" font-family="system-ui">${f(trunc(Y,12))}</text>`;
+    // Scatter points
+    [[75,220],[105,195],[130,210],[160,175],[185,180],[215,155],[245,145],[268,160],[295,130],[320,115],[350,130],[378,100],[405,92],[430,108],[460,80]].forEach(([px2,py2])=>{
+      svg+=`<circle cx="${px2}" cy="${py2}" r="5" fill="${Cx.s}" opacity=".5"/>`;
     });
-    // Recta de regresión
-    svg += `<line x1="70" y1="215" x2="510" y2="55" stroke="${DC.y.s}" stroke-width="2.5" stroke-linecap="round"/>`;
-    // Fórmula
-    svg += `<rect x="${W/2-80}" y="${H-40}" width="160" height="22" rx="5" fill="${DC.y.f}" stroke="${DC.y.s}" stroke-width="1"/>`;
-    svg += `<text x="${W/2}" y="${H-25}" text-anchor="middle" font-size="11" fill="${DC.y.s}" font-weight="700" font-family="system-ui">Ŷ = β₀ + β₁X + ε</text>`;
-    // Flecha β
-    svg += `<text x="355" y="100" font-size="11" fill="${DC.y.s}" font-weight="600" font-family="system-ui">β₁</text>`;
-    // R²
-    svg += `<rect x="${W-120}" y="${pad}" width="68" height="32" rx="6" fill="${DC.m.f}" stroke="${DC.m.s}" stroke-width="1.5"/>`;
-    svg += `<text x="${W-86}" y="${pad+14}" text-anchor="middle" font-size="10" fill="${DC.m.s}" font-weight="600" font-family="system-ui">R² = var.</text>`;
-    svg += `<text x="${W-86}" y="${pad+27}" text-anchor="middle" font-size="10" fill="${DC.m.s}" font-family="system-ui">explicada</text>`;
+    // Regression line
+    svg+=`<line x1="60" y1="228" x2="470" y2="68" stroke="${Cy.s}" stroke-width="2.5" stroke-linecap="round"/>`;
+    // β label on line
+    svg+=`<rect x="330" y="95" width="30" height="18" rx="3" fill="white" opacity=".9"/>`;
+    svg+=`<text x="345" y="108" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="700" font-family="system-ui">β₁</text>`;
+    // Formula box bottom-center
+    svg+=`<rect x="${W/2-78}" y="${H-32}" width="156" height="22" rx="5" fill="${Cy.f}" stroke="${Cy.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W/2}" y="${H-17}" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="700" font-family="system-ui">Ŷ = β₀ + β₁X + ε</text>`;
+    // R² top-right
+    svg+=`<rect x="${W-100}" y="${py}" width="90" height="36" rx="6" fill="${Cm.f}" stroke="${Cm.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W-55}" y="${py+14}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-weight="700" font-family="system-ui">R² = var.</text>`;
+    svg+=`<text x="${W-55}" y="${py+28}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-family="system-ui">explicada</text>`;
   }
 
-  // ── REGRESIÓN MÚLTIPLE ──────────────────────────────────────────────
-  if(d === 'regresion-multiple') {
-    titulo = 'Modelo de Regresión Múltiple';
-    nivel = 'Pregrado · OLS / Regresión estándar';
-    nota = 'Cada predictor (X) aporta de forma independiente a explicar la varianza de Y. Los coeficientes β indican la magnitud del efecto controlando los demás predictores.';
-    const preds = vars.length >= 2 ? vars.slice(0, vars.length-1) : [vars[0]||'Predictor 1', 'Predictor 2'];
-    const Y = vars.length >= 2 ? vars[vars.length-1] : 'Variable Y';
-    const n = Math.min(preds.length, 5);
-    const step = (H-40) / (n+1);
+  // ── REGRESIÓN MÚLTIPLE ────────────────────────────────────────
+  else if(d==='regresion-multiple'){
+    titulo='Modelo de Regresión Múltiple';
+    nivel='Pregrado · OLS / Hayes';
+    nota='Cada predictor aporta independientemente a explicar Y. Se reportan β estandarizados, R² y ΔR².';
+    const preds=vars.length>=2?vars.slice(0,vars.length-1):[vars[0]||'Predictor 1','Predictor 2'];
+    const Y=vars.length>=2?vars[vars.length-1]:'Variable Y';
+    const n=Math.min(preds.length,5);
+    const stepY=(H-20)/(n+1);
     for(let i=0;i<n;i++){
-      const py = 20 + step*(i+1) - 22;
-      svg += svgBox(15, py, 150, 42, preds[i], DC.x.s, DC.x.f);
-      svg += svgArrow(165, py+21, 380, H/2, DC.x.s, `β${i+1}`);
+      const py2=10+stepY*(i+1)-20;
+      svg+=box(10,py2,155,40,preds[i],Cx.s,Cx.f);
+      svg+=arrow(165,py2+20,385,H/2-20,Cx.s,`β${i+1}`);
     }
-    svg += svgBox(380, H/2-22, 160, 44, Y, DC.y.s, DC.y.f);
-    svg += `<text x="${380+80}" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">R² = varianza explicada</text>`;
-    if(preds.length > 5) svg += `<text x="90" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">+${preds.length-5} predictores adicionales</text>`;
+    svg+=box(385,H/2-22,155,44,Y,Cy.s,Cy.f);
+    svg+=`<text x="462" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">R² = varianza total explicada</text>`;
+    if(preds.length>5) svg+=`<text x="90" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">+${preds.length-5} predictores más</text>`;
   }
 
-  // ── MEDIACIÓN SIMPLE ────────────────────────────────────────────────
-  else if(d === 'mediacion') {
-    titulo = 'Modelo de Mediación Simple';
-    nivel = 'Pregrado · Hayes PROCESS Modelo 4';
-    nota = "X afecta a Y directamente (c') y de forma indirecta a través del mediador M. El efecto indirecto = a × b.";
+  // ── MEDIACIÓN SIMPLE ──────────────────────────────────────────
+  else if(d==='mediacion'){
+    titulo='Modelo de Mediación Simple';
+    nivel='Pregrado · Hayes PROCESS Modelo 4';
+    nota="El efecto de X sobre Y opera directamente (c') e indirectamente a través de M. Efecto indirecto = a × b.";
     const X=vars[0]||'Variable X', M=vars[1]||'Mediador (M)', Y=vars[2]||'Variable Y';
-    svg += svgBox(20, H/2-22, 145, 44, X, DC.x.s, DC.x.f);
-    svg += svgBox(W/2-75, 25, 150, 44, M, DC.m.s, DC.m.f);
-    svg += svgBox(W-165, H/2-22, 145, 44, Y, DC.y.s, DC.y.f);
-    svg += svgArrow(165, H/2, W-165, H/2, DC.x.s, "c' (directo)");
-    svg += svgArrow(165, H/2-10, W/2-75, 47, DC.m.s, 'a');
-    svg += svgArrow(W/2+75, 47, W-165, H/2-10, DC.m.s, 'b');
-    svg += `<rect x="${W/2-90}" y="${H-38}" width="180" height="24" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>`;
-    svg += `<text x="${W/2}" y="${H-22}" text-anchor="middle" font-size="10" fill="#0F6E56" font-weight="600" font-family="system-ui">Efecto indirecto = a × b</text>`;
+    svg+=box(15,H/2-22,145,44,X,Cx.s,Cx.f);
+    svg+=box(W/2-72,18,145,44,M,Cm.s,Cm.f);
+    svg+=box(W-160,H/2-22,145,44,Y,Cy.s,Cy.f);
+    svg+=arrow(160,H/2,W-160,H/2,Cx.s,"c' (directo)");
+    svg+=arrow(160,H/2-14,W/2-72,40,Cm.s,'a');
+    svg+=arrow(W/2+73,40,W-160,H/2-14,Cm.s,'b');
+    svg+=`<rect x="${W/2-85}" y="${H-34}" width="170" height="22" rx="5" fill="${Cm.f}" stroke="${Cm.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W/2}" y="${H-19}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-weight="700" font-family="system-ui">Efecto indirecto = a × b</text>`;
   }
 
-  // ── MODERACIÓN SIMPLE ───────────────────────────────────────────────
-  else if(d === 'moderacion') {
-    titulo = 'Modelo de Moderación Simple';
-    nivel = 'Pregrado · Hayes PROCESS Modelo 1';
-    nota = 'El moderador W cambia la fuerza o dirección del efecto de X sobre Y. La interacción X×W es el término clave.';
-    const X=vars[0]||'Variable X', W=vars[1]||'Moderador (W)', Y=vars[2]||'Variable Y';
-    svg += svgBox(20, H/2-22, 145, 44, X, DC.x.s, DC.x.f);
-    svg += svgBox(W-165, H/2-22, 145, 44, Y, DC.y.s, DC.y.f);
-    svg += svgBox(W/2-80, 18, 160, 44, W, DC.w.s, DC.w.f);
-    svg += svgArrow(165, H/2, W-165, H/2, DC.x.s, '');
-    const id1='arm1';
-    svg += `<defs><marker id="${id1}" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 z" fill="${DC.w.s}"/></marker></defs>`;
-    svg += `<line x1="${W/2}" y1="62" x2="${W/2}" y2="${H/2-8}" stroke="${DC.w.s}" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#${id1})"/>`;
-    // Interaction term box
-    svg += `<rect x="${W/2-56}" y="${H/2-8}" width="112" height="22" rx="5" fill="white" stroke="${DC.w.s}" stroke-width="1.5"/>`;
-    svg += `<text x="${W/2}" y="${H/2+7}" text-anchor="middle" font-size="10" fill="${DC.w.s}" font-weight="700" font-family="system-ui">X × W (interacción)</text>`;
-    svg += `<rect x="${W/2-100}" y="${H-35}" width="200" height="22" rx="5" fill="#F3E8FF" stroke="#7C3AED" stroke-width="1"/>`;
-    svg += `<text x="${W/2}" y="${H-20}" text-anchor="middle" font-size="10" fill="#7C3AED" font-weight="600" font-family="system-ui">Si β(X×W) sig. → moderación confirmada</text>`;
+  // ── MODERACIÓN SIMPLE ─────────────────────────────────────────
+  else if(d==='moderacion'){
+    titulo='Modelo de Moderación Simple';
+    nivel='Pregrado · Hayes PROCESS Modelo 1';
+    nota='W modifica la fuerza o dirección de X→Y. El término de interacción X×W es el componente clave.';
+    const X=vars[0]||'Variable X', Wv=vars[1]||'Moderador (W)', Y=vars[2]||'Variable Y';
+    // X box left, Y box right, W box top-center
+    svg+=box(15,H/2-20,140,40,X,Cx.s,Cx.f);
+    svg+=box(W-155,H/2-20,140,40,Y,Cy.s,Cy.f);
+    svg+=box(W/2-72,22,145,40,Wv,Cw.s,Cw.f);
+    // Main arrow X→Y
+    svg+=arrow(155,H/2,W-155,H/2,Cx.s,'');
+    // Moderator arrow (dashed, top-down to midpoint)
+    const mid=W/2, midY=H/2;
+    const id2='modArr';
+    svg+=`<defs><marker id="${id2}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${Cw.s}"/></marker></defs>`;
+    svg+=`<line x1="${mid}" y1="62" x2="${mid}" y2="${midY-14}" stroke="${Cw.s}" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#${id2})"/>`;
+    // Interaction label at midpoint of arrow
+    svg+=`<rect x="${mid-52}" y="${midY-14}" width="104" height="20" rx="4" fill="white" stroke="${Cw.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${mid}" y="${midY-1}" text-anchor="middle" font-size="10" fill="${Cw.s}" font-weight="700" font-family="system-ui">X × W (interacción)</text>`;
+    // Bottom note
+    svg+=`<rect x="${W/2-120}" y="${H-32}" width="240" height="20" rx="4" fill="${Cw.f}" stroke="${Cw.s}" stroke-width="1"/>`;
+    svg+=`<text x="${W/2}" y="${H-18}" text-anchor="middle" font-size="10" fill="${Cw.s}" font-weight="600" font-family="system-ui">β(X×W) significativo → moderación confirmada</text>`;
   }
 
-  // ── MEDIACIÓN MODERADA ──────────────────────────────────────────────
-  else if(d === 'mediacion-moderada') {
-    titulo = 'Modelo de Mediación Moderada';
-    nivel = 'Pregrado avanzado · Hayes PROCESS Modelos 7, 14 o 58';
-    nota = 'W modera la trayectoria a (X→M), la b (M→Y) o ambas. El índice de mediación moderada indica si el efecto indirecto varía según W.';
-    const X=vars[0]||'Variable X', M=vars[1]||'Mediador (M)', Y=vars[2]||'Variable Y', Wv=vars[3]||'Moderador (W)';
-    svg += svgBox(15, H/2-22, 130, 44, X, DC.x.s, DC.x.f);
-    svg += svgBox(W/2-75, 20, 150, 44, M, DC.m.s, DC.m.f);
-    svg += svgBox(W-145, H/2-22, 130, 44, Y, DC.y.s, DC.y.f);
-    svg += svgBox(W/2-75, H-65, 150, 44, Wv, DC.w.s, DC.w.f);
-    svg += svgArrow(145, H/2, W-145, H/2, DC.x.s, "c'");
-    svg += svgArrow(145, H/2-12, W/2-75, 42, DC.m.s, 'a');
-    svg += svgArrow(W/2+75, 42, W-145, H/2-12, DC.m.s, 'b');
-    const idw='armedmod';
-    svg += `<defs><marker id="${idw}" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 z" fill="${DC.w.s}"/></marker></defs>`;
-    svg += `<line x1="${W/2}" y1="${H-65}" x2="${W/2}" y2="64" stroke="${DC.w.s}" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#${idw})"/>`;
-    svg += `<text x="${W/2+8}" y="${H/2-28}" font-size="9" fill="${DC.w.s}" font-family="system-ui" font-style="italic">modera a y/o b</text>`;
+  // ── MEDIACIÓN MODERADA ────────────────────────────────────────
+  else if(d==='mediacion-moderada'){
+    titulo='Modelo de Mediación Moderada';
+    nivel='Pregrado avanzado · Hayes PROCESS Modelos 7, 14 o 58';
+    nota='W modera la ruta a (X→M) o b (M→Y). El índice de mediación moderada indica si el efecto indirecto varía según W.';
+    const X=vars[0]||'X',M=vars[1]||'Mediador',Y=vars[2]||'Y',Wv=vars[3]||'Moderador';
+    svg+=box(10,H/2-20,125,40,X,Cx.s,Cx.f);
+    svg+=box(W/2-62,14,125,40,M,Cm.s,Cm.f);
+    svg+=box(W-135,H/2-20,125,40,Y,Cy.s,Cy.f);
+    svg+=box(W/2-62,H-55,125,40,Wv,Cw.s,Cw.f);
+    svg+=arrow(135,H/2,W-135,H/2,Cx.s,"c'");
+    svg+=arrow(135,H/2-12,W/2-62,34,Cm.s,'a');
+    svg+=arrow(W/2+63,34,W-135,H/2-12,Cm.s,'b');
+    const idw='mmArr';
+    svg+=`<defs><marker id="${idw}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${Cw.s}"/></marker></defs>`;
+    svg+=`<line x1="${W/2}" y1="${H-55}" x2="${W/2}" y2="54" stroke="${Cw.s}" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#${idw})"/>`;
+    svg+=`<text x="${W/2+6}" y="${H/2-32}" font-size="9" fill="${Cw.s}" font-family="system-ui" font-style="italic">modera a y/o b</text>`;
   }
 
-  // ── PATH ANALYSIS (SEM observado) ───────────────────────────────────
-  else if(d === 'path-analysis') {
-    titulo = 'Path Analysis — SEM con Variables Observadas';
-    nivel = 'Posgrado · Software: AMOS, lavaan (R), Mplus';
-    nota = 'Todas las variables son observadas (medidas directamente). Se estiman efectos directos e indirectos. No requiere indicadores múltiples.';
-    const v = [...vars];
-    while(v.length < 4) v.push(`Variable ${v.length+1}`);
-    svg += svgBox(15, 55, 135, 42, v[0], DC.x.s, DC.x.f);
-    svg += svgBox(15, 175, 135, 42, v[1], DC.x.s, DC.x.f);
-    svg += svgBox(230, 110, 140, 42, v[2], DC.m.s, DC.m.f);
-    svg += svgBox(435, 110, 145, 42, v[3], DC.y.s, DC.y.f);
-    svg += svgArrow(150, 76, 230, 121, DC.x.s, 'β₁');
-    svg += svgArrow(150, 196, 230, 132, DC.x.s, 'β₂');
-    svg += svgArrow(370, 131, 435, 131, DC.m.s, 'β₃');
-    svg += svgArrow(150, 76, 435, 120, DC.x.s, '', true);
-    if(v.length > 4) {
-      svg += svgBox(15, 115, 135, 42, v[4]||'Variable 5', DC.x.s, DC.x.f);
-      svg += svgArrow(150, 136, 230, 131, DC.x.s, 'β₄');
-    }
-    svg += `<text x="${W/2}" y="${H-5}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">χ²/df, CFI, TLI, RMSEA, SRMR como índices de ajuste</text>`;
+  // ── PATH ANALYSIS ─────────────────────────────────────────────
+  else if(d==='path-analysis'){
+    titulo='Path Analysis — Variables Observadas';
+    nivel='Posgrado · AMOS, lavaan, Mplus';
+    nota='Variables observadas directamente. Se estiman efectos directos e indirectos. No requiere indicadores múltiples.';
+    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
+    svg+=box(10, 45,130,40,v[0],Cx.s,Cx.f);
+    svg+=box(10,170,130,40,v[1],Cx.s,Cx.f);
+    svg+=box(225,108,130,40,v[2],Cm.s,Cm.f);
+    svg+=box(430,108,130,40,v[3],Cy.s,Cy.f);
+    svg+=arrow(140, 65,225,120,Cx.s,'β₁');
+    svg+=arrow(140,190,225,136,Cx.s,'β₂');
+    svg+=arrow(355,128,430,128,Cm.s,'β₃');
+    svg+=arrow(140, 65,430,118,Cx.s,'',true);
+    svg+=`<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Índices: CFI, TLI, RMSEA, SRMR</text>`;
   }
 
-  // ── SEM MEDIACIÓN CON LATENTES ──────────────────────────────────────
-  else if(d === 'sem-mediacion') {
-    titulo = 'SEM — Mediación con Variables Latentes';
-    nivel = 'Posgrado · Software: AMOS, Mplus, lavaan';
-    nota = 'X, M e Y son constructos latentes medidos por indicadores observados. Corrige el error de medición. Mayor validez que la mediación por regresión.';
-    const X=vars[0]||'X latente', M=vars[1]||'M latente', Y=vars[2]||'Y latente';
-    const i1=vars[0]||'Ind. 1', i2=vars[1]||'Ind. 2', i3=vars[2]||'Ind. 3';
-    // Latentes
-    svg += svgEllipse(110, 145, 80, 38, 'ξ: '+X.substring(0,10), DC.lat.s, DC.lat.f);
-    svg += svgEllipse(300, 80, 75, 34, 'η₁: '+M.substring(0,9), DC.m.s, DC.m.f);
-    svg += svgEllipse(490, 145, 80, 38, 'η₂: '+Y.substring(0,10), DC.y.s, DC.y.f);
-    // Indicadores ξ
-    svg += svgBox(5, 55, 90, 34, 'x₁', DC.lat.s, '#F8FAFF', 10);
-    svg += svgBox(5, 200, 90, 34, 'x₂', DC.lat.s, '#F8FAFF', 10);
-    svg += svgArrow(95, 72, 110, 115, DC.lat.s, 'λ₁');
-    svg += svgArrow(95, 217, 110, 170, DC.lat.s, 'λ₂');
-    // Indicadores η₁
-    svg += svgBox(240, 15, 90, 30, 'm₁', DC.m.s, '#F0FDF8', 10);
-    svg += svgArrow(285, 45, 290, 55, DC.m.s, 'λ₃');
-    // Indicadores η₂
-    svg += svgBox(505, 55, 88, 32, 'y₁', DC.y.s, '#FFF8F5', 10);
-    svg += svgBox(505, 195, 88, 32, 'y₂', DC.y.s, '#FFF8F5', 10);
-    svg += svgArrow(505, 71, 500, 118, DC.y.s, 'λ₄');
-    svg += svgArrow(505, 211, 500, 170, DC.y.s, 'λ₅');
-    // Rutas estructurales
-    svg += svgArrow(190, 145, 225, 100, DC.m.s, 'a');
-    svg += svgArrow(375, 95, 415, 130, DC.m.s, 'b');
-    svg += svgArrow(190, 155, 415, 155, DC.lat.s, "c'", true);
-    svg += `<text x="${W/2}" y="${H-3}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Efecto indirecto = a×b (bootstrapping)</text>`;
+  // ── SEM MEDIACIÓN CON LATENTES ────────────────────────────────
+  else if(d==='sem-mediacion'){
+    titulo='SEM — Mediación con Latentes';
+    nivel='Posgrado · AMOS, Mplus, lavaan';
+    nota='X, M e Y son constructos latentes medidos por indicadores. Corrige el error de medición.';
+    const X=vars[0]||'ξ (X)',M=vars[1]||'η₁ (M)',Y=vars[2]||'η₂ (Y)';
+    // Three ellipses in triangle layout
+    svg+=ellipse(110,155, 78,36,'ξ: '+trunc(X,9),Cl.s,Cl.f);
+    svg+=ellipse(300, 65, 72,32,'η₁: '+trunc(M,8),Cm.s,Cm.f);
+    svg+=ellipse(490,155, 75,36,'η₂: '+trunc(Y,9),Cy.s,Cy.f);
+    // Indicators exogenous
+    svg+=box(5, 40, 80,28,'x₁',Cl.s,'#F8FAFF',9);
+    svg+=box(5,195, 80,28,'x₂',Cl.s,'#F8FAFF',9);
+    svg+=arrow(85, 54,100,128,Cl.s,'λ₁');
+    svg+=arrow(85,209,100,172,Cl.s,'λ₂');
+    // Indicators mediator
+    svg+=box(250, 10, 80,28,'m₁',Cm.s,'#F0FDF8',9);
+    svg+=arrow(290, 38,292, 44,Cm.s,'λ₃');
+    // Indicators outcome
+    svg+=box(500, 55, 75,28,'y₁',Cy.s,'#FFF8F5',9);
+    svg+=box(500,218, 75,28,'y₂',Cy.s,'#FFF8F5',9);
+    svg+=arrow(500, 69,498,128,Cy.s,'λ₄');
+    svg+=arrow(500,232,498,180,Cy.s,'λ₅');
+    // Structural paths
+    svg+=arrow(188,148,228, 88,Cm.s,'a');
+    svg+=arrow(372, 82,418,138,Cm.s,'b');
+    svg+=arrow(188,162,418,162,Cl.s,"c'",true);
+    svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Efecto indirecto a×b — bootstrapping</text>`;
   }
 
-  // ── SEM MODERACIÓN CON LATENTES ─────────────────────────────────────
-  else if(d === 'sem-moderacion') {
-    titulo = 'SEM — Moderación con Variables Latentes';
-    nivel = 'Posgrado · Software: Mplus (LMS), lavaan (modsem)';
-    nota = 'Se estima la interacción entre dos latentes (ξ₁ × ξ₂). Técnicas: LMS (Mplus) o PI (indicadores de producto). Mayor complejidad que moderación por regresión.';
-    const X=vars[0]||'ξ₁ (X latente)', W=vars[1]||'ξ₂ (Moderador)', Y=vars[2]||'η (Y latente)';
-    svg += svgEllipse(110, 100, 85, 38, X.substring(0,14), DC.lat.s, DC.lat.f);
-    svg += svgEllipse(110, 210, 85, 38, W.substring(0,14), DC.w.s, DC.w.f);
-    svg += svgEllipse(470, 150, 90, 42, Y.substring(0,14), DC.y.s, DC.y.f);
-    // Interaction latent
-    svg += svgEllipse(300, 150, 80, 34, 'ξ₁ × ξ₂', '#B45309', '#FEF3E8');
-    svg += svgArrow(195, 108, 225, 135, DC.lat.s, 'γ₁');
-    svg += svgArrow(195, 202, 225, 165, DC.w.s, 'γ₂');
-    svg += svgArrow(380, 150, 383, 150, '#B45309', 'γ₃ (interac.)');
-    svg += `<rect x="${W/2-130}" y="${H-32}" width="260" height="20" rx="4" fill="#FEF3E8" stroke="#B45309" stroke-width="1"/>`;
-    svg += `<text x="${W/2}" y="${H-18}" text-anchor="middle" font-size="9" fill="#B45309" font-family="system-ui">γ₃ significativo → moderación entre latentes confirmada</text>`;
+  // ── SEM MODERACIÓN CON LATENTES ───────────────────────────────
+  else if(d==='sem-moderacion'){
+    titulo='SEM — Moderación con Latentes';
+    nivel='Posgrado · Mplus (LMS), lavaan (modsem)';
+    nota='Interacción entre constructos latentes ξ₁×ξ₂. Técnica LMS o PI. Mayor complejidad que moderación por regresión.';
+    const X=vars[0]||'ξ₁ (X)',Wv=vars[1]||'ξ₂ (W)',Y=vars[2]||'η (Y)';
+    svg+=ellipse(110, 95, 80,36,trunc(X,12),Cl.s,Cl.f);
+    svg+=ellipse(110,210, 80,36,trunc(Wv,12),Cw.s,Cw.f);
+    svg+=ellipse(460,152, 82,40,trunc(Y,12),Cy.s,Cy.f);
+    svg+=ellipse(290,152, 72,32,'ξ₁ × ξ₂','#B45309','#FEF3E8');
+    svg+=arrow(190,103,222,135,Cl.s,'γ₁');
+    svg+=arrow(190,202,222,168,Cw.s,'γ₂');
+    svg+=arrow(362,152,380,152,'#B45309','γ₃');
+    svg+=`<rect x="${W/2-130}" y="${H-30}" width="260" height="20" rx="4" fill="#FEF3E8" stroke="#B45309" stroke-width="1"/>`;
+    svg+=`<text x="${W/2}" y="${H-16}" text-anchor="middle" font-size="9" fill="#B45309" font-family="system-ui">γ₃ sig. → moderación entre latentes confirmada</text>`;
   }
 
-  // ── SEM COMPLETO ─────────────────────────────────────────────────────
-  else if(d === 'sem-completo') {
-    titulo = 'SEM — Modelo Estructural Completo';
-    nivel = 'Posgrado · Software: AMOS, Mplus, lavaan';
-    nota = 'Incluye modelo de medición (CFA) y modelo estructural. Se reportan índices de ajuste: CFI ≥ .95, TLI ≥ .95, RMSEA ≤ .06, SRMR ≤ .08.';
-    const v=[...vars]; while(v.length<4) v.push(`η${v.length}`);
-    // CFA bloques
-    svg += `<rect x="10" y="10" width="130" height="${H-20}" rx="8" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg += `<text x="75" y="26" text-anchor="middle" font-size="9" fill="#1D4ED8" font-family="system-ui" font-weight="600">MODELO DE MEDICIÓN</text>`;
-    svg += svgEllipse(75, 90, 52, 30, 'ξ₁', DC.lat.s, 'white', 13);
-    svg += svgEllipse(75, 180, 52, 30, 'ξ₂', DC.lat.s, 'white', 13);
-    svg += svgBox(18, 55, 45, 24, 'x₁x₂', DC.lat.s, '#F8FAFF', 9);
-    svg += svgBox(18, 155, 45, 24, 'x₃x₄', DC.lat.s, '#F8FAFF', 9);
-    svg += svgArrow(63, 70, 63, 67, DC.lat.s, '');
-    svg += svgArrow(63, 162, 63, 160, DC.lat.s, '');
-    // Structural
-    svg += `<rect x="155" y="10" width="290" height="${H-20}" rx="8" fill="#F0FDF4" stroke="#0F6E56" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg += `<text x="300" y="26" text-anchor="middle" font-size="9" fill="#0F6E56" font-family="system-ui" font-weight="600">MODELO ESTRUCTURAL</text>`;
-    svg += svgEllipse(210, 90, 45, 28, 'ξ₁', DC.lat.s, DC.lat.f, 12);
-    svg += svgEllipse(210, 195, 45, 28, 'ξ₂', DC.lat.s, DC.lat.f, 12);
-    svg += svgEllipse(310, 140, 50, 30, 'η₁', DC.m.s, DC.m.f, 12);
-    svg += svgEllipse(415, 140, 50, 30, 'η₂', DC.y.s, DC.y.f, 12);
-    svg += svgArrow(127, 90, 168, 90, DC.lat.s, '');
-    svg += svgArrow(127, 180, 168, 190, DC.lat.s, '');
-    svg += svgArrow(255, 95, 268, 120, DC.lat.s, 'γ₁');
-    svg += svgArrow(255, 188, 268, 155, DC.lat.s, 'γ₂');
-    svg += svgArrow(360, 140, 368, 140, DC.m.s, 'β');
-    // Output CFA
-    svg += `<rect x="458" y="10" width="132" height="${H-20}" rx="8" fill="#FFF8F5" stroke="#993C1D" stroke-width="1" stroke-dasharray="5,3"/>`;
-    svg += `<text x="524" y="26" text-anchor="middle" font-size="9" fill="#993C1D" font-family="system-ui" font-weight="600">INDICADORES Y</text>`;
-    svg += svgEllipse(524, 90, 50, 28, 'η₂', DC.y.s, DC.y.f, 12);
-    svg += svgBox(478, 150, 45, 24, 'y₁y₂', DC.y.s, '#FFF8F5', 9);
-    svg += svgBox(535, 150, 45, 24, 'y₃y₄', DC.y.s, '#FFF8F5', 9);
-    svg += svgArrow(465, 140, 468, 140, DC.y.s, '');
-    svg += svgArrow(465, 100, 524, 68, DC.y.s, '');
-    svg += `<text x="${W/2}" y="${H-3}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">CFI≥.95 · TLI≥.95 · RMSEA≤.06 · SRMR≤.08</text>`;
+  // ── SEM COMPLETO ──────────────────────────────────────────────
+  else if(d==='sem-completo'){
+    titulo='SEM — Modelo Estructural Completo';
+    nivel='Posgrado · AMOS, Mplus, lavaan';
+    nota='CFA (modelo de medición) + modelo estructural. Índices: CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08.';
+    const v=[...vars]; while(v.length<4) v.push('η'+(v.length));
+    // Measurement model box left
+    svg+=`<rect x="8" y="8" width="128" height="${H-16}" rx="8" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="72" y="23" text-anchor="middle" font-size="8" fill="#1D4ED8" font-weight="600" font-family="system-ui">MEDICIÓN</text>`;
+    svg+=ellipse(72, 90,44,28,'ξ₁',Cl.s,'white',12);
+    svg+=ellipse(72,190,44,28,'ξ₂',Cl.s,'white',12);
+    svg+=box(14, 52,40,22,'x₁x₂',Cl.s,'#F8FAFF',8);
+    svg+=box(14,155,40,22,'x₃x₄',Cl.s,'#F8FAFF',8);
+    svg+=arrow(54, 63,60, 70,Cl.s,'');
+    svg+=arrow(54,158,60,168,Cl.s,'');
+    // Structural model center
+    svg+=`<rect x="148" y="8" width="278" height="${H-16}" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="287" y="23" text-anchor="middle" font-size="8" fill="#059669" font-weight="600" font-family="system-ui">MODELO ESTRUCTURAL</text>`;
+    svg+=ellipse(200, 90,42,26,'ξ₁',Cl.s,Cl.f,11);
+    svg+=ellipse(200,195,42,26,'ξ₂',Cl.s,Cl.f,11);
+    svg+=ellipse(300,140,46,28,'η₁',Cm.s,Cm.f,11);
+    svg+=ellipse(400,140,44,26,'η₂',Cy.s,Cy.f,11);
+    svg+=arrow(116, 90,160, 90,Cl.s,'');
+    svg+=arrow(116,180,160,188,Cl.s,'');
+    svg+=arrow(242, 95,258,120,Cl.s,'γ₁');
+    svg+=arrow(242,188,258,158,Cl.s,'γ₂');
+    svg+=arrow(346,140,358,140,Cm.s,'β');
+    // Output CFA right
+    svg+=`<rect x="440" y="8" width="132" height="${H-16}" rx="8" fill="#FFF8F5" stroke="#993C1D" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="506" y="23" text-anchor="middle" font-size="8" fill="#993C1D" font-weight="600" font-family="system-ui">INDICADORES Y</text>`;
+    svg+=ellipse(506, 90,44,26,'η₂',Cy.s,Cy.f,11);
+    svg+=box(460,148,42,22,'y₁y₂',Cy.s,'#FFF8F5',8);
+    svg+=box(516,148,42,22,'y₃y₄',Cy.s,'#FFF8F5',8);
+    svg+=arrow(444,140,446,140,Cy.s,'');
+    svg+=arrow(444,100,506, 68,Cy.s,'');
+    svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">CFI≥.95 · TLI≥.95 · RMSEA≤.06 · SRMR≤.08</text>`;
   }
 
   // Modal
-  const badgeColor = ['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(d) ? '#1D4ED8' : '#0F6E56';
-  const badgeLabel = ['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(d) ? 'Posgrado' : 'Pregrado';
+  const isPost=['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(d);
+  const badgeColor=isPost?'#1D4ED8':'#059669';
+  const badgeLabel=isPost?'Posgrado':'Pregrado';
 
-  const modalHtml = `
+  const modalHtml=`
     <div id="modal-diagram" class="modal-overlay" onclick="if(event.target===this)this.remove()">
       <div class="modal-inner">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:12px">
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${badgeColor}18;color:${badgeColor};border:1px solid ${badgeColor}40">${badgeLabel}</span>
-              <span style="font-size:11px;color:#888">${nivel}</span>
+              <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:${badgeColor}18;color:${badgeColor};border:1px solid ${badgeColor}40">${badgeLabel}</span>
+              <span style="font-size:11px;color:#888">${f(nivel)}</span>
             </div>
-            <h3 style="font-size:15px;font-weight:700;color:#111;margin:0">${titulo}</h3>
+            <h3 style="font-size:15px;font-weight:700;color:#111;margin:0">${f(titulo)}</h3>
           </div>
           <button onclick="document.getElementById('modal-diagram').remove()" style="border:none;background:#f5f5f5;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;flex-shrink:0">✕</button>
         </div>
-        <p style="font-size:12px;color:#666;margin:0 0 14px;line-height:1.5">${nota}</p>
+        <p style="font-size:12px;color:#555;margin:0 0 14px;line-height:1.5">${f(nota)}</p>
         <svg viewBox="0 0 ${W} ${H}" style="width:100%;border:1px solid #eee;border-radius:10px;background:#fafafa" xmlns="http://www.w3.org/2000/svg">
           ${svg}
         </svg>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
-          <p style="font-size:11px;color:#bbb;margin:0">Generado según diseño metodológico seleccionado</p>
-          <button onclick="downloadDiagram()" style="padding:12px 20px;border-radius:8px;border:1.5px solid #534AB7;color:#534AB7;background:transparent;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;min-height:44px;touch-action:manipulation">📥 Descargar SVG</button>
+          <p style="font-size:11px;color:#bbb;margin:0">Generado según técnica metodológica seleccionada</p>
+          <button onclick="downloadDiagram()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #4F46E5;color:#4F46E5;background:transparent;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;min-height:36px">📥 Descargar SVG</button>
         </div>
       </div>
     </div>`;
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
-  window._lastDiagramSVG = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svg}</svg>`;
+  window._lastDiagramSVG=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svg}</svg>`;
 }
 
-function downloadDiagram() {
-  const blob = new Blob([window._lastDiagramSVG], {type:'image/svg+xml'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='modelo_teorico.svg'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-
-render();
-</script>
-</body>
-</html>
+>
