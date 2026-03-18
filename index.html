@@ -630,6 +630,77 @@ const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
 const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mi","Algo (he leido sobre el tema)","Bastante (me interesa mucho)"];
 const VIABILIDADES = ["Si, tengo acceso directo","Tal vez, con esfuerzo podria acceder","No estoy seguro","No, no tengo acceso"];
 
+// ── INSTRUMENTOS — disponibles globalmente (UI + DOCX) ────────────
+const INSTRUMENTOS_DATA = {
+  'Ansiedad':               {nombre:'Escala de Ansiedad de Beck (BAI)', items:'21 ítems · Likert 0-3', ejemplo:'Ej: "Entumecimiento u hormigueo" — 0=En absoluto · 3=Severamente'},
+  'Estrés percibido':       {nombre:'Escala de Estrés Percibido (PSS-14, Cohen)', items:'14 ítems · Likert 0-4', ejemplo:'Ej: "¿Con qué frecuencia sintió que las dificultades se acumulaban tanto que no podía superarlas?" — 0=Nunca · 4=Muy a menudo'},
+  'Burnout':                {nombre:'Inventario de Burnout de Maslach (MBI)', items:'22 ítems · Likert 0-6', ejemplo:'Ej: "Me siento emocionalmente agotado/a por mi trabajo" — 0=Nunca · 6=Todos los días'},
+  'Autoeficacia':           {nombre:'Escala de Autoeficacia General (Schwarzer & Bäßler)', items:'10 ítems · Likert 1-4', ejemplo:'Ej: "Siempre logro resolver problemas difíciles si me esfuerzo" — 1=Incorrecto · 4=Totalmente correcto'},
+  'Depresión':              {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems · Likert 0-3', ejemplo:'Ej: "No me siento triste" (0) hasta "Estoy tan triste que no puedo soportarlo" (3)'},
+  'Autoestima':             {nombre:'Escala de Autoestima de Rosenberg (EAR)', items:'10 ítems · Likert 1-4', ejemplo:'Ej: "En general estoy satisfecho/a conmigo mismo/a" — 1=Muy en desacuerdo · 4=Muy de acuerdo'},
+  'Bienestar psicológico':  {nombre:'Escala de Bienestar Psicológico de Ryff (versión española)', items:'39 ítems · Likert 1-6', ejemplo:'Ej: "Me siento bien cuando pienso en lo que he hecho en el pasado" — 1=Totalmente en desacuerdo · 6=Totalmente de acuerdo'},
+  'Satisfacción laboral':   {nombre:'Escala de Satisfacción Laboral (SL-SPC, Palma)', items:'27 ítems · Likert 1-5', ejemplo:'Ej: "Mi trabajo me permite desarrollarme profesionalmente" — 1=Totalmente en desacuerdo · 5=Totalmente de acuerdo'},
+  'Motivación':             {nombre:'Escala de Motivación en el Trabajo (R-MAWS)', items:'19 ítems · Likert 1-7', ejemplo:'Ej: "Porque encuentro que es un trabajo interesante" — 1=No corresponde · 7=Corresponde exactamente'},
+  'Resiliencia':            {nombre:'Escala de Resiliencia de Connor-Davidson (CD-RISC)', items:'25 ítems · Likert 0-4', ejemplo:'Ej: "Soy capaz de adaptarme a los cambios" — 0=En absoluto · 4=Siempre'},
+  'Apoyo social':           {nombre:'Escala de Apoyo Social Percibido de Zimet (MSPSS)', items:'12 ítems · Likert 1-7', ejemplo:'Ej: "Hay una persona especial que se alegra de mis logros" — 1=Muy en desacuerdo · 7=Muy de acuerdo'},
+  'Calidad de vida':        {nombre:'WHOQOL-BREF (OMS, versión española)', items:'26 ítems · Likert 1-5', ejemplo:'Ej: "¿En qué medida piensa que el dolor le impide hacer lo que necesita?" — 1=Nada · 5=Completamente'},
+  'Inteligencia emocional': {nombre:'TMMS-24 (Trait Meta-Mood Scale)', items:'24 ítems · Likert 1-5', ejemplo:'Ej: "Presto mucha atención a los sentimientos" — 1=Totalmente en desacuerdo · 5=Totalmente de acuerdo'},
+  'Clima organizacional':   {nombre:'Escala de Clima Organizacional (EDCO)', items:'40 ítems · Likert 1-5', ejemplo:'Ej: "En esta empresa se reconoce el buen desempeño" — 1=Nunca · 5=Siempre'},
+  'Liderazgo':              {nombre:'Cuestionario Multifactorial de Liderazgo (MLQ-5X)', items:'45 ítems · Likert 0-4', ejemplo:'Ej: "Me siento bien cuando estoy cerca de él/ella" — 0=Nunca · 4=Frecuentemente'},
+  'Rendimiento académico':  {nombre:'Escala de Estrategias de Aprendizaje (ACRA)', items:'118 ítems · Likert 1-4', ejemplo:'Ej: "Cuando estudio hago esquemas o resúmenes" — 1=Nunca o casi nunca · 4=Siempre'},
+  'Cohesión familiar':      {nombre:'FACES-III (Olson)', items:'20 ítems · Likert 1-5', ejemplo:'Ej: "Los miembros de la familia se piden ayuda entre sí" — 1=Casi nunca · 5=Casi siempre'},
+  'Estrés laboral':         {nombre:'Escala de Estrés Laboral de la OIT-OMS', items:'25 ítems · Likert 1-7', ejemplo:'Ej: "La carga de trabajo que tengo" — 1=Nunca fuente de estrés · 7=Fuente muy frecuente de estrés'},
+  'Satisfacción marital':   {nombre:'Escala de Satisfacción Marital (ESM, Pick y Andrade)', items:'24 ítems · Likert 1-3', ejemplo:'Ej: "La forma en que mi pareja me demuestra su amor" — 1=Me disgusta · 3=Me gusta mucho'},
+  'Bullying':               {nombre:'Escala de Victimización entre Iguales (VIE)', items:'15 ítems · Likert 1-4', ejemplo:'Ej: "Mis compañeros me ignoran o no me hacen caso" — 1=Nunca · 4=Muchas veces'},
+  'Bienestar subjetivo':    {nombre:'Escala de Satisfacción con la Vida (SWLS, Diener)', items:'5 ítems · Likert 1-7', ejemplo:'Ej: "En la mayoría de los aspectos, mi vida es como yo quiero que sea" — 1=Muy en desacuerdo · 7=Muy de acuerdo'},
+  'Depresión':              {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems · Likert 0-3', ejemplo:'Ej: rango de tristeza del 0 al 3'},
+  'Regulación emocional':   {nombre:'Cuestionario de Regulación Emocional (ERQ, Gross & John)', items:'10 ítems · Likert 1-7', ejemplo:'Ej: "Cuando quiero sentirme mejor, cambio la forma en que estoy pensando" — 1=Totalmente en desacuerdo · 7=Totalmente de acuerdo'},
+  'Impulsividad':           {nombre:'Escala de Impulsividad de Barratt (BIS-11)', items:'30 ítems · Likert 1-4', ejemplo:'Ej: "Planifico mis tareas con cuidado" (ítem inverso) — 1=Raramente · 4=Casi siempre'},
+  'Satisfacción con la vida':{nombre:'Escala de Satisfacción con la Vida (SWLS, Diener)', items:'5 ítems · Likert 1-7', ejemplo:'Ej: "Las condiciones de mi vida son excelentes" — 1=Muy en desacuerdo · 7=Muy de acuerdo'},
+  'Compromiso organizacional':{nombre:'Escala de Compromiso Organizacional (Allen & Meyer)', items:'24 ítems · Likert 1-7', ejemplo:'Ej: "Esta organización tiene un gran significado personal para mí" — 1=Totalmente en desacuerdo · 7=Totalmente de acuerdo'},
+  'Ansiedad competitiva':   {nombre:'Inventario de Ansiedad Competitiva-2 (CSAI-2R)', items:'17 ítems · Likert 1-4', ejemplo:'Ej: "Me preocupa no rendir tan bien como podría en esta competencia" — 1=Nada · 4=Mucho'},
+  'Cohesión grupal':        {nombre:'Cuestionario de Ambiente de Grupo (GEQ, Carron)', items:'18 ítems · Likert 1-9', ejemplo:'Ej: "Este equipo me da la oportunidad de mejorar mi rendimiento personal" — 1=Totalmente en desacuerdo · 9=Totalmente de acuerdo'},
+};
+
+function findInstrumento(varName) {
+  if(!varName) return null;
+  const lower = varName.toLowerCase();
+  // Exact match
+  if(INSTRUMENTOS_DATA[varName]) return INSTRUMENTOS_DATA[varName];
+  // Case-insensitive partial match
+  const entry = Object.entries(INSTRUMENTOS_DATA).find(([k]) =>
+    lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)
+  );
+  return entry ? entry[1] : null;
+}
+
+function renderInstrumentosHtml(varsList) {
+  const encontrados = varsList.map(v => ({v, instr: findInstrumento(v)})).filter(x => x.instr);
+  if(encontrados.length === 0) return '';
+
+  let h = `<div style="margin-top:20px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
+  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">🧪 Instrumentos de medición sugeridos</div>`;
+  h += `<p style="font-size:12px;color:#6B7280;margin-bottom:14px">Validados en población hispanohablante. Verifica la adaptación para tu contexto específico.</p>`;
+
+  encontrados.forEach(({v, instr}) => {
+    h += `<div style="background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid #EDE9FE">`;
+    h += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">`;
+    h += `<span style="font-size:12px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.4px">${v}</span>`;
+    h += `<span style="font-size:11px;color:#9CA3AF;background:#F3F4F6;padding:2px 8px;border-radius:10px">${instr.items}</span>`;
+    h += `</div>`;
+    h += `<p style="font-size:13px;font-weight:600;color:#111827;margin:6px 0 4px">${instr.nombre}</p>`;
+    h += `<p style="font-size:12px;color:#6B7280;font-style:italic;line-height:1.5">${instr.ejemplo}</p>`;
+    h += `</div>`;
+  });
+
+  if(encontrados.length < varsList.length) {
+    const sinInstr = varsList.filter(v => !findInstrumento(v));
+    h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ Sin instrumento registrado para: ${sinInstr.join(', ')}. Busca en SCOPUS o PsycINFO.</p>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
 const NIVEL_HINT = {
   1:"Con 1 variable se recomienda nivel descriptivo.",
   2:"Con 2 variables puedes optar por descriptivo o correlacional.",
@@ -1086,6 +1157,9 @@ function renderContent(){
         <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase de tu investigación</li>
       </ul>
     </div>`;
+
+    // INSTRUMENTOS SUGERIDOS EN UI
+    h += renderInstrumentosHtml(variablesDisplay);
     
     el.innerHTML=h;
   }
@@ -1306,53 +1380,184 @@ async function generate(){
 
   // Construir instrucción específica de hipótesis según enfoque y técnica
   let hipInstruccion;
+  let preguntaInstruccion;
+  let objetivoInstruccion;
+
+  // ── CUALITATIVO: instrucciones específicas por diseño ─────────
   if(state.enfoque === "Cualitativo") {
-    hipInstruccion = "SUPUESTOS DE INVESTIGACION: En investigación cualitativa los supuestos son orientaciones tentativas y emergentes (Hernández et al., 2014). Muchos diseños (fenomenológico, etnográfico, teoría fundamentada) NO usan hipótesis a priori. Formula el supuesto como: 'Se espera comprender cómo [población] experimenta [fenómeno] en su contexto'. NUNCA uses lenguaje correlacional, estadístico ni cuantitativo.";
+    const dQ = state.diseno;
+    const cats = variablesList.join(', ');
+
+    // Pregunta según diseño cualitativo
+    const preguntasQual = {
+      'fenomenologico':       `¿Cuál es la experiencia vivida de ${efectiveProblema()} en ${efectivePoblacion()}?`,
+      'etnografico':          `¿Cómo se construye y organiza culturalmente ${efectiveProblema()} en ${efectivePoblacion()}?`,
+      'teoria-fundamentada':  `¿Cómo se desarrolla y construye el proceso de ${efectiveProblema()} en ${efectivePoblacion()}?`,
+      'estudio-caso':         `¿Cómo se manifiesta ${efectiveProblema()} en el caso de ${efectivePoblacion()}?`,
+      'narrativo':            `¿Cuáles son las narrativas y relatos de vida de ${efectivePoblacion()} sobre ${efectiveProblema()}?`,
+      'investigacion-accion': `¿Cómo puede comprenderse y transformarse ${efectiveProblema()} con la participación de ${efectivePoblacion()}?`,
+    };
+    const ejemploPregunta = preguntasQual[dQ] || `¿Cómo comprenden y experimentan ${efectiveProblema()} los ${efectivePoblacion()}?`;
+
+    // Objetivo según diseño cualitativo
+    const verbosQual = {
+      'fenomenologico':       'Comprender la experiencia vivida de',
+      'etnografico':          'Describir y analizar los patrones culturales de',
+      'teoria-fundamentada':  'Generar una teoría sustantiva sobre',
+      'estudio-caso':         'Analizar en profundidad',
+      'narrativo':            'Explorar las narrativas y relatos de',
+      'investigacion-accion': 'Comprender y transformar participativamente',
+    };
+    const verboQual = verbosQual[dQ] || 'Explorar y comprender';
+
+    // Supuestos según diseño cualitativo
+    const supuestosQual = {
+      'fenomenologico':       `Se espera que ${efectivePoblacion()} describa experiencias diversas y significativas respecto a ${efectiveProblema()}, marcadas por su contexto subjetivo y vivencial.`,
+      'etnografico':          `Se espera encontrar patrones culturales y prácticas compartidas que dan sentido a ${efectiveProblema()} dentro de la comunidad de ${efectivePoblacion()}.`,
+      'teoria-fundamentada':  `Se espera generar categorías emergentes que expliquen el proceso de ${efectiveProblema()} tal como lo vive ${efectivePoblacion()}, pudiendo construir una teoría sustantiva.`,
+      'estudio-caso':         `Se espera que el análisis profundo del caso permita comprender la complejidad de ${efectiveProblema()} en ${efectivePoblacion()} en su contexto específico.`,
+      'narrativo':            `Se espera que las narrativas de ${efectivePoblacion()} revelen trayectorias vitales y significados personales sobre ${efectiveProblema()}.`,
+      'investigacion-accion': `Se espera que la participación activa de ${efectivePoblacion()} permita identificar estrategias de cambio y transformación frente a ${efectiveProblema()}.`,
+    };
+    const ejemploSupuesto = supuestosQual[dQ] || `Se espera comprender cómo ${efectivePoblacion()} experimenta y da sentido a ${efectiveProblema()} en su contexto particular.`;
+
+    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION cualitativa (diseño: ${disenoLabel}). REGLA ESTRICTA: usa "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?". NUNCA uses "¿Existe relación...?", "¿En qué medida...?" ni lenguaje cuantitativo. Ejemplo correcto para este diseño: "${ejemploPregunta}". Las categorías de análisis son: ${cats}.`;
+
+    objetivoInstruccion = `3. OBJETIVO GENERAL: comienza con el verbo "${verboQual}" (coherente con diseño ${disenoLabel}). PROHIBIDO usar "analizar la relación", "determinar la relación", "correlacionar" o cualquier verbo cuantitativo. El objetivo debe enfocarse en COMPRENDER, EXPLORAR, DESCRIBIR o GENERAR teoría. Usa las categorías: ${cats}.`;
+
+    hipInstruccion = `SUPUESTOS DE INVESTIGACION (campo "hipotesis" en el JSON): en investigación cualitativa los supuestos son tentativas flexibles, NO hipótesis estadísticas. REGLA: NO uses "existe una relación", "predice", "correlaciona" ni términos estadísticos. Ejemplo correcto: "${ejemploSupuesto}". Adapta al diseño ${disenoLabel}.`;
+
   } else if(state.enfoque === "Mixto") {
-    hipInstruccion = "HIPOTESIS: Formula una hipótesis mixta coherente con el diseño mixto seleccionado.";
-  } else if(tecInstr) {
-    hipInstruccion = `HIPOTESIS DE INVESTIGACION específica para ${tecnicaLabel}: ${tecInstr.nota} Ejemplo de hipótesis correcta: "${tecInstr.hipotesis}"`;
+    const dM = state.diseno;
+    const vars = variablesList.join(', ');
+    const prob = efectiveProblema();
+    const pop  = efectivePoblacion();
+
+    // Pregunta por diseño mixto
+    const preguntasMixto = {
+      'secuencial-explicativo':
+        `¿En qué medida ${vars} se relacionan en ${pop} (CUAN), y cómo explican los propios participantes esos resultados desde su experiencia (cual)?`,
+      'secuencial-exploratorio':
+        `¿Cómo comprenden ${pop} el fenómeno de ${prob} (CUAL), y en qué medida esos hallazgos se confirman en una muestra más amplia (cuan)?`,
+      'convergente-paralelo':
+        `¿Qué revelan los datos cuantitativos y cualitativos, de manera convergente, sobre ${prob} en ${pop}?`,
+      'transformativo':
+        `¿Cómo afecta ${prob} a ${pop} y qué estrategias de cambio emergen desde su propia voz y sus datos?`,
+      'anidado':
+        `¿En qué medida ${vars} predicen ${prob} en ${pop}, y qué experiencias de los participantes explican los casos atípicos?`,
+    };
+    const ejemploPregunta = preguntasMixto[dM]
+      || `¿Cómo se comprende ${prob} en ${pop} desde una perspectiva cuantitativa y cualitativa integrada?`;
+
+    // Objetivo por diseño mixto
+    const verbosObj = {
+      'secuencial-explicativo':  'Analizar cuantitativamente y luego profundizar cualitativamente',
+      'secuencial-exploratorio': 'Explorar cualitativamente y luego generalizar cuantitativamente',
+      'convergente-paralelo':    'Integrar datos cuantitativos y cualitativos para comprender',
+      'transformativo':          'Analizar e intervenir críticamente sobre',
+      'anidado':                 'Analizar mediante método dominante con apoyo del método secundario',
+    };
+    const verboMixto = verbosObj[dM] || 'Integrar perspectivas cuantitativas y cualitativas sobre';
+
+    // Hipótesis por diseño mixto
+    const hipsMixto = {
+      'secuencial-explicativo':
+        `Se espera encontrar relaciones significativas entre ${vars} en ${pop} (componente cuantitativo), y que los participantes aporten explicaciones contextuales que profundicen dichos resultados (componente cualitativo).`,
+      'secuencial-exploratorio':
+        `Se espera que los hallazgos cualitativos sobre ${prob} en ${pop} permitan construir categorías que luego se confirmen en una muestra más amplia mediante análisis cuantitativo.`,
+      'convergente-paralelo':
+        `Se espera que los datos cuantitativos y cualitativos converjan en hallazgos complementarios sobre ${prob} en ${pop}, ofreciendo una comprensión más completa del fenómeno.`,
+      'transformativo':
+        `Se espera que el análisis mixto con perspectiva crítica visibilice desigualdades y genere estrategias de cambio respecto a ${prob} en ${pop}.`,
+      'anidado':
+        `Se espera que los datos cualitativos incrustados en el diseño principal expliquen los casos atípicos o enriquezcan los hallazgos cuantitativos sobre ${prob} en ${pop}.`,
+    };
+    const ejemploHip = hipsMixto[dM]
+      || `Se espera que la integración de datos cuantitativos y cualitativos ofrezca una comprensión más completa de ${prob} en ${pop}.`;
+
+    // Lógica de integración por diseño
+    const logicaIntegracion = {
+      'secuencial-explicativo':  'Recolección CUAN primero → análisis → recolección cual para explicar resultados. La integración ocurre en la interpretación.',
+      'secuencial-exploratorio': 'Recolección CUAL primero → análisis → recolección cuan para generalizar. La integración ocurre al construir el instrumento cuantitativo.',
+      'convergente-paralelo':    'Recolección CUAN + CUAL simultánea → análisis por separado → triangulación de resultados.',
+      'transformativo':          'Un marco teórico crítico guía ambos métodos orientados al cambio social.',
+      'anidado':                 'Un método domina (CUAN o CUAL); el otro está incrustado para responder una subpregunta dentro del mismo estudio.',
+    };
+    const logica = logicaIntegracion[dM] || 'Integración de ambos métodos según el diseño mixto seleccionado.';
+
+    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION mixta (diseño: ${disenoLabel}). REGLA: debe tener DOS componentes explícitos — uno cuantitativo y uno cualitativo — coherentes con la lógica "${logica}". Ejemplo correcto para este diseño: "${ejemploPregunta}". Usa las variables: ${vars}.`;
+
+    objetivoInstruccion = `3. OBJETIVO GENERAL: comienza con "${verboMixto}" e integra ambos componentes del diseño ${disenoLabel}. Debe mencionar explícitamente el propósito de integrar métodos. Usa las variables: ${vars}.`;
+
+    hipInstruccion = `HIPOTESIS (campo "hipotesis"): formula una hipótesis o supuesto mixto que anticipe los resultados de AMBOS componentes (cuantitativo y cualitativo) coherentes con el diseño ${disenoLabel}. Ejemplo: "${ejemploHip}". NO uses solo lenguaje cuantitativo ni solo cualitativo.`;
+
   } else {
-    hipInstruccion = "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico coherente con el nivel y las variables seleccionadas.";
+    // Cuantitativo
+    preguntaInstruccion = tecInstr
+      ? `2. PREGUNTA DE INVESTIGACION específica para ${tecnicaLabel}. Ejemplo correcto: "${tecInstr.pregunta}". REGLA: Usa exactamente las variables seleccionadas (${variablesList.join(', ')}), no inventes ni cambies variables.`
+      : "2. PREGUNTA DE INVESTIGACION principal:";
+    objetivoInstruccion = tecInstr
+      ? `3. OBJETIVO GENERAL: Empieza con "${tecInstr.verbo}" y usa EXACTAMENTE las variables seleccionadas (${variablesList.join(', ')}). NO uses verbos genéricos como "Determinar la relación" si la técnica es mediación o SEM.`
+      : "3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y técnica; medible y alcanzable).";
+    hipInstruccion = tecInstr
+      ? `HIPOTESIS DE INVESTIGACION específica para ${tecnicaLabel}: ${tecInstr.nota} Ejemplo de hipótesis correcta: "${tecInstr.hipotesis}"`
+      : "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico coherente con el nivel y las variables seleccionadas.";
   }
 
-  // Construir instrucción de pregunta según técnica
-  let preguntaInstruccion = "2. PREGUNTA DE INVESTIGACION principal:";
-  if(tecInstr) {
-    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION específica para ${tecnicaLabel}. Ejemplo correcto: "${tecInstr.pregunta}". REGLA: Usa exactamente las variables seleccionadas (${variablesList.join(', ')}), no inventes ni cambies variables.`;
-  }
+  // ── Ajustar label de técnica para cualitativo ─────────────────
+  const tecnicaInfo = state.enfoque === "Cualitativo"
+    ? `Técnica de análisis: ${
+        state.diseno === 'fenomenologico'   ? 'Análisis fenomenológico interpretativo (IPA) o descriptivo' :
+        state.diseno === 'etnografico'      ? 'Análisis etnográfico (descripción densa, Geertz)' :
+        state.diseno === 'teoria-fundamentada' ? 'Codificación abierta, axial y selectiva (Strauss & Corbin)' :
+        state.diseno === 'estudio-caso'     ? 'Análisis de caso (Yin, 2018) — triangulación de fuentes' :
+        state.diseno === 'narrativo'        ? 'Análisis narrativo (Creswell) — estructura de relato' :
+        state.diseno === 'investigacion-accion' ? 'Análisis participativo — ciclos de reflexión-acción' :
+        'Análisis temático inductivo (Braun & Clarke)'
+      }`
+    : `Técnica de análisis estadístico: ${tecnicaLabel}`;
 
-  // Construir instrucción de objetivo según técnica
-  let objetivoInstruccion = "3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y técnica; medible y alcanzable).";
-  if(tecInstr) {
-    objetivoInstruccion = `3. OBJETIVO GENERAL: Empieza con "${tecInstr.verbo}" y usa EXACTAMENTE las variables seleccionadas (${variablesList.join(', ')}). NO uses verbos genéricos como "Determinar la relación" si la técnica es mediación o SEM.`;
-  }
-
-  const prompt = `Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018; Hayes, 2018 para mediacion/moderacion; Kline, 2016 para SEM).
+  const prompt = `Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018; Creswell, 2013 para cualitativo; Yin, 2018 para estudio de caso).
 
 DATOS DEL ESTUDIANTE:
 - Area: ${efectiveArea()}
 - Poblacion: ${efectivePoblacion()}
 - Problema/fenomeno: ${efectiveProblema()}
-- Variables seleccionadas (${nv} exactas, NO uses otras): ${variablesList.join(", ")}
+- Categorias/Variables (${nv}, NO uses otras): ${variablesList.join(", ")}
 - Enfoque metodologico: ${state.enfoque}
 - Nivel de investigacion: ${nivelLabel}
 - Diseño de investigacion: ${disenoLabel}
-- Técnica de análisis estadístico: ${tecnicaLabel}
+- ${tecnicaInfo}
 - Experiencia previa: ${state.experiencia}
 - Viabilidad de acceso: ${state.viabilidad}
 - Contexto: ${state.contexto||"No especificado"}
 - Motivacion: ${state.motivacion||"No especificada"}
 
-REGLA CRÍTICA: SOLO puedes usar las ${nv} variables listadas arriba. NUNCA agregues, inventes ni sustituyas variables. Si la técnica requiere roles específicos (X, M, Y, W), asígnalos en el orden en que fueron seleccionadas.
+REGLA CRÍTICA: SOLO puedes usar las ${nv} categorías/variables listadas. NUNCA agregues, inventes ni sustituyas.
+${state.enfoque === "Cualitativo" ? `
+REGLAS ABSOLUTAS PARA INVESTIGACIÓN CUALITATIVA:
+- NUNCA uses "relación entre", "predice", "correlaciona", "significativamente", "p<.05" ni ningún término estadístico
+- El objetivo NUNCA puede ser "analizar la relación entre X e Y" — eso es cuantitativo
+- La pregunta SIEMPRE debe iniciar con "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?"
+- Los supuestos son tentativas flexibles, no hipótesis estadísticas
+- El verbo del objetivo debe ser: Comprender, Explorar, Describir, Interpretar, Generar, Analizar la experiencia de` : state.enfoque === "Mixto" ? `
+REGLAS PARA INVESTIGACIÓN MIXTA (diseño: ${disenoLabel}):
+- La PREGUNTA debe tener DOS componentes explícitos: uno cuantitativo y uno cualitativo
+- El OBJETIVO debe mencionar la integración de métodos y su propósito
+- La HIPÓTESIS debe anticipar hallazgos de ambos componentes
+- NO formules solo una pregunta cuantitativa ni solo cualitativa
+- Usa la lógica del diseño: ${(() => {
+    const l = {'secuencial-explicativo':'CUAN primero, luego cual para explicar resultados','secuencial-exploratorio':'CUAL primero, luego cuan para generalizar','convergente-paralelo':'CUAN + CUAL simultáneo, triangulación de resultados','transformativo':'Marco crítico que guía ambos métodos para el cambio','anidado':'Un método dominante contiene al otro como componente secundario'};
+    return l[state.diseno] || 'integración de ambos métodos';
+  })()}` : ''}
 
 Genera los siguientes 4 elementos:
-1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con la técnica "${tecnicaLabel}" y las variables exactas. NO uses variables no seleccionadas.
+1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con el diseño "${disenoLabel}". Sin términos estadísticos si es cualitativo.
 ${preguntaInstruccion}
 ${objetivoInstruccion}
 4. ${hipInstruccion}
 
-IMPORTANTE: Los 4 elementos son OBLIGATORIOS. Sé preciso con la técnica estadística indicada.
+IMPORTANTE: Los 4 elementos son OBLIGATORIOS.
 
 Responde SOLO en JSON sin texto adicional ni markdown:
 {"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
@@ -1627,40 +1832,18 @@ async function downloadDoc() {
     }
 
     // ── Instrumentos sugeridos por variable ─────────────────────
-    const INSTRUMENTOS = {
-      'Ansiedad':           {nombre:'Escala de Ansiedad de Beck (BAI)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = En absoluto · 3 = Severamente. Ej: "Entumecimiento u hormigueo"'},
-      'Estrés percibido':   {nombre:'Escala de Estrés Percibido (PSS-14, Cohen)', items:'14 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Muy a menudo. Ej: "¿Con qué frecuencia se ha sentido incapaz de controlar las cosas importantes de su vida?"'},
-      'Burnout':            {nombre:'Inventario de Burnout de Maslach (MBI)', items:'22 ítems, escala Likert 0-6', ejemplo:'0 = Nunca · 6 = Todos los días. Ej: "Me siento emocionalmente agotado/a por mi trabajo"'},
-      'Autoeficacia':       {nombre:'Escala de Autoeficacia General (Schwarzer & Bäßler)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Incorrecto · 4 = Totalmente correcto. Ej: "Siempre logro resolver problemas difíciles si me esfuerzo"'},
-      'Depresión':          {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = No me siento triste · 3 = Estoy tan triste o tan desdichado que no puedo soportarlo'},
-      'Autoestima':         {nombre:'Escala de Autoestima de Rosenberg (EAR)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Muy en desacuerdo · 4 = Muy de acuerdo. Ej: "En general estoy satisfecho/a conmigo mismo/a"'},
-      'Bienestar psicológico':{nombre:'Escala de Bienestar Psicológico de Ryff (versión española)', items:'39 ítems, escala Likert 1-6', ejemplo:'1 = Totalmente en desacuerdo · 6 = Totalmente de acuerdo. Ej: "Me siento bien cuando pienso en lo que he hecho en el pasado"'},
-      'Satisfacción laboral':{nombre:'Escala de Satisfacción Laboral (SL-SPC, Palma)', items:'27 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Mi trabajo me permite desarrollarme profesionalmente"'},
-      'Motivación':         {nombre:'Escala de Motivación en el Trabajo (R-MAWS)', items:'19 ítems, escala Likert 1-7', ejemplo:'1 = No corresponde en absoluto · 7 = Corresponde exactamente. Ej: "Porque encuentro que es un trabajo interesante"'},
-      'Resiliencia':        {nombre:'Escala de Resiliencia de Connor-Davidson (CD-RISC)', items:'25 ítems, escala Likert 0-4', ejemplo:'0 = En absoluto · 4 = Siempre. Ej: "Soy capaz de adaptarme a los cambios"'},
-      'Apoyo social':       {nombre:'Escala de Apoyo Social Percibido de Zimet (MSPSS)', items:'12 ítems, escala Likert 1-7', ejemplo:'1 = Muy en desacuerdo · 7 = Muy de acuerdo. Ej: "Hay una persona especial que se alegra de mis logros"'},
-      'Calidad de vida':    {nombre:'WHOQOL-BREF (OMS, versión española)', items:'26 ítems, escala Likert 1-5', ejemplo:'1 = Nada · 5 = Completamente. Ej: "¿En qué medida piensa que el dolor le impide hacer lo que necesita?"'},
-      'Inteligencia emocional':{nombre:'TMMS-24 (Trait Meta-Mood Scale)', items:'24 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Presto mucha atención a los sentimientos"'},
-      'Clima organizacional':{nombre:'Escala de Clima Organizacional (EDCO)', items:'40 ítems, escala Likert 1-5', ejemplo:'1 = Nunca · 5 = Siempre. Ej: "En esta empresa se reconoce el buen desempeño"'},
-      'Liderazgo':          {nombre:'Cuestionario Multifactorial de Liderazgo (MLQ-5X)', items:'45 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Frecuentemente, sino siempre. Ej: "Me siento bien cuando estoy cerca de él/ella"'},
-      'Rendimiento académico':{nombre:'Escala de Estrategias de Aprendizaje (ACRA)', items:'118 ítems, escala Likert 1-4', ejemplo:'1 = Nunca o casi nunca · 4 = Siempre o casi siempre. Ej: "Cuando estudio hago esquemas o resúmenes"'},
-      'Cohesión familiar':  {nombre:'FACES-III (Olson)', items:'20 ítems, escala Likert 1-5', ejemplo:'1 = Casi nunca · 5 = Casi siempre. Ej: "Los miembros de la familia se piden ayuda entre sí"'},
-      'Estrés laboral':     {nombre:'Escala de Estrés Laboral de la OIT-OMS', items:'25 ítems, escala Likert 1-7', ejemplo:'1 = Si la condición nunca es fuente de estrés · 7 = Si la condición es una fuente muy frecuente de estrés'},
-      'Satisfacción marital':{nombre:'Escala de Satisfacción Marital (ESM, Pick y Andrade)', items:'24 ítems, escala Likert 1-3', ejemplo:'1 = Me disgusta · 3 = Me gusta mucho. Ej: "La forma en que mi pareja me demuestra su amor"'},
-      'Bullying':           {nombre:'Escala de Victimización entre Iguales (VIE)', items:'15 ítems, escala Likert 1-4', ejemplo:'1 = Nunca · 4 = Muchas veces. Ej: "Mis compañeros me ignoran o no me hacen caso"'},
-    };
+    // Usa INSTRUMENTOS_DATA global y findInstrumento()
 
     // Find instruments for selected variables
     const instrXml_list = vars.map(v => {
-      // Try exact match first, then partial
-      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      let instr = findInstrumento(v);
       if(!instr) return null;
       return `
         ${tableRow(xe(v), xe(instr.nombre))}`;
     }).filter(Boolean);
 
     const instrDetailXml = vars.map(v => {
-      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      let instr = findInstrumento(v);
       if(!instr) return '';
       return `
         ${fieldLabel('Variable: '+v)}
