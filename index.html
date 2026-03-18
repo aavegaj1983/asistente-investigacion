@@ -775,7 +775,8 @@ function getAutoSuggestion() {
     return `<div class="hint success">💡 Con 1 variable → nivel descriptivo. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso'}.</div>`;
   }
   if(nv === 2) {
-    return `<div class="hint success">💡 Con 2 variables → nivel correlacional. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso múltiple'}.</div>`;
+    if(enfoque === 'cuantitativo') return `<div class="hint success">💡 Con 2 variables → nivel correlacional. Diseño recomendado: no experimental transversal.</div>`;
+    return `<div class="hint success">💡 Con 2 categorías de análisis → nivel descriptivo. Diseño recomendado: estudio de caso múltiple.</div>`;
   }
   if(nv >= 3 && enfoque === 'cuantitativo') {
     return `<div class="hint success">💡 Con ${nv} variables → nivel correlacional o explicativo. Diseño recomendado: no experimental transversal (o experimental si puedes manipular).</div>`;
@@ -848,7 +849,10 @@ function renderContent(){
     const mostrarVariables = (state.problema && state.problema !== "otro") || problemaConfirmado;
     
     if(mostrarVariables){
-      h+=sectionLabel("¿Que variables quieres estudiar?");
+      const labelCategorias = state.enfoque === 'Cualitativo'
+        ? "¿Que categorias de analisis o ejes tematicos te interesan?"
+        : "¿Que variables quieres estudiar?";
+      h+=sectionLabel(labelCategorias);
       const vars=state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
       if(vars.length>0){
         h+=`<div class="chips">`;
@@ -859,14 +863,21 @@ function renderContent(){
         h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
         h+=`</div>`;
         const nv=state.variables.filter(v => v !== 'otro').length;
-        if(nv>0&&NIVEL_HINT[nv]){
-          h+=`<div class="hint">${NIVEL_HINT[nv]}</div>`;
+        if(nv>0){
+          if(state.enfoque === 'Cualitativo') {
+            h+=`<div class="hint success">💡 En investigación cualitativa se trabaja con <strong>categorías de análisis</strong> (ejes temáticos). Selecciona los fenómenos que deseas comprender en profundidad.</div>`;
+          } else if(NIVEL_HINT[nv]) {
+            h+=`<div class="hint">${NIVEL_HINT[nv]}</div>`;
+          }
         }
         if(state.variables.includes('otro')){
           h+=`<input type="text" class="otro-input" placeholder="Especifica tus variables separadas por comas" value="${state.variablesOtro}" oninput="state.variablesOtro=this.value;updateNav();saveState()"/>`;
         }
       } else {
-        h+=`<textarea placeholder="Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)" oninput="state.variablesOtro=this.value;setVarsFromText(this.value);saveState()">${state.variablesOtro}</textarea>`;
+        const placeholderTxt = state.enfoque === 'Cualitativo'
+          ? 'Escribe las categorías de análisis separadas por comas (Ej: Identidad cultural, Cohesión grupal, Resignificación)'
+          : 'Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)';
+        h+=`<textarea placeholder="${placeholderTxt}" oninput="state.variablesOtro=this.value;setVarsFromText(this.value);saveState()">${state.variablesOtro}</textarea>`;
       }
     }
     el.innerHTML=h;
@@ -892,10 +903,17 @@ function renderContent(){
       h+=sectionLabel("¿Que nivel de investigacion buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
-        const esc=n.id.replace(/'/g,"\'");
-        h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
+        const esc=n.id.replace(/'/g,"\\'");
+        let nivelHint = n.hint;
+        if(state.enfoque === 'Cualitativo' && (n.id === 'correlacional' || n.id === 'explicativo')) {
+          nivelHint = '⚠️ No recomendado en investigación cualitativa';
+        }
+        h+=badgeWithDesc(n.label, n.desc, nivelHint, state.nivel===n.id, `selectNivel('${esc}')`);
       });
       h+=`</div>`;
+      if(state.enfoque === 'Cualitativo' && (state.nivel === 'correlacional' || state.nivel === 'explicativo')) {
+        h+=`<div class="hint warning">⚠️ El nivel <strong>${state.nivel}</strong> no es apropiado para investigación cualitativa. Se recomienda nivel <strong>exploratorio</strong> o <strong>descriptivo</strong> (Hernández et al., 2014).</div>`;
+      }
     }
 
     // ── Diseño (estrategia de recolección) ────────────────────────
@@ -1015,7 +1033,7 @@ function renderContent(){
       {key:"tema", label:"Tema de investigacion", color:"#534AB7", bg:"#EEEDFE"},
       {key:"pregunta", label:"Pregunta de investigacion", color:"#0F6E56", bg:"#E1F5EE"},
       {key:"objetivo", label:"Objetivo general", color:"#993C1D", bg:"#FAECE7"},
-      {key:"hipotesis", label: state.enfoque === "Cuantitativo" ? "Hipotesis de investigacion" : state.enfoque === "Cualitativo" ? "Hipotesis de trabajo" : "Hipotesis", color:"#7C3AED", bg:"#F3E8FF"},
+      {key:"hipotesis", label: state.enfoque === "Cuantitativo" ? "Hipotesis de investigacion" : state.enfoque === "Cualitativo" ? "Supuestos de investigacion" : "Hipotesis", color:"#7C3AED", bg:"#F3E8FF"},
     ];
     let h= errorMsg + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
@@ -1256,6 +1274,10 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
   if(['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(tecnica) && nivel==='correlacional'){
     warnings.push(`⚠️ Las técnicas SEM/Path Analysis requieren nivel explicativo, no correlacional. Regresa al paso 3 y cambia el nivel.`);
   }
+  // Cualitativo con nivel correlacional o explicativo (error metodológico)
+  if(enfoque === 'Cualitativo' && (nivel === 'correlacional' || nivel === 'explicativo')) {
+    warnings.push(`⚠️ Error metodológico: el enfoque cualitativo NO admite nivel correlacional ni explicativo/causal. Regresa al paso 4 y selecciona nivel "Exploratorio" o "Descriptivo" (Hernández et al., 2014).`);
+  }
   return warnings;
 }
 
@@ -1285,7 +1307,7 @@ async function generate(){
   // Construir instrucción específica de hipótesis según enfoque y técnica
   let hipInstruccion;
   if(state.enfoque === "Cualitativo") {
-    hipInstruccion = "HIPOTESIS DE TRABAJO: Supuesto tentativo y flexible sobre el fenómeno. Usa 'Se espera comprender...' o 'Las experiencias de X están relacionadas con...'. NO uses hipótesis cuantitativas.";
+    hipInstruccion = "SUPUESTOS DE INVESTIGACION: En investigación cualitativa los supuestos son orientaciones tentativas y emergentes (Hernández et al., 2014). Muchos diseños (fenomenológico, etnográfico, teoría fundamentada) NO usan hipótesis a priori. Formula el supuesto como: 'Se espera comprender cómo [población] experimenta [fenómeno] en su contexto'. NUNCA uses lenguaje correlacional, estadístico ni cuantitativo.";
   } else if(state.enfoque === "Mixto") {
     hipInstruccion = "HIPOTESIS: Formula una hipótesis mixta coherente con el diseño mixto seleccionado.";
   } else if(tecInstr) {
@@ -1373,10 +1395,28 @@ Responde SOLO en JSON sin texto adicional ni markdown:
     let fb = { tema:'', pregunta:'', objetivo:'', hipotesis:'' };
 
     if(state.enfoque === "Cualitativo") {
-      fb.tema      = `${prob} en ${pop}`;
-      fb.pregunta  = `¿Cómo se experimenta ${prob} en ${pop}?`;
-      fb.objetivo  = `Comprender las experiencias de ${prob} en ${pop}.`;
-      fb.hipotesis = `Se espera que ${pop} experimente ${prob} de forma diversa según su contexto.`;
+      fb.tema = `${prob} en ${pop}`;
+      const dQ = state.diseno;
+      if(dQ === 'fenomenologico') {
+        fb.pregunta  = `¿Cuál es la experiencia vivida de ${prob} en ${pop}?`;
+        fb.objetivo  = `Comprender la experiencia vivida de ${prob} en ${pop} desde sus significados subjetivos.`;
+      } else if(dQ === 'etnografico') {
+        fb.pregunta  = `¿Cómo se organiza y construye culturalmente ${prob} en ${pop}?`;
+        fb.objetivo  = `Describir y analizar los patrones culturales asociados a ${prob} en ${pop}.`;
+      } else if(dQ === 'teoria-fundamentada') {
+        fb.pregunta  = `¿Cómo se genera y construye la teoría sobre ${prob} en ${pop}?`;
+        fb.objetivo  = `Generar una teoría sustantiva sobre ${prob} a partir de los datos de ${pop}.`;
+      } else if(dQ === 'narrativo') {
+        fb.pregunta  = `¿Cuáles son las narrativas y experiencias de vida de ${pop} respecto a ${prob}?`;
+        fb.objetivo  = `Explorar y analizar las narrativas de ${pop} sobre ${prob} en su contexto.`;
+      } else if(dQ === 'investigacion-accion') {
+        fb.pregunta  = `¿Cómo puede transformarse ${prob} en ${pop} mediante participación colectiva?`;
+        fb.objetivo  = `Identificar estrategias participativas para comprender y transformar ${prob} en ${pop}.`;
+      } else {
+        fb.pregunta  = `¿Cómo se comprende ${prob} en ${pop}?`;
+        fb.objetivo  = `Explorar y comprender el fenómeno de ${prob} en ${pop}.`;
+      }
+      fb.hipotesis = `Se espera comprender cómo ${pop} experimenta y da sentido a ${prob} en su contexto particular.`;
     } else if(state.tecnica === 'correlacion') {
       fb.tema      = `Relación entre ${X} y ${Y} en ${pop}`;
       fb.pregunta  = `¿Existe relación entre ${X} y ${Y} en ${pop}?`;
@@ -1469,7 +1509,7 @@ async function downloadDoc() {
     if(state.variables.includes('otro')&&state.variablesOtro.trim())
       state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>vars.push(v));
     const hipLabel = state.enfoque==="Cuantitativo"?"HIPÓTESIS DE INVESTIGACIÓN"
-                   : state.enfoque==="Cualitativo" ?"HIPÓTESIS DE TRABAJO":"HIPÓTESIS";
+                   : state.enfoque==="Cualitativo" ?"SUPUESTOS DE INVESTIGACIÓN":"HIPÓTESIS";
 
     // ── Escapar XML ───────────────────────────────────────────────
     const xe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1535,7 +1575,7 @@ async function downloadDoc() {
           if(imageBytes && imageBytes.byteLength > 100){
             imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
             imageXml  = `
-              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
               <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
                 <w:r>
                   <w:drawing>
@@ -1570,7 +1610,7 @@ async function downloadDoc() {
           } else {
             // PNG falló pero tenemos SVG — incluir nota
             imageXml = `
-              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
               <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
                 <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
                   <w:t>Ver diagrama en la aplicación web: ${xe(tecnicaLabel)}. El diagrama no pudo incluirse como imagen en este dispositivo.</w:t></w:r></w:p>`;
@@ -1579,7 +1619,7 @@ async function downloadDoc() {
       } catch(e){
         console.warn('Diagram generation failed:', e.message);
         imageXml = `
-          ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+          ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
           <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
             <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
               <w:t>Ver diagrama en la aplicación web usando el botón "Ver modelo teórico". Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
