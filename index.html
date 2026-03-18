@@ -300,6 +300,22 @@ textarea{min-height:70px;resize:vertical}
 /* ── ERROR ───────────────────────────────────────────────────────── */
 .error{color:var(--red);font-size:13px;font-weight:500}
 
+/* ── REFERENCIAS ─────────────────────────────────────────────────── */
+.refs{
+  margin-top:20px;padding:18px;
+  background:#F8FAFF;border-radius:var(--radius-md);
+  border:1px solid var(--brand-mid);
+}
+.refs-title{font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px}
+.refs-item{
+  padding:9px 0;border-bottom:1px solid var(--brand-mid);
+  font-size:12px;line-height:1.75;color:var(--gray-700);
+}
+.refs-item:last-child{border-bottom:none;padding-bottom:0}
+.refs-item em{font-style:italic}
+.refs-note{font-size:11px;color:var(--gray-400);margin-top:3px;font-style:italic;display:block}
+
 /* ── TOUCH TARGETS BASE ──────────────────────────────────────────── */
 .badge,.badge-area,.chip,.btn,.btn-sm,.btn-generate{
   min-height:44px;touch-action:manipulation;
@@ -371,211 +387,209 @@ textarea{min-height:70px;resize:vertical}
   </div>
   <div class="footer">
     Creado por: <strong>Alan A. Vega Jacome</strong>
-    <span style="margin:0 8px;color:#ddd">·</span>
-    <span style="color:#aaa">Powered by </span><a href="https://claude.ai" target="_blank" style="color:#534AB7;text-decoration:none;font-weight:500">Claude</a>
   </div>
 </div>
 <div class="auto-save" id="auto-save">💾 Progreso guardado</div>
 
 <script>
-const STEPS = ["Area","Poblacion","Problema","Metodologia","Contexto","Resultado"];
+const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
 
 const AREAS = [
-  {id:"clinica", label:"Psicologia clinica y salud mental", icon:"🧠"},
-  {id:"educativa", label:"Psicologia educativa", icon:"📚"},
-  {id:"organizacional", label:"Psicologia organizacional", icon:"🏢"},
-  {id:"social", label:"Psicologia social y comunitaria", icon:"🤝"},
-  {id:"deporte", label:"Psicologia del deporte", icon:"🏃"},
-  {id:"consumidor", label:"Psicologia del consumidor", icon:"🛒"},
-  {id:"juridica", label:"Psicologia juridica/forense", icon:"⚖️"},
-  {id:"ambiental", label:"Psicologia ambiental", icon:"🌱"},
-  {id:"positiva", label:"Psicologia positiva", icon:"✨"},
-  {id:"pareja-familia", label:"Psicologia de pareja y familia", icon:"💑"},
-  {id:"salud", label:"Psicologia de la salud", icon:"🏥"},
-  {id:"desarrollo", label:"Psicologia del desarrollo", icon:"👶"},
-  {id:"neuropsicologia", label:"Neuropsicologia", icon:"🧠"},
-  {id:"adicciones", label:"Psicologia de las adicciones", icon:"🚭"},
-  {id:"digital", label:"Psicologia digital/cibernetica", icon:"📱"},
-  {id:"emergencias", label:"Psicologia de emergencias y desastres", icon:"🚨"},
-  {id:"transcultural", label:"Psicologia transcultural", icon:"🌍"},
+  {id:"clinica", label:"Psicología clínica y salud mental", icon:"🧠"},
+  {id:"educativa", label:"Psicología educativa", icon:"📚"},
+  {id:"organizacional", label:"Psicología organizacional", icon:"🏢"},
+  {id:"social", label:"Psicología social y comunitaria", icon:"🤝"},
+  {id:"deporte", label:"Psicología del deporte", icon:"🏃"},
+  {id:"consumidor", label:"Psicología del consumidor", icon:"🛒"},
+  {id:"juridica", label:"Psicología jurídica/forense", icon:"⚖️"},
+  {id:"ambiental", label:"Psicología ambiental", icon:"🌱"},
+  {id:"positiva", label:"Psicología positiva", icon:"✨"},
+  {id:"pareja-familia", label:"Psicología de pareja y familia", icon:"💑"},
+  {id:"salud", label:"Psicología de la salud", icon:"🏥"},
+  {id:"desarrollo", label:"Psicología del desarrollo", icon:"👶"},
+  {id:"neuropsicologia", label:"Neuropsicología", icon:"🧠"},
+  {id:"adicciones", label:"Psicología de las adicciones", icon:"🚭"},
+  {id:"digital", label:"Psicología digital/cibernética", icon:"📱"},
+  {id:"emergencias", label:"Psicología de emergencias y desastres", icon:"🚨"},
+  {id:"transcultural", label:"Psicología transcultural", icon:"🌍"},
   {id:"otro", label:"Otro", icon:"✏️"},
 ];
 
 const POBLACIONES = {
-  clinica:["Ninos y adolescentes","Adultos en general","Adultos mayores","Pacientes con trastornos especificos","Cuidadores / familias"],
-  educativa:["Ninos de educacion inicial","Estudiantes de primaria","Estudiantes de secundaria","Estudiantes universitarios","Docentes"],
-  organizacional:["Trabajadores de empresas privadas","Trabajadores del sector publico","Lideres / jefes","Emprendedores","Personal de salud"],
-  social:["Comunidades rurales","Comunidades urbanas marginales","Grupos vulnerables (migrantes, etc.)","Jovenes en riesgo","Poblacion general"],
+  clinica:["Niños y adolescentes","Adultos en general","Adultos mayores","Personas con diagnóstico de trastornos específicos","Cuidadores y familias"],
+  educativa:["Niños de educación inicial","Estudiantes de primaria","Estudiantes de secundaria","Estudiantes universitarios","Docentes"],
+  organizacional:["Trabajadores de empresas privadas","Trabajadores del sector público","Líderes y jefes","Emprendedores","Personal de salud"],
+  social:["Comunidades rurales","Comunidades urbanas periféricas","Personas en situación de vulnerabilidad (migrantes, personas en situación de calle)","Jóvenes en situación de riesgo","Población general"],
   deporte:["Deportistas amateurs","Deportistas profesionales","Entrenadores","Estudiantes deportistas","Equipos deportivos"],
-  consumidor:["Consumidores jovenes","Consumidores adultos","Compradores online","Clientes de retail","Usuarios de servicios"],
-  juridica:["Victimas de delitos","Testigos","Menores infractores","Reclusos","Personal policial o juridico"],
-  ambiental:["Residentes urbanos","Estudiantes","Trabajadores de oficina","Comunidades locales","Poblacion general"],
-  positiva:["Estudiantes universitarios","Adultos en general","Profesionales","Jovenes","Adultos mayores"],
+  consumidor:["Consumidores jóvenes","Consumidores adultos","Compradores online","Clientes de retail","Usuarios de servicios"],
+  juridica:["Personas víctimas de delitos","Testigos","Adolescentes en conflicto con la ley","Personas privadas de libertad","Personal policial o jurídico"],
+  ambiental:["Residentes urbanos","Estudiantes","Trabajadores de oficina","Comunidades locales","Población general"],
+  positiva:["Estudiantes universitarios","Adultos en general","Profesionales","Jóvenes","Adultos mayores"],
   "pareja-familia":["Parejas","Familias con hijos","Padres","Adolescentes en familias","Parejas en conflicto"],
-  salud:["Pacientes cronicos","Pacientes oncologicos","Personal de salud","Cuidadores","Pacientes ambulatorios"],
-  desarrollo:["Ninos (0-5 anos)","Ninos (6-11 anos)","Adolescentes","Adultos emergentes (18-25)","Adultos mayores"],
-  neuropsicologia:["Pacientes con dano cerebral","Adultos mayores","Ninos con dificultades","Pacientes neurologicos","Estudiantes"],
-  adicciones:["Personas en rehabilitacion","Consumidores activos","Familias de adictos","Jovenes en riesgo","Adultos con adicciones conductuales"],
-  digital:["Adolescentes usuarios de redes","Jovenes gamers","Usuarios de apps","Estudiantes","Trabajadores remotos"],
-  emergencias:["Sobrevivientes de desastres","Primeros respondientes","Victimas de violencia","Comunidades afectadas","Personal de emergencias"],
-  transcultural:["Migrantes","Estudiantes internacionales","Comunidades indigenas","Grupos etnicos","Familias multiculturales"],
+  salud:["Pacientes crónicos","Pacientes oncológicos","Personal de salud","Cuidadores","Pacientes ambulatorios"],
+  desarrollo:["Niños (0-5 años)","Niños (6-11 años)","Adolescentes","Adultos emergentes (18-25)","Adultos mayores"],
+  neuropsicologia:["Pacientes con daño cerebral","Adultos mayores","Niños con dificultades del neurodesarrollo","Pacientes neurológicos","Estudiantes"],
+  adicciones:["Personas en proceso de rehabilitación","Personas en consumo activo","Familias de personas con trastorno por uso de sustancias","Jóvenes en situación de riesgo","Adultos con adicciones conductuales"],
+  digital:["Adolescentes usuarios de redes","Jóvenes gamers","Usuarios de apps","Estudiantes","Trabajadores remotos"],
+  emergencias:["Sobrevivientes de desastres","Primeros respondientes","Personas víctimas de violencia","Comunidades afectadas","Personal de emergencias"],
+  transcultural:["Personas migrantes","Estudiantes internacionales","Comunidades indígenas","Grupos étnicos","Familias multiculturales"],
   otro:[],
 };
 
 const PROBLEMAS = {
-  clinica:["Ansiedad y estres","Depresion","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia"],
-  educativa:["Rendimiento academico","Motivacion y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Desercion escolar","Estilos de aprendizaje"],
-  organizacional:["Estres laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfaccion y compromiso laboral","Desempeno","Bienestar en el trabajo"],
-  social:["Exclusion e identidad social","Convivencia y cohesion comunitaria","Violencia de genero","Resiliencia comunitaria","Prejuicios y discriminacion","Participacion ciudadana"],
-  deporte:["Ansiedad competitiva","Motivacion deportiva","Cohesion de equipo","Lesiones y recuperacion","Rendimiento bajo presion","Burnout deportivo"],
-  consumidor:["Decision de compra","Lealtad a marcas","Publicidad y persuasion","Consumo impulsivo","Influencia de redes sociales","Satisfaccion del cliente"],
-  juridica:["Testimonio y memoria","Victimizacion","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilacion criminal"],
-  ambiental:["Conducta proambiental","Estres por hacinamiento","Apego al lugar","Contaminacion acustica","Espacios verdes y bienestar","Comportamiento sostenible"],
+  clinica:["Ansiedad y estrés","Depresión","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia"],
+  educativa:["Rendimiento académico","Motivación y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Deserción escolar","Estilos de aprendizaje"],
+  organizacional:["Estrés laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfacción y compromiso laboral","Desempeño","Bienestar en el trabajo"],
+  social:["Exclusión e identidad social","Convivencia y cohesión comunitaria","Violencia de género","Resiliencia comunitaria","Prejuicios y discriminación","Participación ciudadana"],
+  deporte:["Ansiedad competitiva","Motivación deportiva","Cohesión de equipo","Lesiones y recuperación","Rendimiento bajo presión","Burnout deportivo"],
+  consumidor:["Decisión de compra","Lealtad a marcas","Publicidad y persuasión","Consumo impulsivo","Influencia de redes sociales","Satisfacción del cliente"],
+  juridica:["Testimonio y memoria","Victimización","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilación criminal"],
+  ambiental:["Conducta proambiental","Estrés por hacinamiento","Apego al lugar","Contaminación acústica","Espacios verdes y bienestar","Comportamiento sostenible"],
   positiva:["Felicidad y bienestar","Gratitud","Optimismo","Fortalezas personales","Sentido de vida","Resiliencia"],
-  "pareja-familia":["Comunicacion de pareja","Conflicto familiar","Satisfaccion marital","Crianza positiva","Divorcio y separacion","Violencia domestica"],
-  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor cronico","Estilos de vida saludables","Ansiedad ante procedimientos"],
-  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transicion a la adultez","Envejecimiento exitoso","Desarrollo moral"],
-  neuropsicologia:["Funciones ejecutivas","Memoria","Atencion y concentracion","Rehabilitacion cognitiva","Deterioro cognitivo","Lenguaje"],
-  adicciones:["Dependencia a sustancias","Adiccion a videojuegos","Recaida","Craving","Comorbilidad psiquiatrica","Adiccion a redes sociales"],
-  digital:["Adiccion a redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Nomofobia (miedo a no tener celular)","Identidad digital","Relaciones online"],
-  emergencias:["Estres postraumatico","Resiliencia post-desastre","Primeros auxilios psicologicos","Duelo traumatico","Panico y evacuacion","Intervencion en crisis"],
-  transcultural:["Aculturacion","Choque cultural","Identidad etnica","Discriminacion percibida","Estres de aculturacion","Integracion social"],
+  "pareja-familia":["Comunicación de pareja","Conflicto familiar","Satisfacción marital","Crianza positiva","Divorcio y separación","Violencia intrafamiliar"],
+  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor crónico","Estilos de vida saludables","Ansiedad ante procedimientos"],
+  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transición a la adultez","Envejecimiento exitoso","Desarrollo moral"],
+  neuropsicologia:["Funciones ejecutivas","Memoria","Atención y concentración","Rehabilitación cognitiva","Deterioro cognitivo","Lenguaje"],
+  adicciones:["Trastorno por uso de sustancias","Trastorno por uso de videojuegos","Recaída","Craving","Comorbilidad psiquiátrica","Uso problemático de redes sociales"],
+  digital:["Uso problemático de redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Dependencia al smartphone","Identidad digital","Relaciones online"],
+  emergencias:["Estrés postraumático","Resiliencia post-desastre","Primeros auxilios psicológicos","Duelo traumático","Pánico y evacuación","Intervención en crisis"],
+  transcultural:["Aculturación","Choque cultural","Identidad étnica","Discriminación percibida","Estrés de aculturación","Integración social"],
   otro:[],
 };
 
 const VARIABLES = {
-  "Ansiedad y estres":["Ansiedad","Estres percibido","Regulacion emocional","Apoyo social","Estrategias de afrontamiento","Autoeficacia"],
-  "Depresion":["Depresion","Autoestima","Apoyo social","Ideacion suicida","Ansiedad","Bienestar subjetivo"],
-  "Autoestima y bienestar":["Autoestima","Bienestar psicologico","Satisfaccion con la vida","Autoeficacia","Resiliencia"],
+  "Ansiedad y estrés":["Ansiedad","Estrés percibido","Regulación emocional","Apoyo social","Estrategias de afrontamiento","Autoeficacia"],
+  "Depresión":["Depresión","Autoestima","Apoyo social","Ideación suicida","Ansiedad","Bienestar subjetivo"],
+  "Autoestima y bienestar":["Autoestima","Bienestar psicológico","Satisfacción con la vida","Autoeficacia","Resiliencia"],
   "Adicciones":["Dependencia a sustancias","Impulsividad","Autocontrol","Apoyo familiar","Ansiedad"],
-  "Trauma y violencia":["Estres postraumatico","Violencia familiar","Resiliencia","Apoyo social","Ansiedad"],
-  "Salud mental post-pandemia":["Ansiedad","Depresion","Estres percibido","Aislamiento social","Bienestar psicologico"],
-  "Rendimiento academico":["Rendimiento academico","Motivacion","Autoeficacia","Ansiedad ante examenes","Habitos de estudio"],
-  "Motivacion y aprendizaje":["Motivacion intrinseca","Motivacion extrinseca","Autoeficacia","Rendimiento academico","Engagement"],
+  "Trauma y violencia":["Estrés postraumático","Violencia familiar","Resiliencia","Apoyo social","Ansiedad"],
+  "Salud mental post-pandemia":["Ansiedad","Depresión","Estrés percibido","Aislamiento social","Bienestar psicológico"],
+  "Rendimiento académico":["Rendimiento académico","Motivación","Autoeficacia","Ansiedad ante exámenes","Hábitos de estudio"],
+  "Motivación y aprendizaje":["Motivación intrínseca","Motivación extrínseca","Autoeficacia","Rendimiento académico","Engagement"],
   "Acoso escolar (bullying)":["Bullying","Autoestima","Ansiedad","Clima escolar","Apoyo docente"],
-  "Habilidades socioemocionales":["Inteligencia emocional","Empatia","Habilidades sociales","Autoregulacion","Bienestar"],
-  "Desercion escolar":["Desercion escolar","Motivacion","Apoyo familiar","Rendimiento academico","Estres"],
-  "Estilos de aprendizaje":["Estilos de aprendizaje","Rendimiento academico","Motivacion","Estrategias cognitivas"],
-  "Estres laboral y burnout":["Burnout","Estres laboral","Satisfaccion laboral","Autoeficacia","Apoyo organizacional"],
-  "Clima y cultura organizacional":["Clima organizacional","Satisfaccion laboral","Compromiso organizacional","Liderazgo"],
-  "Liderazgo":["Estilo de liderazgo","Clima organizacional","Desempeno laboral","Satisfaccion laboral","Motivacion"],
-  "Satisfaccion y compromiso laboral":["Satisfaccion laboral","Compromiso organizacional","Motivacion","Bienestar laboral"],
-  "Desempeno":["Desempeno laboral","Motivacion","Autoeficacia","Liderazgo","Estres laboral"],
-  "Bienestar en el trabajo":["Bienestar laboral","Estres","Satisfaccion laboral","Apoyo social","Autonomia"],
-  "Exclusion e identidad social":["Identidad social","Exclusion social","Autoestima","Prejuicio","Bienestar"],
-  "Convivencia y cohesion comunitaria":["Cohesion social","Confianza interpersonal","Participacion comunitaria","Bienestar"],
-  "Violencia de genero":["Violencia de genero","Autoestima","Apoyo social","Estres postraumatico","Empoderamiento"],
-  "Resiliencia comunitaria":["Resiliencia","Apoyo social","Cohesion comunitaria","Autoeficacia colectiva"],
-  "Prejuicios y discriminacion":["Prejuicio","Discriminacion percibida","Identidad social","Bienestar psicologico"],
-  "Participacion ciudadana":["Participacion ciudadana","Identidad comunitaria","Autoeficacia","Cohesion social"],
-  "Ansiedad competitiva":["Ansiedad competitiva","Autoconfianza","Estres precompetitivo","Rendimiento deportivo","Autoeficacia"],
-  "Motivacion deportiva":["Motivacion intrinseca","Motivacion extrinseca","Compromiso deportivo","Metas de logro","Pasion"],
-  "Cohesion de equipo":["Cohesion grupal","Comunicacion","Liderazgo deportivo","Confianza","Rendimiento colectivo"],
-  "Lesiones y recuperacion":["Bienestar psicologico","Adherencia a rehabilitacion","Miedo a re-lesion","Autoeficacia","Apoyo social"],
-  "Rendimiento bajo presion":["Ansiedad","Autoeficacia","Concentracion","Estres","Rendimiento deportivo"],
-  "Burnout deportivo":["Burnout","Agotamiento","Despersonalizacion","Motivacion","Satisfaccion deportiva"],
-  "Decision de compra":["Intencion de compra","Actitud hacia marca","Precio percibido","Confianza","Influencia social"],
-  "Lealtad a marcas":["Lealtad","Satisfaccion","Confianza en marca","Valor percibido","Engagement"],
-  "Publicidad y persuasion":["Actitud hacia publicidad","Credibilidad","Persuasion","Atencion","Intencion de compra"],
+  "Habilidades socioemocionales":["Inteligencia emocional","Empatía","Habilidades sociales","Autorregulación","Bienestar"],
+  "Deserción escolar":["Deserción escolar","Motivación","Apoyo familiar","Rendimiento académico","Estrés"],
+  "Estilos de aprendizaje":["Estilos de aprendizaje","Rendimiento académico","Motivación","Estrategias cognitivas"],
+  "Estrés laboral y burnout":["Burnout","Estrés laboral","Satisfacción laboral","Autoeficacia","Apoyo organizacional"],
+  "Clima y cultura organizacional":["Clima organizacional","Satisfacción laboral","Compromiso organizacional","Liderazgo"],
+  "Liderazgo":["Estilo de liderazgo","Clima organizacional","Desempeño laboral","Satisfacción laboral","Motivación"],
+  "Satisfacción y compromiso laboral":["Satisfacción laboral","Compromiso organizacional","Motivación","Bienestar laboral"],
+  "Desempeño":["Desempeño laboral","Motivación","Autoeficacia","Liderazgo","Estrés laboral"],
+  "Bienestar en el trabajo":["Bienestar laboral","Estrés","Satisfacción laboral","Apoyo social","Autonomía"],
+  "Exclusión e identidad social":["Identidad social","Exclusión social","Autoestima","Prejuicio","Bienestar"],
+  "Convivencia y cohesión comunitaria":["Cohesión social","Confianza interpersonal","Participación comunitaria","Bienestar"],
+  "Violencia de género":["Violencia de género","Autoestima","Apoyo social","Estrés postraumático","Empoderamiento"],
+  "Resiliencia comunitaria":["Resiliencia","Apoyo social","Cohesión comunitaria","Autoeficacia colectiva"],
+  "Prejuicios y discriminación":["Prejuicio","Discriminación percibida","Identidad social","Bienestar psicológico"],
+  "Participación ciudadana":["Participación ciudadana","Identidad comunitaria","Autoeficacia","Cohesión social"],
+  "Ansiedad competitiva":["Ansiedad competitiva","Autoconfianza","Estrés precompetitivo","Rendimiento deportivo","Autoeficacia"],
+  "Motivación deportiva":["Motivación intrínseca","Motivación extrínseca","Compromiso deportivo","Metas de logro","Pasión"],
+  "Cohesión de equipo":["Cohesión grupal","Comunicación","Liderazgo deportivo","Confianza","Rendimiento colectivo"],
+  "Lesiones y recuperación":["Bienestar psicológico","Adherencia a rehabilitación","Miedo a re-lesión","Autoeficacia","Apoyo social"],
+  "Rendimiento bajo presión":["Ansiedad","Autoeficacia","Concentración","Estrés","Rendimiento deportivo"],
+  "Burnout deportivo":["Burnout","Agotamiento","Despersonalización","Motivación","Satisfacción deportiva"],
+  "Decisión de compra":["Intención de compra","Actitud hacia marca","Precio percibido","Confianza","Influencia social"],
+  "Lealtad a marcas":["Lealtad","Satisfacción","Confianza en marca","Valor percibido","Engagement"],
+  "Publicidad y persuasión":["Actitud hacia publicidad","Credibilidad","Persuasión","Atención","Intención de compra"],
   "Consumo impulsivo":["Impulsividad","Autocontrol","Emociones","Compra impulsiva","Arrepentimiento"],
-  "Influencia de redes sociales":["Influencia social","Confianza en influencers","Intencion de compra","Engagement","Credibilidad"],
-  "Satisfaccion del cliente":["Satisfaccion","Expectativas","Calidad percibida","Lealtad","Quejas"],
-  "Testimonio y memoria":["Memoria de testigos","Sugestionabilidad","Exactitud","Confianza en memoria","Estres"],
-  "Victimizacion":["Sintomas postraumaticos","Revictimizacion","Apoyo social","Autoestima","Miedo al delito"],
-  "Reincidencia delictiva":["Conducta antisocial","Empatia","Impulsividad","Autocontrol","Apoyo social"],
+  "Influencia de redes sociales":["Influencia social","Confianza en influencers","Intención de compra","Engagement","Credibilidad"],
+  "Satisfacción del cliente":["Satisfacción","Expectativas","Calidad percibida","Lealtad","Quejas"],
+  "Testimonio y memoria":["Memoria de testigos","Sugestionabilidad","Exactitud","Confianza en memoria","Estrés"],
+  "Victimización":["Síntomas postraumáticos","Revictimización","Apoyo social","Autoestima","Miedo al delito"],
+  "Reincidencia delictiva":["Conducta antisocial","Empatía","Impulsividad","Autocontrol","Apoyo social"],
   "Credibilidad del testigo":["Credibilidad","Consistencia","Confianza","Exactitud","Lenguaje no verbal"],
-  "Violencia intrafamiliar":["Violencia","Autoestima","Depresion","Apoyo social","Estres postraumatico"],
-  "Perfilacion criminal":["Rasgos de personalidad","Conducta criminal","Motivacion","Psicopatia","Impulsividad"],
+  "Violencia intrafamiliar":["Violencia de pareja íntima","Autoestima","Depresión","Apoyo social","Estrés postraumático"],
+  "Perfilación criminal":["Rasgos de personalidad","Conducta criminal","Motivación","Psicopatía","Impulsividad"],
   "Conducta proambiental":["Conducta proambiental","Conciencia ambiental","Normas sociales","Valores","Autoeficacia"],
-  "Estres por hacinamiento":["Estres","Privacidad","Hacinamiento percibido","Bienestar","Irritabilidad"],
-  "Apego al lugar":["Apego","Identidad de lugar","Satisfaccion residencial","Bienestar","Arraigo"],
-  "Contaminacion acustica":["Estres","Molestia","Calidad de vida","Salud mental","Irritabilidad"],
-  "Espacios verdes y bienestar":["Bienestar","Estres","Contacto con naturaleza","Restauracion atencional","Satisfaccion"],
+  "Estrés por hacinamiento":["Estrés","Privacidad","Hacinamiento percibido","Bienestar","Irritabilidad"],
+  "Apego al lugar":["Apego","Identidad de lugar","Satisfacción residencial","Bienestar","Arraigo"],
+  "Contaminación acústica":["Estrés","Molestia","Calidad de vida","Salud mental","Irritabilidad"],
+  "Espacios verdes y bienestar":["Bienestar","Estrés","Contacto con naturaleza","Restauración atencional","Satisfacción"],
   "Comportamiento sostenible":["Conducta sostenible","Actitudes ambientales","Valores","Conocimiento ambiental","Normas"],
-  "Felicidad y bienestar":["Felicidad","Bienestar subjetivo","Satisfaccion con la vida","Afecto positivo","Sentido de vida"],
-  "Gratitud":["Gratitud","Bienestar","Afecto positivo","Satisfaccion","Optimismo"],
+  "Felicidad y bienestar":["Felicidad","Bienestar subjetivo","Satisfacción con la vida","Afecto positivo","Sentido de vida"],
+  "Gratitud":["Gratitud","Bienestar","Afecto positivo","Satisfacción","Optimismo"],
   "Optimismo":["Optimismo","Bienestar","Resiliencia","Esperanza","Afrontamiento"],
-  "Fortalezas personales":["Fortalezas del caracter","Bienestar","Satisfaccion","Autoeficacia","Virtudes"],
-  "Sentido de vida":["Sentido de vida","Proposito","Bienestar","Satisfaccion","Significado"],
+  "Fortalezas personales":["Fortalezas del carácter","Bienestar","Satisfacción","Autoeficacia","Virtudes"],
+  "Sentido de vida":["Sentido de vida","Propósito","Bienestar","Satisfacción","Significado"],
   "Resiliencia":["Resiliencia","Afrontamiento","Bienestar","Autoeficacia","Apoyo social"],
-  "Comunicacion de pareja":["Comunicacion","Satisfaccion de pareja","Conflicto","Empatia","Asertividad"],
-  "Conflicto familiar":["Conflicto","Cohesion familiar","Comunicacion","Estres","Funcionamiento familiar"],
-  "Satisfaccion marital":["Satisfaccion marital","Compromiso","Comunicacion","Intimidad","Conflicto"],
+  "Comunicación de pareja":["Comunicación","Satisfacción de pareja","Conflicto","Empatía","Asertividad"],
+  "Conflicto familiar":["Conflicto","Cohesión familiar","Comunicación","Estrés","Funcionamiento familiar"],
+  "Satisfacción marital":["Satisfacción marital","Compromiso","Comunicación","Intimidad","Conflicto"],
   "Crianza positiva":["Estilo de crianza","Autoestima infantil","Disciplina","Calidez parental","Conducta infantil"],
-  "Divorcio y separacion":["Ajuste al divorcio","Bienestar","Estres","Apoyo social","Coparentalidad"],
-  "Violencia domestica":["Violencia de pareja","Autoestima","Depresion","Estres postraumatico","Apoyo social"],
+  "Divorcio y separación":["Ajuste al divorcio","Bienestar","Estrés","Apoyo social","Coparentalidad"],
+  "Violencia intrafamiliar":["Violencia de pareja íntima","Autoestima","Depresión","Estrés postraumático","Apoyo social"],
   "Adherencia al tratamiento":["Adherencia","Autoeficacia","Creencias de salud","Apoyo social","Conocimiento de enfermedad"],
-  "Afrontamiento de enfermedad":["Estrategias de afrontamiento","Bienestar","Ansiedad","Depresion","Apoyo social"],
-  "Calidad de vida":["Calidad de vida","Bienestar","Funcionamiento fisico","Salud mental","Satisfaccion"],
-  "Dolor cronico":["Dolor percibido","Catastrofizacion","Depresion","Ansiedad","Funcionalidad"],
-  "Estilos de vida saludables":["Ejercicio","Alimentacion","Autoeficacia","Motivacion","Habitos de salud"],
+  "Afrontamiento de enfermedad":["Estrategias de afrontamiento","Bienestar","Ansiedad","Depresión","Apoyo social"],
+  "Calidad de vida":["Calidad de vida","Bienestar","Funcionamiento físico","Salud mental","Satisfacción"],
+  "Dolor crónico":["Dolor percibido","Catastrofización","Depresión","Ansiedad","Funcionalidad"],
+  "Estilos de vida saludables":["Ejercicio","Alimentación","Autoeficacia","Motivación","Hábitos de salud"],
   "Ansiedad ante procedimientos":["Ansiedad","Miedo","Afrontamiento","Conocimiento","Apoyo social"],
-  "Apego temprano":["Apego","Sensibilidad materna","Seguridad","Interaccion madre-hijo","Desarrollo socioemocional"],
-  "Desarrollo cognitivo":["Funciones ejecutivas","Memoria","Atencion","Lenguaje","Inteligencia"],
-  "Identidad en adolescencia":["Identidad","Autoestima","Exploracion","Compromiso","Bienestar"],
-  "Transicion a la adultez":["Autonomia","Identidad","Bienestar","Exploracion","Inestabilidad"],
-  "Envejecimiento exitoso":["Bienestar","Funcionamiento cognitivo","Actividad","Apoyo social","Satisfaccion"],
-  "Desarrollo moral":["Razonamiento moral","Empatia","Conducta prosocial","Valores","Justicia"],
-  "Funciones ejecutivas":["Funciones ejecutivas","Memoria de trabajo","Inhibicion","Flexibilidad cognitiva","Planificacion"],
-  "Memoria":["Memoria","Atencion","Aprendizaje","Funciones ejecutivas","Metamemoria"],
-  "Atencion y concentracion":["Atencion","Concentracion","Funciones ejecutivas","Rendimiento","Distractibilidad"],
-  "Rehabilitacion cognitiva":["Funciones cognitivas","Mejora","Transferencia","Motivacion","Autoeficacia"],
-  "Deterioro cognitivo":["Deterioro","Memoria","Funciones ejecutivas","Actividades diarias","Depresion"],
-  "Lenguaje":["Lenguaje","Comprension","Expresion","Funciones ejecutivas","Memoria"],
-  "Dependencia a sustancias":["Dependencia","Craving","Recaida","Impulsividad","Autocontrol"],
-  "Adiccion a videojuegos":["Adiccion","Uso problematico","Autocontrol","Bienestar","Rendimiento academico"],
-  "Recaida":["Recaida","Craving","Autoeficacia","Apoyo social","Estres"],
-  "Craving":["Craving","Ansiedad","Autocontrol","Estres","Gatillos"],
-  "Comorbilidad psiquiatrica":["Depresion","Ansiedad","Adiccion","Impulsividad","Bienestar"],
-  "Adiccion a redes sociales":["Adiccion","Uso problematico","Tiempo de uso","Autoestima","Ansiedad social"],
-  "Cyberbullying":["Victimizacion online","Autoestima","Depresion","Ansiedad","Apoyo social"],
+  "Apego temprano":["Apego","Sensibilidad materna","Seguridad","Interacción madre-hijo/a","Desarrollo socioemocional"],
+  "Desarrollo cognitivo":["Funciones ejecutivas","Memoria","Atención","Lenguaje","Inteligencia"],
+  "Identidad en adolescencia":["Identidad","Autoestima","Exploración","Compromiso","Bienestar"],
+  "Transición a la adultez":["Autonomía","Identidad","Bienestar","Exploración","Inestabilidad"],
+  "Envejecimiento exitoso":["Bienestar","Funcionamiento cognitivo","Actividad","Apoyo social","Satisfacción"],
+  "Desarrollo moral":["Razonamiento moral","Empatía","Conducta prosocial","Valores","Justicia"],
+  "Funciones ejecutivas":["Funciones ejecutivas","Memoria de trabajo","Inhibición","Flexibilidad cognitiva","Planificación"],
+  "Memoria":["Memoria","Atención","Aprendizaje","Funciones ejecutivas","Metamemoria"],
+  "Atención y concentración":["Atención","Concentración","Funciones ejecutivas","Rendimiento","Distractibilidad"],
+  "Rehabilitación cognitiva":["Funciones cognitivas","Mejora","Transferencia","Motivación","Autoeficacia"],
+  "Deterioro cognitivo":["Deterioro","Memoria","Funciones ejecutivas","Actividades diarias","Depresión"],
+  "Lenguaje":["Lenguaje","Comprensión","Expresión","Funciones ejecutivas","Memoria"],
+  "Trastorno por uso de sustancias":["Dependencia","Craving","Recaída","Impulsividad","Autocontrol"],
+  "Trastorno por uso de videojuegos":["Uso problemático","Autocontrol","Bienestar","Rendimiento académico","Motivación"],
+  "Recaída":["Recaída","Craving","Autoeficacia","Apoyo social","Estrés"],
+  "Craving":["Craving","Ansiedad","Autocontrol","Estrés","Gatillos ambientales"],
+  "Comorbilidad psiquiátrica":["Depresión","Ansiedad","Trastorno por uso de sustancias","Impulsividad","Bienestar"],
+  "Uso problemático de redes sociales":["Uso problemático","Tiempo de uso","Autoestima","Ansiedad social","Autocontrol"],
+  "Cyberbullying":["Victimización online","Autoestima","Depresión","Ansiedad","Apoyo social"],
   "FOMO (miedo a perderse algo)":["FOMO","Ansiedad","Uso de redes","Bienestar","Autoestima"],
-  "Nomofobia (miedo a no tener celular)":["Nomofobia","Ansiedad","Dependencia","Autocontrol","Estres"],
-  "Identidad digital":["Identidad online","Autopresentacion","Autoestima","Comparacion social","Autenticidad"],
-  "Relaciones online":["Calidad de relaciones","Intimidad","Comunicacion","Satisfaccion","Apoyo social"],
-  "Estres postraumatico":["TEPT","Ansiedad","Evitacion","Reexperimentacion","Hiperactivacion"],
-  "Resiliencia post-desastre":["Resiliencia","Afrontamiento","Crecimiento postraumatico","Apoyo social","Bienestar"],
-  "Primeros auxilios psicologicos":["Intervencion","Efectividad","Estres agudo","Apoyo","Estabilizacion"],
-  "Duelo traumatico":["Duelo","Depresion","Ansiedad","Aceptacion","Apoyo social"],
-  "Panico y evacuacion":["Panico","Conducta de evacuacion","Miedo","Preparacion","Percepcion de riesgo"],
-  "Intervencion en crisis":["Efectividad","Estabilizacion","Apoyo","Afrontamiento","Sintomas"],
-  "Aculturacion":["Aculturacion","Estres de aculturacion","Identidad etnica","Adaptacion","Bienestar"],
-  "Choque cultural":["Choque cultural","Adaptacion","Ansiedad","Apoyo social","Ajuste"],
-  "Identidad etnica":["Identidad etnica","Autoestima","Pertenencia","Discriminacion","Bienestar"],
-  "Discriminacion percibida":["Discriminacion percibida","Autoestima","Bienestar","Estres","Salud mental"],
-  "Estres de aculturacion":["Estres","Aculturacion","Apoyo social","Bienestar","Adaptacion"],
-  "Integracion social":["Integracion","Apoyo social","Participacion","Bienestar","Sentido de pertenencia"],
+  "Dependencia al smartphone":["Uso problemático del smartphone","Ansiedad","Autocontrol","Estrés","Bienestar"],
+  "Identidad digital":["Identidad online","Autopresentación","Autoestima","Comparación social","Autenticidad"],
+  "Relaciones online":["Calidad de relaciones","Intimidad","Comunicación","Satisfacción","Apoyo social"],
+  "Estrés postraumático":["TEPT","Ansiedad","Evitación","Reexperimentación","Hiperactivación"],
+  "Resiliencia post-desastre":["Resiliencia","Afrontamiento","Crecimiento postraumático","Apoyo social","Bienestar"],
+  "Primeros auxilios psicológicos":["Intervención","Efectividad","Estrés agudo","Apoyo","Estabilización"],
+  "Duelo traumático":["Duelo","Depresión","Ansiedad","Aceptación","Apoyo social"],
+  "Pánico y evacuación":["Pánico","Conducta de evacuación","Miedo","Preparación","Percepción de riesgo"],
+  "Intervención en crisis":["Efectividad","Estabilización","Apoyo","Afrontamiento","Síntomas"],
+  "Aculturación":["Aculturación","Estrés de aculturación","Identidad étnica","Adaptación","Bienestar"],
+  "Choque cultural":["Choque cultural","Adaptación","Ansiedad","Apoyo social","Ajuste"],
+  "Identidad étnica":["Identidad étnica","Autoestima","Pertenencia","Discriminación","Bienestar"],
+  "Discriminación percibida":["Discriminación percibida","Autoestima","Bienestar","Estrés","Salud mental"],
+  "Estrés de aculturación":["Estrés","Aculturación","Apoyo social","Bienestar","Adaptación"],
+  "Integración social":["Integración","Apoyo social","Participación","Bienestar","Sentido de pertenencia"],
 };
 
 const NIVELES = [
-  {id:"exploratorio", label:"Exploratorio", desc:"Tema poco conocido, primeras aproximaciones", hint:"Recomendado cuando hay poca investigación previa"},
-  {id:"descriptivo", label:"Descriptivo", desc:"Caracterizar y describir el fenómeno", hint:"Recomendado con 1 variable o para caracterizar"},
-  {id:"correlacional", label:"Correlacional", desc:"Analizar relaciones entre 2 o más variables", hint:"Recomendado con 2-3 variables"},
-  {id:"explicativo", label:"Explicativo / Causal", desc:"Explicar causas y efectos del fenómeno", hint:"Recomendado con 3+ variables y relaciones de causa"},
+  {id:"exploratorio", label:"Exploratorio", desc:"Tema poco conocido, primeras aproximaciones al fenómeno", hint:"Recomendado cuando hay escasa investigación previa. Genera hipótesis pero no las prueba (Hernández & Mendoza, 2018)"},
+  {id:"descriptivo", label:"Descriptivo", desc:"Caracterizar y describir el fenómeno o la población", hint:"Recomendado con 1 variable o para caracterizar una realidad. Estrategia descriptiva / selectiva (Ato et al., 2013)"},
+  {id:"correlacional", label:"Correlacional / Predictivo", desc:"Analizar relaciones o capacidad predictiva entre 2 o más variables", hint:"Recomendado con 2-3 variables. Equivale al 'diseño predictivo transversal' de Ato et al. (2013)"},
+  {id:"explicativo", label:"Explicativo / Causal", desc:"Explicar mecanismos, causas y efectos del fenómeno", hint:"Recomendado con 3+ variables. Corresponde a 'estudios explicativos' con DVO o DVL (Ato et al., 2013)"},
 ];
 
 // DISEÑOS: solo estrategias de recolección de datos
 const DISENOS = {
   cuantitativo: [
-    {id:"experimental",            label:"Experimental",               desc:"Manipulas variables con grupo control y asignación aleatoria", hint:"⭐ Máximo control causal · Requiere laboratorio o intervención"},
-    {id:"cuasiexperimental",       label:"Cuasi-experimental",         desc:"Manipulas variables sin asignación aleatoria", hint:"Grupos preexistentes · Control moderado"},
-    {id:"no-experimental-transversal",  label:"No experimental transversal",  desc:"Observas variables en un único momento del tiempo", hint:"⭐ Más común en pregrado · Sin manipulación"},
-    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas las mismas variables en distintos momentos", hint:"Seguimiento temporal · Panel o tendencia"},
+    {id:"experimental",            label:"Experimental",               desc:"Manipulas variables con grupo control y asignación aleatoria", hint:"⭐ Máximo control causal · Estrategia manipulativa (Ato et al., 2013) · Requiere laboratorio o intervención"},
+    {id:"cuasiexperimental",       label:"Cuasi-experimental",         desc:"Manipulas variables sin asignación aleatoria (grupos preexistentes)", hint:"Estrategia manipulativa sin aleatorización (Ato et al., 2013) · Control moderado · Nivel explicativo"},
+    {id:"no-experimental-transversal",  label:"No experimental transversal",  desc:"Observas variables en un único momento del tiempo, sin manipulación", hint:"⭐ Más común en pregrado · Estrategia asociativa/descriptiva (Ato et al., 2013)"},
+    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas las mismas variables en distintos momentos temporales", hint:"Seguimiento temporal · Panel o tendencia · DLEP / DPL (Ato et al., 2013)"},
   ],
   cualitativo: [
-    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados", hint:"⭐ Ideal para comprender vivencias profundas"},
-    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en contexto", hint:"Requiere inmersión prolongada"},
-    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos"},
-    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos", hint:"⭐ Muy común en pregrado, flexible"},
-    {id:"narrativo", label:"Narrativo", desc:"Historias de vida y relatos biográficos", hint:"Ideal para trayectorias individuales"},
-    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para cambio", hint:"Combina investigación con intervención"},
+    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados subjetivos de los participantes", hint:"⭐ Ideal para comprender vivencias profundas · IPA o descriptivo (Creswell, 2013)"},
+    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en su contexto natural", hint:"Requiere inmersión prolongada · Descripción densa (Geertz)"},
+    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos · Strauss & Corbin (1998)"},
+    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos en su contexto", hint:"⭐ Muy común en pregrado · Yin (2018) · Flexible y riguroso"},
+    {id:"narrativo", label:"Narrativo", desc:"Historias de vida y relatos biográficos de los participantes", hint:"Ideal para trayectorias individuales · Creswell (2013)"},
+    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para generar cambio", hint:"Combina investigación con intervención participativa"},
   ],
   mixto: [
-    {id:"secuencial-explicativo", label:"Secuencial Explicativo (CUAN → cual)", desc:"Primero cuantitativo, luego cualitativo para profundizar", hint:"⭐ Usas datos cualitativos para explicar resultados cuantitativos"},
-    {id:"secuencial-exploratorio", label:"Secuencial Exploratorio (CUAL → cuan)", desc:"Primero cualitativo, luego cuantitativo para generalizar", hint:"⭐ Exploras primero, luego mides en muestra mayor"},
-    {id:"convergente-paralelo", label:"Convergente Paralelo (CUAN + CUAL)", desc:"Recolectas ambos tipos de datos simultáneamente", hint:"Comparas y triangulas resultados"},
-    {id:"transformativo", label:"Transformativo", desc:"Enfoque en justicia social y cambio", hint:"Perspectiva crítica, emancipadora"},
-    {id:"anidado", label:"Anidado o Incrustado", desc:"Un enfoque dentro de otro (secundario)", hint:"Un método apoya al otro (ej: entrevistas en experimento)"},
+    {id:"secuencial-explicativo", label:"Secuencial Explicativo (CUAN → cual)", desc:"Primero cuantitativo, luego cualitativo para profundizar los resultados", hint:"⭐ Los datos cualitativos explican los resultados cuantitativos (Creswell & Plano Clark, 2017)"},
+    {id:"secuencial-exploratorio", label:"Secuencial Exploratorio (CUAL → cuan)", desc:"Primero cualitativo para explorar, luego cuantitativo para generalizar", hint:"⭐ Exploras primero, luego mides en muestra mayor (Creswell & Plano Clark, 2017)"},
+    {id:"convergente-paralelo", label:"Convergente Paralelo (CUAN + CUAL)", desc:"Recolectas ambos tipos de datos simultáneamente y triangulas", hint:"Comparas y triangulas resultados al final del proceso"},
+    {id:"transformativo", label:"Transformativo", desc:"Enfoque en justicia social y cambio estructural", hint:"Perspectiva crítica y emancipadora · Marco teórico guía ambos métodos"},
+    {id:"anidado", label:"Anidado o Incrustado", desc:"Un enfoque principal que contiene al otro como componente secundario", hint:"Un método apoya al otro (ej: entrevistas dentro de un experimento)"},
   ]
 };
 
@@ -587,23 +601,23 @@ const DISENOS = {
 
 const TECNICAS_POR_NIVEL = {
   correlacional: [
-    {id:"correlacion",       label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"r o ρ · Pregrado"},
-    {id:"regresion-simple",  label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X",                  hint:"📊 Diagrama · Pregrado · OLS"},
+    {id:"correlacion",       label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"r o ρ · Diseño correlacional simple — DCS (Ato et al., 2013) · Pregrado"},
+    {id:"regresion-simple",  label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X",                  hint:"📊 Diagrama · Diseño predictivo transversal — DPT (Ato et al., 2013) · Pregrado · OLS"},
   ],
   explicativo_transversal: [
-    {id:"regresion-multiple", label:"Regresión múltiple",   desc:"Predice Y con 2 o más predictores simultáneamente",           hint:"📊 Diagrama · Pregrado · OLS / Hayes"},
-    {id:"mediacion",          label:"Mediación simple",     desc:"M explica el mecanismo por el que X afecta a Y",              hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 4"},
-    {id:"moderacion",         label:"Moderación simple",    desc:"W cambia la fuerza o dirección del efecto X → Y",             hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 1"},
-    {id:"mediacion-moderada", label:"Mediación moderada",   desc:"W modera la trayectoria de mediación X → M → Y",             hint:"📊 Diagrama · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
-    {id:"path-analysis",      label:"Path Analysis",        desc:"Red causal entre variables observadas, sin latentes",         hint:"📊 Diagrama · Posgrado · AMOS, lavaan, Mplus"},
-    {id:"sem-mediacion",      label:"SEM — Mediación con latentes",   desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama · Posgrado · AMOS, Mplus"},
-    {id:"sem-moderacion",     label:"SEM — Moderación con latentes",  desc:"Interacción entre variables latentes",                hint:"📊 Diagrama · Posgrado · Mplus (LMS)"},
-    {id:"sem-completo",       label:"SEM — Modelo completo",          desc:"CFA + modelo estructural con múltiples trayectorias", hint:"📊 Diagrama · Posgrado · AMOS, Mplus, lavaan"},
+    {id:"regresion-multiple", label:"Regresión múltiple",   desc:"Predice Y con 2 o más predictores simultáneamente",           hint:"📊 Diagrama · DPT — Ato et al. (2013) · Pregrado · OLS / Hayes"},
+    {id:"mediacion",          label:"Mediación simple",     desc:"M explica el mecanismo por el que X afecta a Y",              hint:"📊 Diagrama · DVO — variables observables (Ato et al., 2013) · Pregrado · Hayes PROCESS Modelo 4"},
+    {id:"moderacion",         label:"Moderación simple",    desc:"W cambia la fuerza o dirección del efecto X → Y",             hint:"📊 Diagrama · DVO — variables observables (Ato et al., 2013) · Pregrado · Hayes PROCESS Modelo 1"},
+    {id:"mediacion-moderada", label:"Mediación moderada",   desc:"W modera la trayectoria de mediación X → M → Y",             hint:"📊 Diagrama · DVO — variables observables (Ato et al., 2013) · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
+    {id:"path-analysis",      label:"Path Analysis",        desc:"Red causal entre variables observadas sin variables latentes",         hint:"📊 Diagrama · DVO — diseño explicativo con variables observables (Ato et al., 2013) · Posgrado · AMOS, lavaan, Mplus"},
+    {id:"sem-mediacion",      label:"SEM — Mediación con latentes",   desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama · DVL — diseño explicativo con variables latentes (Ato et al., 2013) · Posgrado · AMOS, Mplus"},
+    {id:"sem-moderacion",     label:"SEM — Moderación con latentes",  desc:"Interacción entre variables latentes ξ₁×ξ₂",                hint:"📊 Diagrama · DVL — diseño explicativo con variables latentes (Ato et al., 2013) · Posgrado · Mplus (LMS)"},
+    {id:"sem-completo",       label:"SEM — Modelo completo",          desc:"CFA + modelo estructural con múltiples trayectorias entre latentes", hint:"📊 Diagrama · DVL — diseño explicativo con variables latentes (Ato et al., 2013) · Posgrado · AMOS, Mplus, lavaan"},
   ],
   explicativo_longitudinal: [
-    {id:"regresion-multiple", label:"Regresión múltiple longitudinal", desc:"Predice Y en distintos momentos con múltiples predictores", hint:"📊 Diagrama · Pregrado avanzado"},
-    {id:"path-analysis",      label:"Path Analysis longitudinal",      desc:"Trayectorias causales medidas en distintos tiempos",        hint:"📊 Diagrama · Posgrado · AMOS, lavaan"},
-    {id:"sem-completo",       label:"SEM longitudinal",                desc:"Modelo estructural con mediciones repetidas (panel)",       hint:"📊 Diagrama · Posgrado · Mplus, lavaan"},
+    {id:"regresion-multiple", label:"Regresión múltiple longitudinal", desc:"Predice Y en distintos momentos con múltiples predictores", hint:"📊 Diagrama · Diseño predictivo longitudinal — DPL (Ato et al., 2013) · Pregrado avanzado"},
+    {id:"path-analysis",      label:"Path Analysis longitudinal",      desc:"Trayectorias causales entre variables observadas en distintos tiempos",        hint:"📊 Diagrama · DVO longitudinal (Ato et al., 2013) · Posgrado · AMOS, lavaan"},
+    {id:"sem-completo",       label:"SEM longitudinal",                desc:"Modelo estructural con mediciones repetidas (panel) y variables latentes",       hint:"📊 Diagrama · DLEP — diseño explicativo longitudinal en panel (Ato et al., 2013) · Posgrado · Mplus, lavaan"},
   ]
 };
 
@@ -611,7 +625,11 @@ const TECNICAS_POR_NIVEL = {
 function getTecnicasDisponibles(nivel, diseno) {
   // Experimental y cuasi-experimental: ANOVA/t-test, fuera del alcance
   if(diseno === 'experimental' || diseno === 'cuasiexperimental') return null;
-  if(nivel === 'correlacional') return TECNICAS_POR_NIVEL.correlacional;
+  if(nivel === 'correlacional') {
+    // Correlacional + longitudinal: las técnicas bivariadas estándar no son las apropiadas
+    if(diseno === 'no-experimental-longitudinal') return 'correlacional_longitudinal';
+    return TECNICAS_POR_NIVEL.correlacional;
+  }
   if(nivel === 'explicativo') {
     if(diseno === 'no-experimental-longitudinal') return TECNICAS_POR_NIVEL.explicativo_longitudinal;
     return TECNICAS_POR_NIVEL.explicativo_transversal;
@@ -626,9 +644,41 @@ const TECNICAS = {
   explicativo_longitudinal: TECNICAS_POR_NIVEL.explicativo_longitudinal
 };
 
+// ── REFERENCIAS BIBLIOGRÁFICAS ────────────────────────────────────
+const REFERENCIAS = [
+  {
+    cita: "Ato, M., López, J. J., y Benavente, A. (2013). Un sistema de clasificación de los diseños de investigación en psicología. <em>Anales de Psicología, 29</em>(3), 1038-1059. https://doi.org/10.6018/analesps.29.3.178511",
+    nota: "Sistema de clasificación de diseños: estrategia manipulativa, asociativa y descriptiva. Marco de referencia para la nomenclatura de diseños (DCS, DPT, DVO, DVL, DLEP, etc.)."
+  },
+  {
+    cita: "Creswell, J. W. (2013). <em>Qualitative inquiry and research design: Choosing among five approaches</em> (3.ª ed.). Sage.",
+    nota: "Referencia para diseños cualitativos: fenomenológico, etnográfico, teoría fundamentada, estudio de caso y narrativo."
+  },
+  {
+    cita: "Creswell, J. W., y Plano Clark, V. L. (2017). <em>Designing and conducting mixed methods research</em> (3.ª ed.). Sage.",
+    nota: "Referencia para diseños mixtos: secuencial explicativo, secuencial exploratorio, convergente paralelo, transformativo y anidado."
+  },
+  {
+    cita: "Hayes, A. F. (2018). <em>Introduction to mediation, moderation, and conditional process analysis: A regression-based approach</em> (2.ª ed.). The Guilford Press.",
+    nota: "Referencia para mediación simple (Modelo 4), moderación simple (Modelo 1) y mediación moderada (Modelos 7, 14, 58). Software: PROCESS macro para SPSS/SAS."
+  },
+  {
+    cita: "Hernández-Sampieri, R., y Mendoza, C. P. (2018). <em>Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta</em>. McGraw-Hill Education.",
+    nota: "Referencia principal del asistente. Marco para niveles de investigación, enfoques y diseños en psicología y ciencias sociales."
+  },
+  {
+    cita: "Kline, R. B. (2016). <em>Principles and practice of structural equation modeling</em> (4.ª ed.). The Guilford Press.",
+    nota: "Referencia para modelos SEM, path analysis y modelos con variables latentes. Índices de ajuste: CFI, TLI, RMSEA, SRMR."
+  },
+  {
+    cita: "Yin, R. K. (2018). <em>Case study research and applications: Design and methods</em> (6.ª ed.). Sage.",
+    nota: "Referencia para diseño de estudio de caso cualitativo: triangulación de fuentes y análisis en profundidad."
+  },
+];
+
 const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
-const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mi","Algo (he leido sobre el tema)","Bastante (me interesa mucho)"];
-const VIABILIDADES = ["Si, tengo acceso directo","Tal vez, con esfuerzo podria acceder","No estoy seguro","No, no tengo acceso"];
+const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mí","Algo (he leído sobre el tema)","Bastante (me interesa mucho)"];
+const VIABILIDADES = ["Sí, tengo acceso directo","Tal vez, con esfuerzo podría acceder","No estoy seguro/a","No, no tengo acceso"];
 
 // ── INSTRUMENTOS — disponibles globalmente (UI + DOCX) ────────────
 const INSTRUMENTOS_DATA = {
@@ -653,7 +703,6 @@ const INSTRUMENTOS_DATA = {
   'Satisfacción marital':   {nombre:'Escala de Satisfacción Marital (ESM, Pick y Andrade)', items:'24 ítems · Likert 1-3', ejemplo:'Ej: "La forma en que mi pareja me demuestra su amor" — 1=Me disgusta · 3=Me gusta mucho'},
   'Bullying':               {nombre:'Escala de Victimización entre Iguales (VIE)', items:'15 ítems · Likert 1-4', ejemplo:'Ej: "Mis compañeros me ignoran o no me hacen caso" — 1=Nunca · 4=Muchas veces'},
   'Bienestar subjetivo':    {nombre:'Escala de Satisfacción con la Vida (SWLS, Diener)', items:'5 ítems · Likert 1-7', ejemplo:'Ej: "En la mayoría de los aspectos, mi vida es como yo quiero que sea" — 1=Muy en desacuerdo · 7=Muy de acuerdo'},
-  'Depresión':              {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems · Likert 0-3', ejemplo:'Ej: rango de tristeza del 0 al 3'},
   'Regulación emocional':   {nombre:'Cuestionario de Regulación Emocional (ERQ, Gross & John)', items:'10 ítems · Likert 1-7', ejemplo:'Ej: "Cuando quiero sentirme mejor, cambio la forma en que estoy pensando" — 1=Totalmente en desacuerdo · 7=Totalmente de acuerdo'},
   'Impulsividad':           {nombre:'Escala de Impulsividad de Barratt (BIS-11)', items:'30 ítems · Likert 1-4', ejemplo:'Ej: "Planifico mis tareas con cuidado" (ítem inverso) — 1=Raramente · 4=Casi siempre'},
   'Satisfacción con la vida':{nombre:'Escala de Satisfacción con la Vida (SWLS, Diener)', items:'5 ítems · Likert 1-7', ejemplo:'Ej: "Las condiciones de mi vida son excelentes" — 1=Muy en desacuerdo · 7=Muy de acuerdo'},
@@ -697,6 +746,18 @@ function renderInstrumentosHtml(varsList) {
     const sinInstr = varsList.filter(v => !findInstrumento(v));
     h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ Sin instrumento registrado para: ${sinInstr.join(', ')}. Busca en SCOPUS o PsycINFO.</p>`;
   }
+  h += `</div>`;
+  return h;
+}
+
+function renderReferenciasHtml() {
+  let h = `<div class="refs">`;
+  h += `<div class="refs-title">📚 Referencias metodológicas del proyecto</div>`;
+  REFERENCIAS.forEach(r => {
+    h += `<div class="refs-item">${r.cita}`;
+    if(r.nota) h += `<span class="refs-note">${r.nota}</span>`;
+    h += `</div>`;
+  });
   h += `</div>`;
   return h;
 }
@@ -755,6 +816,14 @@ function efectiveArea(){return state.area==="otro"?state.areaOtro:AREAS.find(a=>
 function efectivePoblacion(){return state.poblacion==="otro"?state.poblacionOtro:state.poblacion;}
 function efectiveProblema(){return state.problema==="otro"?state.problemaOtro:state.problema;}
 
+// Combina población + lugar para usar en el paso 6
+function getPoblacionCompleta(){
+  const pob = efectivePoblacion();
+  const lugar = state.contexto ? state.contexto.trim() : "";
+  if(lugar) return `${pob} de ${lugar}`;
+  return pob;
+}
+
 function canNext(){
   const s=state.step;
   if(s===0){
@@ -782,9 +851,11 @@ function canNext(){
     if(state.enfoque==="Cuantitativo"){
       // Experimental/cuasi: no requieren técnica del menú
       if(state.diseno==='experimental' || state.diseno==='cuasiexperimental') return true;
+      // Correlacional + longitudinal: advertencia, puede continuar sin técnica
+      if(state.nivel==='correlacional' && state.diseno==='no-experimental-longitudinal') return true;
       // Exploratorio/descriptivo: no requieren técnica avanzada
       if(state.nivel==='exploratorio' || state.nivel==='descriptivo') return true;
-      // Correlacional/explicativo: requieren técnica
+      // Correlacional/explicativo transversal: requieren técnica
       if(state.nivel==="correlacional" || state.nivel==="explicativo") return state.tecnica !== "";
     }
     return true;
@@ -861,7 +932,7 @@ function renderContent(){
   const s=state.step;
 
   if(s===0){
-    let h=sectionLabel("¿Que area de la psicologia te interesa?");
+    let h=sectionLabel("¿Qué área de la psicología te interesa?");
     h+=`<div class="grid3">`;
     AREAS.forEach(a=>{
       h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')"><span class="area-icon">${a.icon}</span><span>${a.label}</span></button>`;
@@ -874,7 +945,7 @@ function renderContent(){
   }
 
   else if(s===1){
-    let h=sectionLabel("¿Con que poblacion quieres trabajar?");
+    let h=sectionLabel("¿Con qué población quieres trabajar?");
     const pobs=state.area&&state.area!=="otro"?POBLACIONES[state.area]:[];
     if(pobs.length>0){
       h+=`<div class="options">`;
@@ -896,7 +967,7 @@ function renderContent(){
   }
 
   else if(s===2){
-    let h=sectionLabel("¿Que problema o fenomeno quieres investigar?");
+    let h=sectionLabel("¿Qué problema o fenómeno quieres investigar?");
     const probs=state.area&&state.area!=="otro"?PROBLEMAS[state.area]:[];
     if(probs.length>0){
       h+=`<div class="options">`;
@@ -921,8 +992,8 @@ function renderContent(){
     
     if(mostrarVariables){
       const labelCategorias = state.enfoque === 'Cualitativo'
-        ? "¿Que categorias de analisis o ejes tematicos te interesan?"
-        : "¿Que variables quieres estudiar?";
+        ? "¿Qué categorías de análisis o ejes temáticos te interesan?"
+        : "¿Qué variables quieres estudiar?";
       h+=sectionLabel(labelCategorias);
       const vars=state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
       if(vars.length>0){
@@ -958,7 +1029,7 @@ function renderContent(){
     let h=`<div class="gap20">`;
 
     // ── Enfoque ───────────────────────────────────────────────────
-    h+=sectionLabel("¿Que enfoque metodologico prefieres?");
+    h+=sectionLabel("¿Qué enfoque metodológico prefieres?");
     h+=`<div class="options">`;
     ENFOQUES.forEach(e=>{
       let desc="";
@@ -971,7 +1042,7 @@ function renderContent(){
 
     // ── Nivel ─────────────────────────────────────────────────────
     if(state.enfoque){
-      h+=sectionLabel("¿Que nivel de investigacion buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
+      h+=sectionLabel("¿Qué nivel de investigación buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
         const esc=n.id.replace(/'/g,"\\'");
@@ -985,11 +1056,14 @@ function renderContent(){
       if(state.enfoque === 'Cualitativo' && (state.nivel === 'correlacional' || state.nivel === 'explicativo')) {
         h+=`<div class="hint warning">⚠️ El nivel <strong>${state.nivel}</strong> no es apropiado para investigación cualitativa. Se recomienda nivel <strong>exploratorio</strong> o <strong>descriptivo</strong> (Hernández et al., 2014).</div>`;
       }
+      if(state.diseno === 'cuasiexperimental' && state.nivel !== 'explicativo') {
+        h+=`<div class="hint warning">⚠️ El diseño cuasi-experimental busca establecer relaciones causales (sin aleatorización), por lo que es coherente principalmente con nivel <strong>explicativo</strong>. Se recomienda ajustar el nivel de investigación.</div>`;
+      }
     }
 
     // ── Diseño (estrategia de recolección) ────────────────────────
     if(state.enfoque && state.nivel){
-      h+=sectionLabel("¿Que diseño de investigacion utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos (experimental, observacional, longitudinal, etc.)");
+      h+=sectionLabel("¿Qué diseño de investigación utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos (experimental, observacional, longitudinal, etc.). Según Ato, López y Benavente (2013), los diseños se agrupan en tres estrategias: manipulativa (experimental/cuasiexperimental), asociativa (predictivo/explicativo) y descriptiva.");
       const enfoqueKey = state.enfoque.toLowerCase();
       const disenosDisponibles = DISENOS[enfoqueKey] || [];
       h+=`<div class="options">`;
@@ -1008,20 +1082,24 @@ function renderContent(){
       if(state.diseno==='experimental' || state.diseno==='cuasiexperimental'){
         h+=`<div class="hint warning">⚠️ Los diseños experimental y cuasi-experimental utilizan técnicas como ANOVA, t de Student o ANCOVA para comparar grupos. Estas técnicas están fuera del alcance de este asistente (orientado a correlación, regresión y modelos relacionales). Puedes continuar, pero el asistente generará una propuesta adaptada a tu diseño sin una técnica específica de comparación de grupos.</div>`;
       }
+      // Correlacional + longitudinal: advertencia de técnica adecuada
+      else if(tecnicasDisponibles === 'correlacional_longitudinal'){
+        h+=`<div class="hint warning">⚠️ <strong>Combinación infrecuente:</strong> El nivel correlacional con diseño longitudinal requiere técnicas especializadas como <strong>correlaciones test-retest</strong>, <strong>modelos autorregresivos</strong> o <strong>modelos de efectos cruzados con rezago (cross-lagged)</strong>, que están fuera del alcance de este asistente. Se recomienda cambiar a nivel <strong>explicativo</strong> para aprovechar el potencial del diseño longitudinal, o usar diseño <strong>transversal</strong> si el objetivo es solo correlacional.</div>`;
+      }
       // Exploratorio / descriptivo: sin técnica avanzada
       else if(state.nivel==='exploratorio' || state.nivel==='descriptivo'){
         h+=`<div class="hint success">✅ Para nivel ${state.nivel === 'exploratorio' ? 'exploratorio' : 'descriptivo'} se utilizan estadísticos descriptivos: frecuencias, medidas de tendencia central y dispersión. No se requieren técnicas avanzadas.</div>`;
       }
       // Técnicas disponibles según nivel + diseño
-      else if(tecnicasDisponibles && tecnicasDisponibles.length > 0){
+      else if(tecnicasDisponibles && tecnicasDisponibles.length > 0 && Array.isArray(tecnicasDisponibles)){
         h+=sectionLabel("¿Qué técnica de análisis estadístico planeas usar?",
           "Solo aparecen técnicas coherentes con tu nivel y diseño de investigación.");
         if(state.nivel==="correlacional"){
-          h+=`<div class="hint">📌 Nivel correlacional: estas técnicas miden asociaciones, no establecen causalidad.</div>`;
+          h+=`<div class="hint">📌 Nivel correlacional/predictivo: estas técnicas miden asociaciones o predicciones, <strong>no</strong> establecen causalidad (Hernández & Mendoza, 2018). Equivalen al <em>diseño predictivo transversal — DPT</em> de Ato et al. (2013).</div>`;
         } else if(state.diseno==='no-experimental-longitudinal'){
           h+=`<div class="hint">📌 Diseño longitudinal: las técnicas disponibles son adecuadas para datos con mediciones repetidas o en distintos tiempos.</div>`;
         } else {
-          h+=`<div class="hint">📌 Nivel explicativo + diseño transversal: puedes modelar relaciones causales. Las opciones SEM son de uso avanzado (posgrado).</div>`;
+          h+=`<div class="hint">📌 Nivel explicativo + diseño transversal: puedes modelar relaciones causales entre variables observadas (DVO) o latentes (DVL) según Ato et al. (2013). Las opciones SEM son de uso avanzado y corresponden a posgrado.</div>`;
         }
         h+=`<div class="options">`;
         tecnicasDisponibles.forEach(t=>{
@@ -1038,24 +1116,24 @@ function renderContent(){
   }
   else if(s===4){
     let h=`<div class="gap20">`;
-    h+=sectionLabel("¿Cuanta experiencia tienes con este tema o poblacion?");
+    h+=sectionLabel("¿Cuánta experiencia tienes con este tema o población?");
     h+=`<div class="options">`;
     EXPERIENCIAS.forEach(e=>{
       const esc=e.replace(/'/g,"\\'");
       h+=badge(e, state.experiencia===e, `state.experiencia='${esc}';updateNav();renderContent();saveState()`);
     });
     h+=`</div>`;
-    h+=sectionLabel("¿Tienes acceso a la poblacion que quieres estudiar?");
+    h+=sectionLabel("¿Tienes acceso a la población que quieres estudiar?");
     h+=`<div class="options">`;
     VIABILIDADES.forEach(v=>{
       const esc=v.replace(/'/g,"\\'");
       h+=badge(v, state.viabilidad===v, `state.viabilidad='${esc}';updateNav();renderContent();saveState()`);
     });
     h+=`</div>`;
-    h+=sectionLabel("¿En que contexto realizarias tu investigacion? — opcional");
-    h+=`<textarea placeholder="Ej: Lima, en un colegio privado..." oninput="state.contexto=this.value;saveState()">${state.contexto}</textarea>`;
-    h+=sectionLabel("¿Por que te interesa este tema? — opcional");
-    h+=`<textarea placeholder="Ej: Lo observe en mi practica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
+    h+=sectionLabel("¿En qué lugar realizarías tu investigación? — Especifica ciudad o región");
+    h+=`<textarea placeholder="Ej: Lima, Perú — distrito de San Juan de Lurigancho; o Arequipa, en una institución educativa pública..." oninput="state.contexto=this.value;saveState()">${state.contexto}</textarea>`;
+    h+=sectionLabel("¿Por qué te interesa este tema? — opcional");
+    h+=`<textarea placeholder="Ej: Lo observé en mi práctica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
     h+=`</div>`;
     el.innerHTML=h;
   }
@@ -1151,15 +1229,19 @@ function renderContent(){
     h+=`<div class="next-steps">
       <div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div>
       <ul>
-        <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social)</li>
-        <li><strong>Marco teórico:</strong> Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO</li>
-        <li><strong>Metodología:</strong> Define tu muestra, instrumentos de medición y procedimiento de recolección</li>
-        <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase de tu investigación</li>
+        <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social del problema)</li>
+        <li><strong>Marco teórico:</strong> Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa también los diseños usados en estudios similares siguiendo la clasificación de Ato et al. (2013)</li>
+        <li><strong>Metodología detallada:</strong> Define tu muestra (tipo y tamaño), instrumentos de medición validados y procedimiento de recolección de datos. Consulta Hernández & Mendoza (2018) para guiar tu decisión de diseño</li>
+        <li><strong>Análisis estadístico o cualitativo:</strong> Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos conforme a la técnica elegida</li>
+        <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase del proyecto de investigación</li>
       </ul>
     </div>`;
 
     // INSTRUMENTOS SUGERIDOS EN UI
     h += renderInstrumentosHtml(variablesDisplay);
+
+    // REFERENCIAS BIBLIOGRÁFICAS
+    h += renderReferenciasHtml();
     
     el.innerHTML=h;
   }
@@ -1375,7 +1457,7 @@ async function generate(){
 
   // Obtener instrucciones específicas para la técnica
   const tecInstr = getTecnicaInstructions(
-    state.tecnica, variablesList, efectivePoblacion(), state.nivel
+    state.tecnica, variablesList, getPoblacionCompleta(), state.nivel
   );
 
   // Construir instrucción específica de hipótesis según enfoque y técnica
@@ -1390,14 +1472,14 @@ async function generate(){
 
     // Pregunta según diseño cualitativo
     const preguntasQual = {
-      'fenomenologico':       `¿Cuál es la experiencia vivida de ${efectiveProblema()} en ${efectivePoblacion()}?`,
-      'etnografico':          `¿Cómo se construye y organiza culturalmente ${efectiveProblema()} en ${efectivePoblacion()}?`,
-      'teoria-fundamentada':  `¿Cómo se desarrolla y construye el proceso de ${efectiveProblema()} en ${efectivePoblacion()}?`,
-      'estudio-caso':         `¿Cómo se manifiesta ${efectiveProblema()} en el caso de ${efectivePoblacion()}?`,
-      'narrativo':            `¿Cuáles son las narrativas y relatos de vida de ${efectivePoblacion()} sobre ${efectiveProblema()}?`,
-      'investigacion-accion': `¿Cómo puede comprenderse y transformarse ${efectiveProblema()} con la participación de ${efectivePoblacion()}?`,
+      'fenomenologico':       `¿Cuál es la experiencia vivida de ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
+      'etnografico':          `¿Cómo se construye y organiza culturalmente ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
+      'teoria-fundamentada':  `¿Cómo se desarrolla y construye el proceso de ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
+      'estudio-caso':         `¿Cómo se manifiesta ${efectiveProblema()} en el caso de ${getPoblacionCompleta()}?`,
+      'narrativo':            `¿Cuáles son las narrativas y relatos de vida de ${getPoblacionCompleta()} sobre ${efectiveProblema()}?`,
+      'investigacion-accion': `¿Cómo puede comprenderse y transformarse ${efectiveProblema()} con la participación de ${getPoblacionCompleta()}?`,
     };
-    const ejemploPregunta = preguntasQual[dQ] || `¿Cómo comprenden y experimentan ${efectiveProblema()} los ${efectivePoblacion()}?`;
+    const ejemploPregunta = preguntasQual[dQ] || `¿Cómo comprenden y experimentan ${efectiveProblema()} los ${getPoblacionCompleta()}?`;
 
     // Objetivo según diseño cualitativo
     const verbosQual = {
@@ -1412,14 +1494,14 @@ async function generate(){
 
     // Supuestos según diseño cualitativo
     const supuestosQual = {
-      'fenomenologico':       `Se espera que ${efectivePoblacion()} describa experiencias diversas y significativas respecto a ${efectiveProblema()}, marcadas por su contexto subjetivo y vivencial.`,
-      'etnografico':          `Se espera encontrar patrones culturales y prácticas compartidas que dan sentido a ${efectiveProblema()} dentro de la comunidad de ${efectivePoblacion()}.`,
-      'teoria-fundamentada':  `Se espera generar categorías emergentes que expliquen el proceso de ${efectiveProblema()} tal como lo vive ${efectivePoblacion()}, pudiendo construir una teoría sustantiva.`,
-      'estudio-caso':         `Se espera que el análisis profundo del caso permita comprender la complejidad de ${efectiveProblema()} en ${efectivePoblacion()} en su contexto específico.`,
-      'narrativo':            `Se espera que las narrativas de ${efectivePoblacion()} revelen trayectorias vitales y significados personales sobre ${efectiveProblema()}.`,
-      'investigacion-accion': `Se espera que la participación activa de ${efectivePoblacion()} permita identificar estrategias de cambio y transformación frente a ${efectiveProblema()}.`,
+      'fenomenologico':       `Se espera que ${getPoblacionCompleta()} describa experiencias diversas y significativas respecto a ${efectiveProblema()}, marcadas por su contexto subjetivo y vivencial.`,
+      'etnografico':          `Se espera encontrar patrones culturales y prácticas compartidas que dan sentido a ${efectiveProblema()} dentro de la comunidad de ${getPoblacionCompleta()}.`,
+      'teoria-fundamentada':  `Se espera generar categorías emergentes que expliquen el proceso de ${efectiveProblema()} tal como lo vive ${getPoblacionCompleta()}, pudiendo construir una teoría sustantiva.`,
+      'estudio-caso':         `Se espera que el análisis profundo del caso permita comprender la complejidad de ${efectiveProblema()} en ${getPoblacionCompleta()} en su contexto específico.`,
+      'narrativo':            `Se espera que las narrativas de ${getPoblacionCompleta()} revelen trayectorias vitales y significados personales sobre ${efectiveProblema()}.`,
+      'investigacion-accion': `Se espera que la participación activa de ${getPoblacionCompleta()} permita identificar estrategias de cambio y transformación frente a ${efectiveProblema()}.`,
     };
-    const ejemploSupuesto = supuestosQual[dQ] || `Se espera comprender cómo ${efectivePoblacion()} experimenta y da sentido a ${efectiveProblema()} en su contexto particular.`;
+    const ejemploSupuesto = supuestosQual[dQ] || `Se espera comprender cómo ${getPoblacionCompleta()} experimenta y da sentido a ${efectiveProblema()} en su contexto particular.`;
 
     preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION cualitativa (diseño: ${disenoLabel}). REGLA ESTRICTA: usa "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?". NUNCA uses "¿Existe relación...?", "¿En qué medida...?" ni lenguaje cuantitativo. Ejemplo correcto para este diseño: "${ejemploPregunta}". Las categorías de análisis son: ${cats}.`;
 
@@ -1431,7 +1513,7 @@ async function generate(){
     const dM = state.diseno;
     const vars = variablesList.join(', ');
     const prob = efectiveProblema();
-    const pop  = efectivePoblacion();
+    const pop  = getPoblacionCompleta();
 
     // Pregunta por diseño mixto
     const preguntasMixto = {
@@ -1521,7 +1603,7 @@ async function generate(){
 
 DATOS DEL ESTUDIANTE:
 - Area: ${efectiveArea()}
-- Poblacion: ${efectivePoblacion()}
+- Poblacion: ${getPoblacionCompleta()}
 - Problema/fenomeno: ${efectiveProblema()}
 - Categorias/Variables (${nv}, NO uses otras): ${variablesList.join(", ")}
 - Enfoque metodologico: ${state.enfoque}
@@ -1530,10 +1612,11 @@ DATOS DEL ESTUDIANTE:
 - ${tecnicaInfo}
 - Experiencia previa: ${state.experiencia}
 - Viabilidad de acceso: ${state.viabilidad}
-- Contexto: ${state.contexto||"No especificado"}
+- Lugar/Contexto: ${state.contexto||"No especificado"}
 - Motivacion: ${state.motivacion||"No especificada"}
 
 REGLA CRÍTICA: SOLO puedes usar las ${nv} categorías/variables listadas. NUNCA agregues, inventes ni sustituyas.
+REGLA DE POBLACIÓN: La población debe aparecer siempre especificada con su lugar geográfico tal como se indica en "Poblacion" arriba. No generalices ni omitas la ubicación.
 ${state.enfoque === "Cualitativo" ? `
 REGLAS ABSOLUTAS PARA INVESTIGACIÓN CUALITATIVA:
 - NUNCA uses "relación entre", "predice", "correlaciona", "significativamente", "p<.05" ni ningún término estadístico
@@ -1579,8 +1662,8 @@ Responde SOLO en JSON sin texto adicional ni markdown:
     
     if(!parsed.hipotesis) {
       parsed.hipotesis = tecInstr ? tecInstr.hipotesis
-        : state.enfoque==="Cualitativo" ? `Se espera comprender el fenómeno de ${efectiveProblema()} en ${efectivePoblacion()}.`
-        : `Existe una relación significativa entre ${variablesList.slice(0,2).join(' y ')} en ${efectivePoblacion()}.`;
+        : state.enfoque==="Cualitativo" ? `Se espera comprender el fenómeno de ${efectiveProblema()} en ${getPoblacionCompleta()}.`
+        : `Existe una relación significativa entre ${variablesList.slice(0,2).join(' y ')} en ${getPoblacionCompleta()}.`;
     }
     
     state.result=parsed;
@@ -1594,7 +1677,7 @@ Responde SOLO en JSON sin texto adicional ni markdown:
     const M = variablesList[1]||'Variable M';
     const Y = variablesList[variablesList.length-1]||'Variable Y';
     const W = variablesList[1]||'Moderador';
-    const pop = efectivePoblacion();
+    const pop = getPoblacionCompleta();
     const prob = efectiveProblema();
 
     let fb = { tema:'', pregunta:'', objetivo:'', hipotesis:'' };
@@ -1870,6 +1953,31 @@ async function downloadDoc() {
       ${instrDetailXml}` : '';
     const nextN = secPasos;
 
+    const secRefs  = secInstr ? secInstr + 1 : (imageXml ? 4 : 3);
+
+    // ── Referencias bibliográficas XML ──────────────────────────
+    const refItem = (cita, nota) => {
+      // Strip HTML tags from cita for XML
+      const citaClean = cita.replace(/<em>/g,'').replace(/<\/em>/g,'').replace(/&amp;/g,'&');
+      const citaXe = xe(citaClean);
+      const notaXe = nota ? xe(nota) : '';
+      return `
+        <w:p><w:pPr><w:ind w:left="360" w:hanging="360"/><w:spacing w:before="100" w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="374151"/></w:rPr>
+            <w:t xml:space="preserve">${citaXe}</w:t></w:r></w:p>
+        ${nota ? `<w:p><w:pPr><w:ind w:left="360"/><w:spacing w:after="120"/></w:pPr>
+          <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+            <w:t xml:space="preserve">${notaXe}</w:t></w:r></w:p>` : ''}`;
+    };
+
+    const refsXml = `
+      ${emptyPara(200)}
+      ${heading(secRefs+'. REFERENCIAS METODOLÓGICAS','4F46E5')}
+      <w:p><w:pPr><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
+          <w:t>Las siguientes referencias sustentan el marco metodológico del proyecto de investigación.</w:t></w:r></w:p>
+      ${REFERENCIAS.map(r => refItem(r.cita, r.nota)).join('')}`;
+
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -1901,7 +2009,7 @@ async function downloadDoc() {
       </w:tblBorders>
     </w:tblPr>
     ${tableRow('Área', efectiveArea())}
-    ${tableRow('Población', efectivePoblacion())}
+    ${tableRow('Población', getPoblacionCompleta())}
     ${tableRow('Problema / Fenómeno', efectiveProblema())}
     ${tableRow('Variables', vars.join(', '))}
     ${tableRow('Enfoque', state.enfoque)}
@@ -1914,16 +2022,18 @@ async function downloadDoc() {
 
   ${emptyPara(200)}
   ${heading(secPasos+'. PRÓXIMOS PASOS','D97706')}
-  ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del tema.')}
-  ${stepItem(2,'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO.')}
-  ${stepItem(3,'Metodología: Define tu muestra, instrumentos y procedimiento de recolección.')}
-  ${stepItem(4,'Cronograma: Establece tiempos realistas para cada fase del proyecto.')}
+  ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del problema de investigación.')}
+  ${stepItem(2,'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa los diseños utilizados en estudios similares siguiendo la clasificación de Ato et al. (2013).')}
+  ${stepItem(3,'Metodología detallada: Define el tipo y tamaño de muestra, instrumentos de medición validados y procedimiento de recolección. Consulta Hernández & Mendoza (2018) para fundamentar tu diseño.')}
+  ${stepItem(4,'Análisis estadístico o cualitativo: Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos según la técnica elegida.')}
+  ${stepItem(5,'Cronograma: Establece tiempos realistas para cada fase del proyecto de investigación.')}
 
   ${instrSectionXml}
+  ${refsXml}
   ${emptyPara(480)}
   <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
     <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
-      <w:t>Generado con Asistente de Investigación · Alan A. Vega Jacome · Powered by Claude</w:t></w:r></w:p>
+      <w:t>Generado con el Asistente de Investigación · Alan A. Vega Jacome</w:t></w:r></w:p>
 
   <w:sectPr><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
 </w:body></w:document>`;
