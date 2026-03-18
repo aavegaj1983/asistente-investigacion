@@ -1,1 +1,2289 @@
-s
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Asistente para la creación de proyectos de investigación</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* ── TOKENS ──────────────────────────────────────────────────────── */
+:root{
+  --brand:#4F46E5;--brand-light:#EEF2FF;--brand-mid:#C7D2FE;--brand-dark:#3730A3;
+  --green:#059669;--green-light:#ECFDF5;--green-mid:#A7F3D0;
+  --amber:#D97706;--amber-light:#FFFBEB;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+  --gray-400:#9CA3AF;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg:0 10px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
+  --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+
+/* ── RESET & BASE ────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font);
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0FDF4 50%,#FFF7ED 100%);
+  min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
+  padding:20px 16px 40px;
+}
+
+/* ── CARD ────────────────────────────────────────────────────────── */
+.card{
+  background:#fff;border-radius:var(--radius-xl);
+  border:1px solid var(--gray-200);
+  padding:28px 24px;width:100%;max-width:640px;
+  box-shadow:var(--shadow-lg);
+  height:fit-content;
+  overflow:hidden;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────── */
+h2{
+  font-size:17px;font-weight:700;color:var(--gray-900);
+  margin-bottom:6px;letter-spacing:-0.2px;line-height:1.3;
+}
+
+/* ── STEP BAR ────────────────────────────────────────────────────── */
+.steps{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.step-circle{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;cursor:default;transition:all .25s;
+}
+.step-circle.done{background:var(--brand);color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,.35)}
+.step-circle.active{background:var(--brand-light);color:var(--brand);border:2px solid var(--brand)}
+.step-circle.pending{background:var(--gray-100);color:var(--gray-400)}
+.step-line{height:2px;width:16px;border-radius:2px;transition:background .25s}
+.step-line.done{background:var(--brand)}
+.step-line.pending{background:var(--gray-200)}
+.step-label{font-size:11px;color:var(--gray-400);margin-bottom:22px;font-weight:500;letter-spacing:.2px}
+
+/* ── SECTION LABEL ───────────────────────────────────────────────── */
+.section-label{
+  font-size:13px;color:var(--gray-500);font-weight:600;
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* ── TOOLTIP ─────────────────────────────────────────────────────── */
+.tooltip{position:relative;display:inline-flex;cursor:help}
+.tooltip-icon{
+  width:16px;height:16px;background:var(--brand);color:#fff;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+}
+.tooltip-text{
+  visibility:hidden;width:240px;background:var(--gray-900);color:#fff;
+  text-align:left;border-radius:var(--radius-sm);padding:10px 12px;
+  position:absolute;z-index:10;bottom:130%;left:50%;margin-left:-120px;
+  opacity:0;transition:opacity .25s;font-size:12px;line-height:1.5;
+  font-weight:400;box-shadow:var(--shadow-md);
+}
+.tooltip-text::after{
+  content:"";position:absolute;top:100%;left:50%;margin-left:-5px;
+  border-width:5px;border-style:solid;border-color:var(--gray-900) transparent transparent transparent;
+}
+.tooltip:hover .tooltip-text{visibility:visible;opacity:1}
+
+/* ── GRID ────────────────────────────────────────────────────────── */
+.options{display:flex;flex-direction:column;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ── AREA BADGES (paso 1) ────────────────────────────────────────── */
+.badge-area{
+  padding:14px 12px;border-radius:var(--radius-md);cursor:pointer;
+  text-align:center;border:1.5px solid transparent;
+  font-size:12px;font-weight:500;width:100%;
+  transition:all .18s;position:relative;
+  background:var(--gray-50);color:var(--gray-700);
+  box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.badge-area .area-icon{font-size:22px;line-height:1}
+.badge-area:hover{background:var(--brand-light);border-color:var(--brand-mid);color:var(--brand-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.badge-area.active{
+  border-color:var(--brand);background:var(--brand-light);
+  color:var(--brand-dark);font-weight:600;
+  box-shadow:0 0 0 3px rgba(79,70,229,.15),var(--shadow-md);
+}
+
+/* ── OPTION BADGES (pasos 2-4) ───────────────────────────────────── */
+.badge{
+  padding:12px 16px;border-radius:var(--radius-md);cursor:pointer;
+  text-align:left;border:1.5px solid var(--gray-200);
+  background:var(--gray-50);font-size:14px;font-weight:500;
+  width:100%;transition:all .18s;position:relative;
+  color:var(--gray-700);box-shadow:var(--shadow-sm);
+  word-break:break-word;overflow-wrap:break-word;box-sizing:border-box;
+}
+.badge:hover{border-color:var(--brand-mid);background:var(--brand-light);color:var(--brand-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.badge.active{
+  border:2px solid var(--brand);background:var(--brand-light);
+  color:var(--brand-dark);font-weight:600;
+  box-shadow:0 0 0 3px rgba(79,70,229,.12),var(--shadow-md);
+}
+.badge-title{font-weight:600;margin-bottom:2px;color:inherit}
+.badge-desc{font-size:12px;color:var(--gray-500);margin-top:3px;line-height:1.4}
+.badge-hint{
+  font-size:11px;color:var(--gray-500);margin-top:5px;
+  font-style:italic;display:inline-flex;align-items:center;gap:3px;
+}
+.badge-hint.recommended{color:var(--green);font-weight:600}
+
+/* ── CHIPS ───────────────────────────────────────────────────────── */
+.chip{
+  padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;
+  border:1.5px solid var(--gray-200);background:var(--gray-50);
+  color:var(--gray-700);font-weight:500;transition:all .15s;
+}
+.chip:hover{border-color:var(--green-mid);background:var(--green-light);color:var(--green)}
+.chip.active{
+  border:2px solid var(--green);background:var(--green-light);
+  color:var(--green);font-weight:600;
+  box-shadow:0 0 0 3px rgba(5,150,105,.1);
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+
+/* ── HINTS ───────────────────────────────────────────────────────── */
+.hint{
+  background:var(--brand-light);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:13px;color:var(--brand-dark);
+  margin-top:6px;border:1px solid var(--brand-mid);
+  display:block;line-height:1.6;
+  word-break:break-word;overflow-wrap:break-word;
+  width:100%;box-sizing:border-box;
+}
+.hint strong{font-weight:700;color:inherit}
+.hint.warning{background:var(--amber-light);color:var(--amber);border-color:#FDE68A}
+.hint.success{background:var(--green-light);color:var(--green);border-color:var(--green-mid)}
+
+/* ── INPUTS ──────────────────────────────────────────────────────── */
+input[type=text],textarea{
+  width:100%;font-size:16px;padding:10px 14px;border-radius:var(--radius-sm);
+  border:1.5px solid var(--gray-200);font-family:var(--font);
+  margin-top:6px;background:var(--gray-50);color:var(--gray-900);
+  transition:all .2s;
+}
+input[type=text]:focus,textarea:focus{
+  outline:none;border-color:var(--brand);background:#fff;
+  box-shadow:0 0 0 3px rgba(79,70,229,.1);
+}
+textarea{min-height:70px;resize:vertical}
+.otro-input{border-color:var(--brand)!important;background:#fff!important}
+
+/* ── NAV BUTTONS ─────────────────────────────────────────────────── */
+.nav{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:28px;padding-top:18px;border-top:1px solid var(--gray-100);
+  gap:12px;
+}
+.btn{
+  padding:11px 22px;border-radius:var(--radius-md);font-size:14px;
+  cursor:pointer;font-family:var(--font);border:none;
+  transition:all .2s;font-weight:600;letter-spacing:.1px;
+}
+.btn-back{
+  border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-500);
+}
+.btn-back:hover{background:var(--gray-50);border-color:var(--gray-400);color:var(--gray-700)}
+.btn-back:disabled{opacity:.35;cursor:not-allowed}
+.btn-next{
+  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;padding:11px 28px;
+  box-shadow:0 4px 14px rgba(79,70,229,.35);
+}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.4)}
+.btn-next:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;box-shadow:none;transform:none}
+
+/* ── CONTENT AREA ────────────────────────────────────────────────── */
+.content{min-height:280px}
+.gap20{display:flex;flex-direction:column;gap:20px}
+
+/* ── RESULT CARDS ────────────────────────────────────────────────── */
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.result-header p{font-size:13px;color:var(--gray-400);font-weight:500}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{
+  padding:8px 14px;border-radius:var(--radius-sm);font-size:12px;
+  cursor:pointer;font-family:var(--font);border:1.5px solid var(--gray-200);
+  background:#fff;color:var(--gray-600);transition:all .15s;font-weight:600;
+}
+.btn-sm:hover{background:var(--gray-50);border-color:var(--gray-400)}
+.btn-edit{border-color:var(--gray-200);color:var(--gray-600)}
+.btn-regen{border-color:var(--brand-mid);color:var(--brand);background:var(--brand-light)}
+.btn-regen:hover{background:var(--brand);color:#fff}
+.btn-download{border-color:var(--green-mid);color:var(--green);background:var(--green-light)}
+.btn-download:hover{background:var(--green);color:#fff}
+.btn-download.loading{opacity:.6;pointer-events:none;cursor:wait}
+.result-block{
+  border-radius:var(--radius-md);padding:16px 18px;margin-bottom:12px;
+  border:1px solid transparent;
+}
+.result-block-label{
+  font-size:10px;font-weight:700;margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:1.2px;
+}
+.result-block p{font-size:15px;line-height:1.7;color:var(--gray-800)}
+.result-block textarea{
+  font-size:14px;padding:10px;border-radius:var(--radius-sm);
+  min-height:70px;width:100%;border:1.5px solid rgba(0,0,0,.1);
+  background:rgba(255,255,255,.6);font-family:var(--font);
+}
+
+/* ── SUMMARY ─────────────────────────────────────────────────────── */
+.summary{
+  margin-top:6px;padding:14px 18px;background:var(--gray-50);
+  border-radius:var(--radius-md);border:1px solid var(--gray-200);
+}
+.summary p.title{font-size:11px;color:var(--gray-400);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.summary-grid p{font-size:12px;color:var(--gray-600);padding:4px 0}
+.summary-grid span{color:var(--gray-400);font-weight:500}
+
+/* ── LOADING ─────────────────────────────────────────────────────── */
+.loading{text-align:center;padding:48px 0}
+.loading .icon{font-size:36px;margin-bottom:14px;animation:pulse 1.5s ease-in-out infinite}
+.loading p{color:var(--gray-400);font-size:14px;font-weight:500}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── GENERATE BOX ────────────────────────────────────────────────── */
+.generate-box{text-align:center;padding:36px 0}
+.generate-box p{margin-bottom:24px;font-size:15px;color:var(--gray-500);line-height:1.6}
+.btn-generate{
+  padding:14px 36px;border-radius:var(--radius-md);
+  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;border:none;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--font);
+  box-shadow:0 4px 18px rgba(79,70,229,.4);
+  transition:all .2s;letter-spacing:.2px;
+}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,70,229,.45)}
+
+/* ── FOOTER ──────────────────────────────────────────────────────── */
+.footer{
+  text-align:center;margin-top:24px;padding-top:16px;
+  border-top:1px solid var(--gray-100);font-size:12px;
+  color:var(--gray-400);display:flex;justify-content:center;
+  align-items:center;gap:8px;flex-wrap:wrap;
+}
+.footer strong{color:var(--brand)}
+.footer a{color:var(--brand);text-decoration:none;font-weight:600}
+.footer a:hover{text-decoration:underline}
+
+/* ── NEXT STEPS ──────────────────────────────────────────────────── */
+.next-steps{
+  margin-top:16px;padding:18px;
+  background:linear-gradient(135deg,#F0FDF4,#ECFDF5);
+  border-radius:var(--radius-md);border:1px solid var(--green-mid);
+}
+.next-steps-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.next-steps ul{list-style:none;padding:0}
+.next-steps li{padding:8px 0;font-size:13px;color:#065F46;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid rgba(5,150,105,.1)}
+.next-steps li:last-child{border-bottom:none}
+.next-steps li::before{content:"✓";color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:1px}
+
+/* ── AUTO SAVE ───────────────────────────────────────────────────── */
+.auto-save{
+  position:fixed;bottom:20px;right:20px;background:#fff;
+  border:1px solid var(--gray-200);padding:8px 14px;border-radius:20px;
+  font-size:11px;color:var(--gray-500);font-family:var(--font);font-weight:600;
+  box-shadow:var(--shadow-md);display:none;
+}
+.auto-save.show{display:flex;align-items:center;gap:6px;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ERROR ───────────────────────────────────────────────────────── */
+.error{color:var(--red);font-size:13px;font-weight:500}
+
+/* ── TOUCH TARGETS BASE ──────────────────────────────────────────── */
+.badge,.badge-area,.chip,.btn,.btn-sm,.btn-generate{
+  min-height:44px;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ── TABLET (≤768px) ─────────────────────────────────────────────── */
+@media (max-width:768px){
+  body{padding:12px 10px 32px}
+  .card{padding:20px 16px;border-radius:var(--radius-lg)}
+  h2{font-size:16px}
+  .steps{gap:3px}
+  .step-circle{width:26px;height:26px;font-size:11px}
+  .step-line{width:10px}
+  .grid2,.grid3{grid-template-columns:1fr;gap:10px}
+  .badge-area{flex-direction:row;text-align:left;padding:12px 14px;gap:10px}
+  .badge-area .area-icon{font-size:20px}
+  .nav{flex-direction:column;gap:10px;margin-top:20px}
+  .btn{width:100%;padding:14px 20px;font-size:15px}
+  .btn-next{order:-1}
+  .result-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn-sm{padding:11px 8px;text-align:center;font-size:13px}
+  .result-block p{font-size:14px}
+  .summary-grid{grid-template-columns:1fr}
+  .auto-save{bottom:12px;right:12px}
+}
+
+/* ── MÓVIL (≤480px) ──────────────────────────────────────────────── */
+@media (max-width:480px){
+  body{padding:8px 6px 28px}
+  .card{padding:16px 14px;border-radius:var(--radius-md)}
+  h2{font-size:15px}
+  .steps{overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .result-actions{grid-template-columns:1fr}
+  .btn-sm{width:100%;min-height:48px;font-size:14px}
+  .result-block p{font-size:13px;line-height:1.7}
+  .footer{font-size:11px}
+}
+
+/* ── MODAL DIAGRAMA ──────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.6);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px;box-sizing:border-box;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.modal-inner{
+  background:#fff;border-radius:var(--radius-xl);padding:24px;
+  width:100%;max-width:700px;
+  box-shadow:0 32px 80px rgba(0,0,0,.25);
+  max-height:92vh;overflow-y:auto;box-sizing:border-box;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width:480px){
+  .modal-inner{padding:16px 14px;border-radius:var(--radius-lg);max-height:95vh}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Asistente para la creación de proyectos de investigación</h2>
+  <div class="steps" id="steps-bar"></div>
+  <p class="step-label" id="step-label"></p>
+  <div class="content" id="content"></div>
+  <div class="nav">
+    <button class="btn btn-back" id="btn-back" onclick="prevStep()">Atras</button>
+    <button class="btn btn-next" id="btn-next" onclick="nextStep()">Siguiente</button>
+  </div>
+  <div class="footer">
+    Creado por: <strong>Alan A. Vega Jacome</strong>
+    <span style="margin:0 8px;color:#ddd">·</span>
+    <span style="color:#aaa">Powered by </span><a href="https://claude.ai" target="_blank" style="color:#534AB7;text-decoration:none;font-weight:500">Claude</a>
+  </div>
+</div>
+<div class="auto-save" id="auto-save">💾 Progreso guardado</div>
+
+<script>
+const STEPS = ["Area","Poblacion","Problema","Metodologia","Contexto","Resultado"];
+
+const AREAS = [
+  {id:"clinica", label:"Psicologia clinica y salud mental", icon:"🧠"},
+  {id:"educativa", label:"Psicologia educativa", icon:"📚"},
+  {id:"organizacional", label:"Psicologia organizacional", icon:"🏢"},
+  {id:"social", label:"Psicologia social y comunitaria", icon:"🤝"},
+  {id:"deporte", label:"Psicologia del deporte", icon:"🏃"},
+  {id:"consumidor", label:"Psicologia del consumidor", icon:"🛒"},
+  {id:"juridica", label:"Psicologia juridica/forense", icon:"⚖️"},
+  {id:"ambiental", label:"Psicologia ambiental", icon:"🌱"},
+  {id:"positiva", label:"Psicologia positiva", icon:"✨"},
+  {id:"pareja-familia", label:"Psicologia de pareja y familia", icon:"💑"},
+  {id:"salud", label:"Psicologia de la salud", icon:"🏥"},
+  {id:"desarrollo", label:"Psicologia del desarrollo", icon:"👶"},
+  {id:"neuropsicologia", label:"Neuropsicologia", icon:"🧠"},
+  {id:"adicciones", label:"Psicologia de las adicciones", icon:"🚭"},
+  {id:"digital", label:"Psicologia digital/cibernetica", icon:"📱"},
+  {id:"emergencias", label:"Psicologia de emergencias y desastres", icon:"🚨"},
+  {id:"transcultural", label:"Psicologia transcultural", icon:"🌍"},
+  {id:"otro", label:"Otro", icon:"✏️"},
+];
+
+const POBLACIONES = {
+  clinica:["Ninos y adolescentes","Adultos en general","Adultos mayores","Pacientes con trastornos especificos","Cuidadores / familias"],
+  educativa:["Ninos de educacion inicial","Estudiantes de primaria","Estudiantes de secundaria","Estudiantes universitarios","Docentes"],
+  organizacional:["Trabajadores de empresas privadas","Trabajadores del sector publico","Lideres / jefes","Emprendedores","Personal de salud"],
+  social:["Comunidades rurales","Comunidades urbanas marginales","Grupos vulnerables (migrantes, etc.)","Jovenes en riesgo","Poblacion general"],
+  deporte:["Deportistas amateurs","Deportistas profesionales","Entrenadores","Estudiantes deportistas","Equipos deportivos"],
+  consumidor:["Consumidores jovenes","Consumidores adultos","Compradores online","Clientes de retail","Usuarios de servicios"],
+  juridica:["Victimas de delitos","Testigos","Menores infractores","Reclusos","Personal policial o juridico"],
+  ambiental:["Residentes urbanos","Estudiantes","Trabajadores de oficina","Comunidades locales","Poblacion general"],
+  positiva:["Estudiantes universitarios","Adultos en general","Profesionales","Jovenes","Adultos mayores"],
+  "pareja-familia":["Parejas","Familias con hijos","Padres","Adolescentes en familias","Parejas en conflicto"],
+  salud:["Pacientes cronicos","Pacientes oncologicos","Personal de salud","Cuidadores","Pacientes ambulatorios"],
+  desarrollo:["Ninos (0-5 anos)","Ninos (6-11 anos)","Adolescentes","Adultos emergentes (18-25)","Adultos mayores"],
+  neuropsicologia:["Pacientes con dano cerebral","Adultos mayores","Ninos con dificultades","Pacientes neurologicos","Estudiantes"],
+  adicciones:["Personas en rehabilitacion","Consumidores activos","Familias de adictos","Jovenes en riesgo","Adultos con adicciones conductuales"],
+  digital:["Adolescentes usuarios de redes","Jovenes gamers","Usuarios de apps","Estudiantes","Trabajadores remotos"],
+  emergencias:["Sobrevivientes de desastres","Primeros respondientes","Victimas de violencia","Comunidades afectadas","Personal de emergencias"],
+  transcultural:["Migrantes","Estudiantes internacionales","Comunidades indigenas","Grupos etnicos","Familias multiculturales"],
+  otro:[],
+};
+
+const PROBLEMAS = {
+  clinica:["Ansiedad y estres","Depresion","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia"],
+  educativa:["Rendimiento academico","Motivacion y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Desercion escolar","Estilos de aprendizaje"],
+  organizacional:["Estres laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfaccion y compromiso laboral","Desempeno","Bienestar en el trabajo"],
+  social:["Exclusion e identidad social","Convivencia y cohesion comunitaria","Violencia de genero","Resiliencia comunitaria","Prejuicios y discriminacion","Participacion ciudadana"],
+  deporte:["Ansiedad competitiva","Motivacion deportiva","Cohesion de equipo","Lesiones y recuperacion","Rendimiento bajo presion","Burnout deportivo"],
+  consumidor:["Decision de compra","Lealtad a marcas","Publicidad y persuasion","Consumo impulsivo","Influencia de redes sociales","Satisfaccion del cliente"],
+  juridica:["Testimonio y memoria","Victimizacion","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilacion criminal"],
+  ambiental:["Conducta proambiental","Estres por hacinamiento","Apego al lugar","Contaminacion acustica","Espacios verdes y bienestar","Comportamiento sostenible"],
+  positiva:["Felicidad y bienestar","Gratitud","Optimismo","Fortalezas personales","Sentido de vida","Resiliencia"],
+  "pareja-familia":["Comunicacion de pareja","Conflicto familiar","Satisfaccion marital","Crianza positiva","Divorcio y separacion","Violencia domestica"],
+  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor cronico","Estilos de vida saludables","Ansiedad ante procedimientos"],
+  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transicion a la adultez","Envejecimiento exitoso","Desarrollo moral"],
+  neuropsicologia:["Funciones ejecutivas","Memoria","Atencion y concentracion","Rehabilitacion cognitiva","Deterioro cognitivo","Lenguaje"],
+  adicciones:["Dependencia a sustancias","Adiccion a videojuegos","Recaida","Craving","Comorbilidad psiquiatrica","Adiccion a redes sociales"],
+  digital:["Adiccion a redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Nomofobia (miedo a no tener celular)","Identidad digital","Relaciones online"],
+  emergencias:["Estres postraumatico","Resiliencia post-desastre","Primeros auxilios psicologicos","Duelo traumatico","Panico y evacuacion","Intervencion en crisis"],
+  transcultural:["Aculturacion","Choque cultural","Identidad etnica","Discriminacion percibida","Estres de aculturacion","Integracion social"],
+  otro:[],
+};
+
+const VARIABLES = {
+  "Ansiedad y estres":["Ansiedad","Estres percibido","Regulacion emocional","Apoyo social","Estrategias de afrontamiento","Autoeficacia"],
+  "Depresion":["Depresion","Autoestima","Apoyo social","Ideacion suicida","Ansiedad","Bienestar subjetivo"],
+  "Autoestima y bienestar":["Autoestima","Bienestar psicologico","Satisfaccion con la vida","Autoeficacia","Resiliencia"],
+  "Adicciones":["Dependencia a sustancias","Impulsividad","Autocontrol","Apoyo familiar","Ansiedad"],
+  "Trauma y violencia":["Estres postraumatico","Violencia familiar","Resiliencia","Apoyo social","Ansiedad"],
+  "Salud mental post-pandemia":["Ansiedad","Depresion","Estres percibido","Aislamiento social","Bienestar psicologico"],
+  "Rendimiento academico":["Rendimiento academico","Motivacion","Autoeficacia","Ansiedad ante examenes","Habitos de estudio"],
+  "Motivacion y aprendizaje":["Motivacion intrinseca","Motivacion extrinseca","Autoeficacia","Rendimiento academico","Engagement"],
+  "Acoso escolar (bullying)":["Bullying","Autoestima","Ansiedad","Clima escolar","Apoyo docente"],
+  "Habilidades socioemocionales":["Inteligencia emocional","Empatia","Habilidades sociales","Autoregulacion","Bienestar"],
+  "Desercion escolar":["Desercion escolar","Motivacion","Apoyo familiar","Rendimiento academico","Estres"],
+  "Estilos de aprendizaje":["Estilos de aprendizaje","Rendimiento academico","Motivacion","Estrategias cognitivas"],
+  "Estres laboral y burnout":["Burnout","Estres laboral","Satisfaccion laboral","Autoeficacia","Apoyo organizacional"],
+  "Clima y cultura organizacional":["Clima organizacional","Satisfaccion laboral","Compromiso organizacional","Liderazgo"],
+  "Liderazgo":["Estilo de liderazgo","Clima organizacional","Desempeno laboral","Satisfaccion laboral","Motivacion"],
+  "Satisfaccion y compromiso laboral":["Satisfaccion laboral","Compromiso organizacional","Motivacion","Bienestar laboral"],
+  "Desempeno":["Desempeno laboral","Motivacion","Autoeficacia","Liderazgo","Estres laboral"],
+  "Bienestar en el trabajo":["Bienestar laboral","Estres","Satisfaccion laboral","Apoyo social","Autonomia"],
+  "Exclusion e identidad social":["Identidad social","Exclusion social","Autoestima","Prejuicio","Bienestar"],
+  "Convivencia y cohesion comunitaria":["Cohesion social","Confianza interpersonal","Participacion comunitaria","Bienestar"],
+  "Violencia de genero":["Violencia de genero","Autoestima","Apoyo social","Estres postraumatico","Empoderamiento"],
+  "Resiliencia comunitaria":["Resiliencia","Apoyo social","Cohesion comunitaria","Autoeficacia colectiva"],
+  "Prejuicios y discriminacion":["Prejuicio","Discriminacion percibida","Identidad social","Bienestar psicologico"],
+  "Participacion ciudadana":["Participacion ciudadana","Identidad comunitaria","Autoeficacia","Cohesion social"],
+  "Ansiedad competitiva":["Ansiedad competitiva","Autoconfianza","Estres precompetitivo","Rendimiento deportivo","Autoeficacia"],
+  "Motivacion deportiva":["Motivacion intrinseca","Motivacion extrinseca","Compromiso deportivo","Metas de logro","Pasion"],
+  "Cohesion de equipo":["Cohesion grupal","Comunicacion","Liderazgo deportivo","Confianza","Rendimiento colectivo"],
+  "Lesiones y recuperacion":["Bienestar psicologico","Adherencia a rehabilitacion","Miedo a re-lesion","Autoeficacia","Apoyo social"],
+  "Rendimiento bajo presion":["Ansiedad","Autoeficacia","Concentracion","Estres","Rendimiento deportivo"],
+  "Burnout deportivo":["Burnout","Agotamiento","Despersonalizacion","Motivacion","Satisfaccion deportiva"],
+  "Decision de compra":["Intencion de compra","Actitud hacia marca","Precio percibido","Confianza","Influencia social"],
+  "Lealtad a marcas":["Lealtad","Satisfaccion","Confianza en marca","Valor percibido","Engagement"],
+  "Publicidad y persuasion":["Actitud hacia publicidad","Credibilidad","Persuasion","Atencion","Intencion de compra"],
+  "Consumo impulsivo":["Impulsividad","Autocontrol","Emociones","Compra impulsiva","Arrepentimiento"],
+  "Influencia de redes sociales":["Influencia social","Confianza en influencers","Intencion de compra","Engagement","Credibilidad"],
+  "Satisfaccion del cliente":["Satisfaccion","Expectativas","Calidad percibida","Lealtad","Quejas"],
+  "Testimonio y memoria":["Memoria de testigos","Sugestionabilidad","Exactitud","Confianza en memoria","Estres"],
+  "Victimizacion":["Sintomas postraumaticos","Revictimizacion","Apoyo social","Autoestima","Miedo al delito"],
+  "Reincidencia delictiva":["Conducta antisocial","Empatia","Impulsividad","Autocontrol","Apoyo social"],
+  "Credibilidad del testigo":["Credibilidad","Consistencia","Confianza","Exactitud","Lenguaje no verbal"],
+  "Violencia intrafamiliar":["Violencia","Autoestima","Depresion","Apoyo social","Estres postraumatico"],
+  "Perfilacion criminal":["Rasgos de personalidad","Conducta criminal","Motivacion","Psicopatia","Impulsividad"],
+  "Conducta proambiental":["Conducta proambiental","Conciencia ambiental","Normas sociales","Valores","Autoeficacia"],
+  "Estres por hacinamiento":["Estres","Privacidad","Hacinamiento percibido","Bienestar","Irritabilidad"],
+  "Apego al lugar":["Apego","Identidad de lugar","Satisfaccion residencial","Bienestar","Arraigo"],
+  "Contaminacion acustica":["Estres","Molestia","Calidad de vida","Salud mental","Irritabilidad"],
+  "Espacios verdes y bienestar":["Bienestar","Estres","Contacto con naturaleza","Restauracion atencional","Satisfaccion"],
+  "Comportamiento sostenible":["Conducta sostenible","Actitudes ambientales","Valores","Conocimiento ambiental","Normas"],
+  "Felicidad y bienestar":["Felicidad","Bienestar subjetivo","Satisfaccion con la vida","Afecto positivo","Sentido de vida"],
+  "Gratitud":["Gratitud","Bienestar","Afecto positivo","Satisfaccion","Optimismo"],
+  "Optimismo":["Optimismo","Bienestar","Resiliencia","Esperanza","Afrontamiento"],
+  "Fortalezas personales":["Fortalezas del caracter","Bienestar","Satisfaccion","Autoeficacia","Virtudes"],
+  "Sentido de vida":["Sentido de vida","Proposito","Bienestar","Satisfaccion","Significado"],
+  "Resiliencia":["Resiliencia","Afrontamiento","Bienestar","Autoeficacia","Apoyo social"],
+  "Comunicacion de pareja":["Comunicacion","Satisfaccion de pareja","Conflicto","Empatia","Asertividad"],
+  "Conflicto familiar":["Conflicto","Cohesion familiar","Comunicacion","Estres","Funcionamiento familiar"],
+  "Satisfaccion marital":["Satisfaccion marital","Compromiso","Comunicacion","Intimidad","Conflicto"],
+  "Crianza positiva":["Estilo de crianza","Autoestima infantil","Disciplina","Calidez parental","Conducta infantil"],
+  "Divorcio y separacion":["Ajuste al divorcio","Bienestar","Estres","Apoyo social","Coparentalidad"],
+  "Violencia domestica":["Violencia de pareja","Autoestima","Depresion","Estres postraumatico","Apoyo social"],
+  "Adherencia al tratamiento":["Adherencia","Autoeficacia","Creencias de salud","Apoyo social","Conocimiento de enfermedad"],
+  "Afrontamiento de enfermedad":["Estrategias de afrontamiento","Bienestar","Ansiedad","Depresion","Apoyo social"],
+  "Calidad de vida":["Calidad de vida","Bienestar","Funcionamiento fisico","Salud mental","Satisfaccion"],
+  "Dolor cronico":["Dolor percibido","Catastrofizacion","Depresion","Ansiedad","Funcionalidad"],
+  "Estilos de vida saludables":["Ejercicio","Alimentacion","Autoeficacia","Motivacion","Habitos de salud"],
+  "Ansiedad ante procedimientos":["Ansiedad","Miedo","Afrontamiento","Conocimiento","Apoyo social"],
+  "Apego temprano":["Apego","Sensibilidad materna","Seguridad","Interaccion madre-hijo","Desarrollo socioemocional"],
+  "Desarrollo cognitivo":["Funciones ejecutivas","Memoria","Atencion","Lenguaje","Inteligencia"],
+  "Identidad en adolescencia":["Identidad","Autoestima","Exploracion","Compromiso","Bienestar"],
+  "Transicion a la adultez":["Autonomia","Identidad","Bienestar","Exploracion","Inestabilidad"],
+  "Envejecimiento exitoso":["Bienestar","Funcionamiento cognitivo","Actividad","Apoyo social","Satisfaccion"],
+  "Desarrollo moral":["Razonamiento moral","Empatia","Conducta prosocial","Valores","Justicia"],
+  "Funciones ejecutivas":["Funciones ejecutivas","Memoria de trabajo","Inhibicion","Flexibilidad cognitiva","Planificacion"],
+  "Memoria":["Memoria","Atencion","Aprendizaje","Funciones ejecutivas","Metamemoria"],
+  "Atencion y concentracion":["Atencion","Concentracion","Funciones ejecutivas","Rendimiento","Distractibilidad"],
+  "Rehabilitacion cognitiva":["Funciones cognitivas","Mejora","Transferencia","Motivacion","Autoeficacia"],
+  "Deterioro cognitivo":["Deterioro","Memoria","Funciones ejecutivas","Actividades diarias","Depresion"],
+  "Lenguaje":["Lenguaje","Comprension","Expresion","Funciones ejecutivas","Memoria"],
+  "Dependencia a sustancias":["Dependencia","Craving","Recaida","Impulsividad","Autocontrol"],
+  "Adiccion a videojuegos":["Adiccion","Uso problematico","Autocontrol","Bienestar","Rendimiento academico"],
+  "Recaida":["Recaida","Craving","Autoeficacia","Apoyo social","Estres"],
+  "Craving":["Craving","Ansiedad","Autocontrol","Estres","Gatillos"],
+  "Comorbilidad psiquiatrica":["Depresion","Ansiedad","Adiccion","Impulsividad","Bienestar"],
+  "Adiccion a redes sociales":["Adiccion","Uso problematico","Tiempo de uso","Autoestima","Ansiedad social"],
+  "Cyberbullying":["Victimizacion online","Autoestima","Depresion","Ansiedad","Apoyo social"],
+  "FOMO (miedo a perderse algo)":["FOMO","Ansiedad","Uso de redes","Bienestar","Autoestima"],
+  "Nomofobia (miedo a no tener celular)":["Nomofobia","Ansiedad","Dependencia","Autocontrol","Estres"],
+  "Identidad digital":["Identidad online","Autopresentacion","Autoestima","Comparacion social","Autenticidad"],
+  "Relaciones online":["Calidad de relaciones","Intimidad","Comunicacion","Satisfaccion","Apoyo social"],
+  "Estres postraumatico":["TEPT","Ansiedad","Evitacion","Reexperimentacion","Hiperactivacion"],
+  "Resiliencia post-desastre":["Resiliencia","Afrontamiento","Crecimiento postraumatico","Apoyo social","Bienestar"],
+  "Primeros auxilios psicologicos":["Intervencion","Efectividad","Estres agudo","Apoyo","Estabilizacion"],
+  "Duelo traumatico":["Duelo","Depresion","Ansiedad","Aceptacion","Apoyo social"],
+  "Panico y evacuacion":["Panico","Conducta de evacuacion","Miedo","Preparacion","Percepcion de riesgo"],
+  "Intervencion en crisis":["Efectividad","Estabilizacion","Apoyo","Afrontamiento","Sintomas"],
+  "Aculturacion":["Aculturacion","Estres de aculturacion","Identidad etnica","Adaptacion","Bienestar"],
+  "Choque cultural":["Choque cultural","Adaptacion","Ansiedad","Apoyo social","Ajuste"],
+  "Identidad etnica":["Identidad etnica","Autoestima","Pertenencia","Discriminacion","Bienestar"],
+  "Discriminacion percibida":["Discriminacion percibida","Autoestima","Bienestar","Estres","Salud mental"],
+  "Estres de aculturacion":["Estres","Aculturacion","Apoyo social","Bienestar","Adaptacion"],
+  "Integracion social":["Integracion","Apoyo social","Participacion","Bienestar","Sentido de pertenencia"],
+};
+
+const NIVELES = [
+  {id:"exploratorio", label:"Exploratorio", desc:"Tema poco conocido, primeras aproximaciones", hint:"Recomendado cuando hay poca investigación previa"},
+  {id:"descriptivo", label:"Descriptivo", desc:"Caracterizar y describir el fenómeno", hint:"Recomendado con 1 variable o para caracterizar"},
+  {id:"correlacional", label:"Correlacional", desc:"Analizar relaciones entre 2 o más variables", hint:"Recomendado con 2-3 variables"},
+  {id:"explicativo", label:"Explicativo / Causal", desc:"Explicar causas y efectos del fenómeno", hint:"Recomendado con 3+ variables y relaciones de causa"},
+];
+
+// DISEÑOS: solo estrategias de recolección de datos
+const DISENOS = {
+  cuantitativo: [
+    {id:"experimental",            label:"Experimental",               desc:"Manipulas variables con grupo control y asignación aleatoria", hint:"⭐ Máximo control causal · Requiere laboratorio o intervención"},
+    {id:"cuasiexperimental",       label:"Cuasi-experimental",         desc:"Manipulas variables sin asignación aleatoria", hint:"Grupos preexistentes · Control moderado"},
+    {id:"no-experimental-transversal",  label:"No experimental transversal",  desc:"Observas variables en un único momento del tiempo", hint:"⭐ Más común en pregrado · Sin manipulación"},
+    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas las mismas variables en distintos momentos", hint:"Seguimiento temporal · Panel o tendencia"},
+  ],
+  cualitativo: [
+    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados", hint:"⭐ Ideal para comprender vivencias profundas"},
+    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en contexto", hint:"Requiere inmersión prolongada"},
+    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos"},
+    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos", hint:"⭐ Muy común en pregrado, flexible"},
+    {id:"narrativo", label:"Narrativo", desc:"Historias de vida y relatos biográficos", hint:"Ideal para trayectorias individuales"},
+    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para cambio", hint:"Combina investigación con intervención"},
+  ],
+  mixto: [
+    {id:"secuencial-explicativo", label:"Secuencial Explicativo (CUAN → cual)", desc:"Primero cuantitativo, luego cualitativo para profundizar", hint:"⭐ Usas datos cualitativos para explicar resultados cuantitativos"},
+    {id:"secuencial-exploratorio", label:"Secuencial Exploratorio (CUAL → cuan)", desc:"Primero cualitativo, luego cuantitativo para generalizar", hint:"⭐ Exploras primero, luego mides en muestra mayor"},
+    {id:"convergente-paralelo", label:"Convergente Paralelo (CUAN + CUAL)", desc:"Recolectas ambos tipos de datos simultáneamente", hint:"Comparas y triangulas resultados"},
+    {id:"transformativo", label:"Transformativo", desc:"Enfoque en justicia social y cambio", hint:"Perspectiva crítica, emancipadora"},
+    {id:"anidado", label:"Anidado o Incrustado", desc:"Un enfoque dentro de otro (secundario)", hint:"Un método apoya al otro (ej: entrevistas en experimento)"},
+  ]
+};
+
+// TÉCNICAS DE ANÁLISIS
+// Filtradas por: nivel + diseño
+// experimental/cuasiexperimental → ANOVA/t-test (fuera del alcance del asistente)
+// no-experimental-transversal    → todas según nivel
+// no-experimental-longitudinal   → regresión, path analysis, SEM longitudinal
+
+const TECNICAS_POR_NIVEL = {
+  correlacional: [
+    {id:"correlacion",       label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"r o ρ · Pregrado"},
+    {id:"regresion-simple",  label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X",                  hint:"📊 Diagrama · Pregrado · OLS"},
+  ],
+  explicativo_transversal: [
+    {id:"regresion-multiple", label:"Regresión múltiple",   desc:"Predice Y con 2 o más predictores simultáneamente",           hint:"📊 Diagrama · Pregrado · OLS / Hayes"},
+    {id:"mediacion",          label:"Mediación simple",     desc:"M explica el mecanismo por el que X afecta a Y",              hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 4"},
+    {id:"moderacion",         label:"Moderación simple",    desc:"W cambia la fuerza o dirección del efecto X → Y",             hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 1"},
+    {id:"mediacion-moderada", label:"Mediación moderada",   desc:"W modera la trayectoria de mediación X → M → Y",             hint:"📊 Diagrama · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
+    {id:"path-analysis",      label:"Path Analysis",        desc:"Red causal entre variables observadas, sin latentes",         hint:"📊 Diagrama · Posgrado · AMOS, lavaan, Mplus"},
+    {id:"sem-mediacion",      label:"SEM — Mediación con latentes",   desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama · Posgrado · AMOS, Mplus"},
+    {id:"sem-moderacion",     label:"SEM — Moderación con latentes",  desc:"Interacción entre variables latentes",                hint:"📊 Diagrama · Posgrado · Mplus (LMS)"},
+    {id:"sem-completo",       label:"SEM — Modelo completo",          desc:"CFA + modelo estructural con múltiples trayectorias", hint:"📊 Diagrama · Posgrado · AMOS, Mplus, lavaan"},
+  ],
+  explicativo_longitudinal: [
+    {id:"regresion-multiple", label:"Regresión múltiple longitudinal", desc:"Predice Y en distintos momentos con múltiples predictores", hint:"📊 Diagrama · Pregrado avanzado"},
+    {id:"path-analysis",      label:"Path Analysis longitudinal",      desc:"Trayectorias causales medidas en distintos tiempos",        hint:"📊 Diagrama · Posgrado · AMOS, lavaan"},
+    {id:"sem-completo",       label:"SEM longitudinal",                desc:"Modelo estructural con mediciones repetidas (panel)",       hint:"📊 Diagrama · Posgrado · Mplus, lavaan"},
+  ]
+};
+
+// Función que devuelve las técnicas disponibles según nivel + diseño
+function getTecnicasDisponibles(nivel, diseno) {
+  // Experimental y cuasi-experimental: ANOVA/t-test, fuera del alcance
+  if(diseno === 'experimental' || diseno === 'cuasiexperimental') return null;
+  if(nivel === 'correlacional') return TECNICAS_POR_NIVEL.correlacional;
+  if(nivel === 'explicativo') {
+    if(diseno === 'no-experimental-longitudinal') return TECNICAS_POR_NIVEL.explicativo_longitudinal;
+    return TECNICAS_POR_NIVEL.explicativo_transversal;
+  }
+  return null; // exploratorio y descriptivo: sin técnica avanzada
+}
+
+// Alias para compatibilidad con getTecnicaInstructions y fallbacks
+const TECNICAS = {
+  correlacional: TECNICAS_POR_NIVEL.correlacional,
+  explicativo:   TECNICAS_POR_NIVEL.explicativo_transversal,
+  explicativo_longitudinal: TECNICAS_POR_NIVEL.explicativo_longitudinal
+};
+
+const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
+const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mi","Algo (he leido sobre el tema)","Bastante (me interesa mucho)"];
+const VIABILIDADES = ["Si, tengo acceso directo","Tal vez, con esfuerzo podria acceder","No estoy seguro","No, no tengo acceso"];
+
+const NIVEL_HINT = {
+  1:"Con 1 variable se recomienda nivel descriptivo.",
+  2:"Con 2 variables puedes optar por descriptivo o correlacional.",
+  3:"Con 3 o más variables puedes optar por correlacional o explicativo.",
+};
+
+// CARGAR ESTADO DESDE LOCALSTORAGE
+let savedState = null;
+try {
+  savedState = JSON.parse(localStorage.getItem('investigacion_state'));
+} catch(e) {}
+
+let state = savedState || {
+  step:0,
+  area:"",
+  areaOtro:"",
+  poblacion:"",
+  poblacionOtro:"",
+  problema:"",
+  problemaOtro:"",
+  variables:[],
+  variablesOtro:"",
+  enfoque:"",
+  nivel:"",
+  diseno:"",
+  tecnica:"",
+  experiencia:"",
+  viabilidad:"",
+  contexto:"",
+  motivacion:"",
+  result:null,
+  loading:false,
+  editMode:false,
+  edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+};
+
+// GUARDAR ESTADO AUTOMÁTICAMENTE
+function saveState() {
+  try {
+    localStorage.setItem('investigacion_state', JSON.stringify(state));
+    showAutoSave();
+  } catch(e) {}
+}
+
+function showAutoSave() {
+  const el = document.getElementById('auto-save');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function efectiveArea(){return state.area==="otro"?state.areaOtro:AREAS.find(a=>a.id===state.area)?.label||"";}
+function efectivePoblacion(){return state.poblacion==="otro"?state.poblacionOtro:state.poblacion;}
+function efectiveProblema(){return state.problema==="otro"?state.problemaOtro:state.problema;}
+
+function canNext(){
+  const s=state.step;
+  if(s===0){
+    if(state.area==="otro") return state.areaOtro.trim()!=="";
+    return state.area!=="";
+  }
+  if(s===1){
+    if(state.poblacion==="otro") return state.poblacionOtro.trim()!=="";
+    return state.poblacion!=="";
+  }
+  if(s===2){
+    // Si problema es "otro", necesita problema especificado Y variables
+    if(state.problema==="otro") {
+      return state.problemaOtro.trim()!=="" && state.variablesOtro.trim()!=="";
+    }
+    // Si seleccionó "otro" en variables, necesita variables especificadas
+    if(state.variables.includes('otro')) {
+      return state.variables.length>0 && state.variablesOtro.trim()!=="";
+    }
+    // Caso normal: problema seleccionado y al menos una variable
+    return state.problema!=="" && state.variables.length>0;
+  }
+  if(s===3){
+    if(!state.enfoque || !state.nivel || !state.diseno) return false;
+    if(state.enfoque==="Cuantitativo"){
+      // Experimental/cuasi: no requieren técnica del menú
+      if(state.diseno==='experimental' || state.diseno==='cuasiexperimental') return true;
+      // Exploratorio/descriptivo: no requieren técnica avanzada
+      if(state.nivel==='exploratorio' || state.nivel==='descriptivo') return true;
+      // Correlacional/explicativo: requieren técnica
+      if(state.nivel==="correlacional" || state.nivel==="explicativo") return state.tecnica !== "";
+    }
+    return true;
+  }
+  if(s===4) return state.experiencia!=="" && state.viabilidad!=="";
+  return true;
+}
+
+function badge(label, active, click){
+  return `<button class="badge ${active?'active':''}" onclick="${click}">${label}</button>`;
+}
+
+function badgeWithDesc(title, desc, hint, active, click, recommended=false){
+  const hintClass = recommended ? 'recommended' : '';
+  return `<button class="badge ${active?'active':''}" onclick="${click}">
+    <div class="badge-title">${title}</div>
+    <div class="badge-desc">${desc}</div>
+    ${hint ? `<div class="badge-hint ${hintClass}">${hint}</div>` : ''}
+  </button>`;
+}
+
+function sectionLabel(t, tooltip=""){
+  if(tooltip) {
+    return `<p class="section-label">${t} <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">${tooltip}</span></span></p>`;
+  }
+  return `<p class="section-label">${t}</p>`;
+}
+
+function renderStepsBar(){
+  let h="";
+  STEPS.forEach((name,i)=>{
+    const done=i<state.step;
+    const active=i===state.step;
+    const pending=i>state.step;
+    let cls=done?"done":active?"active":"pending";
+    h+=`<div class="step-circle ${cls}" onclick="${done?`state.step=${i};render()`:''}">${done?'✓':i+1}</div>`;
+    if(i<STEPS.length-1){
+      h+=`<div class="step-line ${done?'done':'pending'}"></div>`;
+    }
+  });
+  document.getElementById("steps-bar").innerHTML=h;
+  document.getElementById("step-label").textContent=`Paso ${state.step+1} de 6: ${STEPS[state.step]}`;
+}
+
+// SUGERENCIAS AUTOMÁTICAS
+function getAutoSuggestion() {
+  if(!state.enfoque || !state.variables.length) return "";
+  
+  const nv = state.variables.filter(v => v !== 'otro').length;
+  const enfoque = state.enfoque.toLowerCase();
+  
+  // Validación: Cualitativo con muchas variables
+  if(enfoque === "cualitativo" && nv >= 4) {
+    return `<div class="hint warning">⚠️ Para enfoque cualitativo, usualmente se trabaja con menos variables (1-2) y se profundiza más en cada una. ¿Estás seguro de necesitar ${nv} variables?</div>`;
+  }
+  
+  // Sugerencia automática según variables
+  if(nv === 1) {
+    return `<div class="hint success">💡 Con 1 variable → nivel descriptivo. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso'}.</div>`;
+  }
+  if(nv === 2) {
+    return `<div class="hint success">💡 Con 2 variables → nivel correlacional. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso múltiple'}.</div>`;
+  }
+  if(nv >= 3 && enfoque === 'cuantitativo') {
+    return `<div class="hint success">💡 Con ${nv} variables → nivel correlacional o explicativo. Diseño recomendado: no experimental transversal (o experimental si puedes manipular).</div>`;
+  }
+  
+  return "";
+}
+
+function renderContent(){
+  const el=document.getElementById("content");
+  const s=state.step;
+
+  if(s===0){
+    let h=sectionLabel("¿Que area de la psicologia te interesa?");
+    h+=`<div class="grid3">`;
+    AREAS.forEach(a=>{
+      h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')"><span class="area-icon">${a.icon}</span><span>${a.label}</span></button>`;
+    });
+    h+=`</div>`;
+    if(state.area==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu area" value="${state.areaOtro}" oninput="state.areaOtro=this.value;updateNav();saveState()"/>`;
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===1){
+    let h=sectionLabel("¿Con que poblacion quieres trabajar?");
+    const pobs=state.area&&state.area!=="otro"?POBLACIONES[state.area]:[];
+    if(pobs.length>0){
+      h+=`<div class="options">`;
+      pobs.forEach(p=>{
+        const esc=p.replace(/'/g,"\\'");
+        h+=badge(p, state.poblacion===p, `selectPoblacion('${esc}')`);
+      });
+      h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
+      h+=`</div>`;
+    } else {
+      h+=`<div class="options">`;
+      h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
+      h+=`</div>`;
+    }
+    if(state.poblacion==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu poblacion" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState()"/>`;
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===2){
+    let h=sectionLabel("¿Que problema o fenomeno quieres investigar?");
+    const probs=state.area&&state.area!=="otro"?PROBLEMAS[state.area]:[];
+    if(probs.length>0){
+      h+=`<div class="options">`;
+      probs.forEach(p=>{
+        const esc=p.replace(/'/g,"\\'");
+        h+=badge(p, state.problema===p, `selectProblema('${esc}')`);
+      });
+      h+=badge("Otro", state.problema==="otro", `selectProblema('otro')`);
+      h+=`</div>`;
+    } else {
+      h+=`<div class="options">`;
+      h+=badge("Otro", state.problema==="otro", `selectProblema('otro')`);
+      h+=`</div>`;
+    }
+    if(state.problema==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu problema/fenomeno" value="${state.problemaOtro}" oninput="state.problemaOtro=this.value;updateNav();saveState()" onblur="renderContent()" onkeypress="if(event.key==='Enter'){renderContent()}"/>`;
+    }
+    
+    // Mostrar campo de variables solo si ya confirmó el problema (tiene al menos 3 caracteres Y no está vacío después de trim)
+    const problemaConfirmado = state.problema === "otro" && state.problemaOtro.trim().length >= 3;
+    const mostrarVariables = (state.problema && state.problema !== "otro") || problemaConfirmado;
+    
+    if(mostrarVariables){
+      h+=sectionLabel("¿Que variables quieres estudiar?");
+      const vars=state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
+      if(vars.length>0){
+        h+=`<div class="chips">`;
+        vars.forEach(v=>{
+          const esc=v.replace(/'/g,"\\'");
+          h+=`<button class="chip ${state.variables.includes(v)?'active':''}" onclick="toggleVar('${esc}')">${v}</button>`;
+        });
+        h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
+        h+=`</div>`;
+        const nv=state.variables.filter(v => v !== 'otro').length;
+        if(nv>0&&NIVEL_HINT[nv]){
+          h+=`<div class="hint">${NIVEL_HINT[nv]}</div>`;
+        }
+        if(state.variables.includes('otro')){
+          h+=`<input type="text" class="otro-input" placeholder="Especifica tus variables separadas por comas" value="${state.variablesOtro}" oninput="state.variablesOtro=this.value;updateNav();saveState()"/>`;
+        }
+      } else {
+        h+=`<textarea placeholder="Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)" oninput="state.variablesOtro=this.value;setVarsFromText(this.value);saveState()">${state.variablesOtro}</textarea>`;
+      }
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===3){
+    let h=`<div class="gap20">`;
+
+    // ── Enfoque ───────────────────────────────────────────────────
+    h+=sectionLabel("¿Que enfoque metodologico prefieres?");
+    h+=`<div class="options">`;
+    ENFOQUES.forEach(e=>{
+      let desc="";
+      if(e==="Cuantitativo") desc="Números, estadísticas, medición objetiva";
+      if(e==="Cualitativo")  desc="Experiencias, significados, profundidad";
+      if(e==="Mixto")        desc="Combina métodos cuantitativos y cualitativos";
+      h+=badgeWithDesc(e, desc, null, state.enfoque===e, `selectEnfoque('${e}')`);
+    });
+    h+=`</div>`;
+
+    // ── Nivel ─────────────────────────────────────────────────────
+    if(state.enfoque){
+      h+=sectionLabel("¿Que nivel de investigacion buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
+      h+=`<div class="options">`;
+      NIVELES.forEach(n=>{
+        const esc=n.id.replace(/'/g,"\'");
+        h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
+      });
+      h+=`</div>`;
+    }
+
+    // ── Diseño (estrategia de recolección) ────────────────────────
+    if(state.enfoque && state.nivel){
+      h+=sectionLabel("¿Que diseño de investigacion utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos (experimental, observacional, longitudinal, etc.)");
+      const enfoqueKey = state.enfoque.toLowerCase();
+      const disenosDisponibles = DISENOS[enfoqueKey] || [];
+      h+=`<div class="options">`;
+      disenosDisponibles.forEach(d=>{
+        const esc=d.id.replace(/'/g,"\'");
+        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+      });
+      h+=`</div>`;
+    }
+
+    // ── Técnica de análisis ───────────────────────────────────────
+    if(state.enfoque==="Cuantitativo" && state.diseno && state.nivel) {
+      const tecnicasDisponibles = getTecnicasDisponibles(state.nivel, state.diseno);
+
+      // Experimental / cuasi-experimental: ANOVA/t-test, fuera del alcance
+      if(state.diseno==='experimental' || state.diseno==='cuasiexperimental'){
+        h+=`<div class="hint warning">⚠️ Los diseños experimental y cuasi-experimental utilizan técnicas como ANOVA, t de Student o ANCOVA para comparar grupos. Estas técnicas están fuera del alcance de este asistente (orientado a correlación, regresión y modelos relacionales). Puedes continuar, pero el asistente generará una propuesta adaptada a tu diseño sin una técnica específica de comparación de grupos.</div>`;
+      }
+      // Exploratorio / descriptivo: sin técnica avanzada
+      else if(state.nivel==='exploratorio' || state.nivel==='descriptivo'){
+        h+=`<div class="hint success">✅ Para nivel ${state.nivel === 'exploratorio' ? 'exploratorio' : 'descriptivo'} se utilizan estadísticos descriptivos: frecuencias, medidas de tendencia central y dispersión. No se requieren técnicas avanzadas.</div>`;
+      }
+      // Técnicas disponibles según nivel + diseño
+      else if(tecnicasDisponibles && tecnicasDisponibles.length > 0){
+        h+=sectionLabel("¿Qué técnica de análisis estadístico planeas usar?",
+          "Solo aparecen técnicas coherentes con tu nivel y diseño de investigación.");
+        if(state.nivel==="correlacional"){
+          h+=`<div class="hint">📌 Nivel correlacional: estas técnicas miden asociaciones, no establecen causalidad.</div>`;
+        } else if(state.diseno==='no-experimental-longitudinal'){
+          h+=`<div class="hint">📌 Diseño longitudinal: las técnicas disponibles son adecuadas para datos con mediciones repetidas o en distintos tiempos.</div>`;
+        } else {
+          h+=`<div class="hint">📌 Nivel explicativo + diseño transversal: puedes modelar relaciones causales. Las opciones SEM son de uso avanzado (posgrado).</div>`;
+        }
+        h+=`<div class="options">`;
+        tecnicasDisponibles.forEach(t=>{
+          const esc=t.id.replace(/'/g,"\'");
+          h+=badgeWithDesc(t.label, t.desc, t.hint, state.tecnica===t.id, `selectTecnica('${esc}')`);
+        });
+        h+=`</div>`;
+      }
+    }
+
+    h+=getAutoSuggestion();
+    h+=`</div>`;
+    el.innerHTML=h;
+  }
+  else if(s===4){
+    let h=`<div class="gap20">`;
+    h+=sectionLabel("¿Cuanta experiencia tienes con este tema o poblacion?");
+    h+=`<div class="options">`;
+    EXPERIENCIAS.forEach(e=>{
+      const esc=e.replace(/'/g,"\\'");
+      h+=badge(e, state.experiencia===e, `state.experiencia='${esc}';updateNav();renderContent();saveState()`);
+    });
+    h+=`</div>`;
+    h+=sectionLabel("¿Tienes acceso a la poblacion que quieres estudiar?");
+    h+=`<div class="options">`;
+    VIABILIDADES.forEach(v=>{
+      const esc=v.replace(/'/g,"\\'");
+      h+=badge(v, state.viabilidad===v, `state.viabilidad='${esc}';updateNav();renderContent();saveState()`);
+    });
+    h+=`</div>`;
+    h+=sectionLabel("¿En que contexto realizarias tu investigacion? — opcional");
+    h+=`<textarea placeholder="Ej: Lima, en un colegio privado..." oninput="state.contexto=this.value;saveState()">${state.contexto}</textarea>`;
+    h+=sectionLabel("¿Por que te interesa este tema? — opcional");
+    h+=`<textarea placeholder="Ej: Lo observe en mi practica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
+    h+=`</div>`;
+    el.innerHTML=h;
+  }
+
+  else if(s===5){
+    if(state.loading){
+      el.innerHTML=`<div class="loading"><div class="icon">⏳</div><p>Generando tu propuesta de investigacion...</p></div>`;
+      return;
+    }
+    if(!state.result){
+      // Calcular advertencias antes de generar
+      let warnHtml = '';
+      const warns = getWarnings(
+        state.variables.filter(v=>v!=='otro').concat(
+          state.variables.includes('otro')&&state.variablesOtro.trim()
+            ? state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean) : []
+        ),
+        state.tecnica, state.nivel, state.enfoque
+      );
+      if(warns.length > 0){
+        warnHtml = `<div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">` +
+          warns.map(w => `<div class="hint ${w.startsWith('⚠️')?'warning':w.startsWith('📌')?'':'success'}"
+            style="font-size:13px;line-height:1.6">${w}</div>`).join('') +
+        `</div>`;
+      }
+      const tecnicaLabel = state.tecnica
+        ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+        : 'Estadística descriptiva';
+      el.innerHTML=`<div class="generate-box">
+        ${warnHtml}
+        <p>Todo listo. Generaremos una propuesta coherente con tu técnica: <strong>${tecnicaLabel}</strong>.<br>
+        <span style="font-size:13px;color:#9CA3AF">Revisa las advertencias arriba si las hay. Podrás editar el resultado.</span></p>
+        <button class="btn-generate" onclick="generate()">✨ Generar propuesta</button>
+      </div>`;
+      return;
+    }
+    
+    let errorMsg = "";
+    if(state.result.error){
+      errorMsg = `<div style="padding:20px;background:#FEF3E8;border:1px solid #F59E0B;border-radius:8px;margin-bottom:20px">
+        <p style="color:#B45309;font-size:14px;line-height:1.6;margin:0">${state.result.error}</p>
+      </div>`;
+    }
+    
+    const fields=[
+      {key:"tema", label:"Tema de investigacion", color:"#534AB7", bg:"#EEEDFE"},
+      {key:"pregunta", label:"Pregunta de investigacion", color:"#0F6E56", bg:"#E1F5EE"},
+      {key:"objetivo", label:"Objetivo general", color:"#993C1D", bg:"#FAECE7"},
+      {key:"hipotesis", label: state.enfoque === "Cuantitativo" ? "Hipotesis de investigacion" : state.enfoque === "Cualitativo" ? "Hipotesis de trabajo" : "Hipotesis", color:"#7C3AED", bg:"#F3E8FF"},
+    ];
+    let h= errorMsg + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
+    h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
+    h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
+    h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
+    // Mostrar diagrama según técnica seleccionada (no el diseño)
+    const tecnicaParaDiagrama = ['regresion-multiple','mediacion','moderacion',
+      'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
+    if(tecnicaParaDiagrama.includes(state.tecnica)) {
+      h+=`<button class="btn-sm" onclick="showModelDiagram()" style="border-color:#7C3AED;color:#7C3AED">📊 Ver modelo teórico</button>`;
+    }
+    h+=`<button class="btn-sm btn-nuevo" onclick="nuevoProyecto()" style="border-color:#dc2626;color:#dc2626">🔄 Nuevo proyecto</button>`;
+    h+=`</div></div>`;
+    fields.forEach(f=>{
+      h+=`<div class="result-block" style="background:${f.bg}">`;
+      h+=`<p class="result-block-label" style="color:${f.color}">${f.label}</p>`;
+      if(state.editMode){
+        const esc=state.edited[f.key].replace(/"/g,"&quot;");
+        h+=`<textarea style="border:1px solid ${f.color}" oninput="state.edited.${f.key}=this.value;saveState()">${state.edited[f.key]}</textarea>`;
+      } else {
+        h+=`<p>${state.edited[f.key]}</p>`;
+      }
+      h+=`</div>`;
+    });
+    h+=`<div class="summary"><p class="title">Resumen de tu perfil metodologico</p><div class="summary-grid">`;
+    const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+    const enfoqueKey = state.enfoque.toLowerCase();
+    const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+    const disenoLabel = disenoObj?.label || state.diseno;
+    
+    let variablesDisplay = state.variables.filter(v => v !== 'otro');
+    if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+      const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
+      variablesDisplay = variablesDisplay.concat(otrasVars);
+    }
+    
+    [["Area",efectiveArea()],["Poblacion",efectivePoblacion()],["Problema",efectiveProblema()],
+     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],["Nivel",nivelLabel],["Diseño",disenoLabel],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
+      h+=`<p><span>${k}:</span> ${v}</p>`;
+    });
+    h+=`</div></div>`;
+
+    // PRÓXIMOS PASOS
+    h+=`<div class="next-steps">
+      <div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div>
+      <ul>
+        <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social)</li>
+        <li><strong>Marco teórico:</strong> Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO</li>
+        <li><strong>Metodología:</strong> Define tu muestra, instrumentos de medición y procedimiento de recolección</li>
+        <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase de tu investigación</li>
+      </ul>
+    </div>`;
+    
+    el.innerHTML=h;
+  }
+}
+
+function updateNav(){
+  document.getElementById("btn-back").disabled=state.step===0;
+  const nb=document.getElementById("btn-next");
+  nb.disabled=!canNext();
+  nb.style.display=state.step===5?"none":"block";
+}
+
+function render(){
+  renderStepsBar();
+  renderContent();
+  updateNav();
+}
+
+function nextStep(){if(canNext()&&state.step<5){state.step++;render();saveState();}}
+function prevStep(){if(state.step>0){state.step--;render();saveState();}}
+
+function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];updateNav();renderContent();saveState();}
+function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";updateNav();renderContent();saveState();}
+function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";updateNav();renderContent();saveState();}
+function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
+function selectDiseno(v){state.diseno=v;state.tecnica="";updateNav();renderContent();saveState();}
+function selectTecnica(v){state.tecnica=v;updateNav();renderContent();saveState();}
+
+function toggleVar(v){
+  const i=state.variables.indexOf(v);
+  if(i>-1) state.variables.splice(i,1); else state.variables.push(v);
+  updateNav();renderContent();saveState();
+}
+function setVarsFromText(val){
+  const vars = val.split(",").map(v=>v.trim()).filter(Boolean);
+  state.variables = vars;
+  state.variablesOtro = val;
+  updateNav();
+}
+function toggleEdit(){state.editMode=!state.editMode;renderContent();}
+
+function nuevoProyecto(){
+  if(confirm('¿Estás seguro de que quieres empezar un nuevo proyecto? Se perderá toda la información actual.')){
+    // Limpiar localStorage
+    localStorage.removeItem('investigacion_state');
+    
+    // Reiniciar estado
+    state = {
+      step:0,
+      area:"",
+      areaOtro:"",
+      poblacion:"",
+      poblacionOtro:"",
+      problema:"",
+      problemaOtro:"",
+      variables:[],
+      variablesOtro:"",
+      enfoque:"",
+      nivel:"",
+      diseno:"",
+      tecnica:"",
+      experiencia:"",
+      viabilidad:"",
+      contexto:"",
+      motivacion:"",
+      result:null,
+      loading:false,
+      editMode:false,
+      edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+    };
+    
+    // Volver al inicio
+    render();
+  }
+}
+
+// ── INSTRUCCIONES ESPECÍFICAS POR TÉCNICA ────────────────────────
+function getTecnicaInstructions(tecnica, vars, poblacion, nivel) {
+  const X  = vars[0]||'Variable X';
+  const M  = vars[1]||'Variable M';
+  const Y  = vars[vars.length-1]||'Variable Y';
+  const W  = vars[1]||'Moderador';
+  const pop = poblacion;
+
+  const instrucciones = {
+    'correlacion': {
+      pregunta: `¿Existe relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Determinar la relación entre',
+      hipotesis:`Existe una relación estadísticamente significativa entre ${X} y ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿Existe relación...?", objetivo con "Determinar la relación", hipótesis con "Existe una relación [positiva/negativa] entre X e Y". NO uses causalidad.'
+    },
+    'regresion-simple': {
+      pregunta: `¿En qué medida ${X} predice ${Y} en ${pop}?`,
+      verbo:    'Determinar la capacidad predictiva de',
+      hipotesis:`${X} predice significativamente ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿En qué medida X predice Y?", objetivo con "Determinar la capacidad predictiva de X sobre Y", hipótesis predictiva (β significativo). NO uses causalidad.'
+    },
+    'regresion-multiple': {
+      pregunta: `¿En qué medida ${vars.slice(0,-1).join(', ')} predicen ${Y} en ${pop}?`,
+      verbo:    'Determinar la capacidad predictiva de',
+      hipotesis:`${vars.slice(0,-1).join(', ')} predicen significativamente ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿En qué medida los predictores explican la varianza de Y?", objetivo con verbos como "Determinar" o "Analizar la capacidad predictiva". Hipótesis con coeficientes β. NO incluyas variables no seleccionadas.'
+    },
+    'mediacion': {
+      pregunta: `¿En qué medida ${M} media la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Examinar el efecto mediador de',
+      hipotesis:`${M} media significativamente la relación entre ${X} y ${Y} en ${pop} (efecto indirecto a×b significativo).`,
+      nota:     `Usa pregunta con "¿En qué medida M media...?", objetivo con "Examinar el efecto mediador de M en la relación X→Y". Hipótesis sobre efecto indirecto (a×b). VARIABLES EXACTAS: X=${X}, M=${M}, Y=${Y}. NO inventes otras variables.`
+    },
+    'moderacion': {
+      pregunta: `¿En qué medida ${W} modera la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Analizar el efecto moderador de',
+      hipotesis:`${W} modera significativamente la relación entre ${X} y ${Y} en ${pop} (interacción X×W significativa).`,
+      nota:     `Usa pregunta con "¿En qué medida W modera...?", objetivo con "Analizar el efecto moderador de W sobre X→Y". Hipótesis sobre interacción X×W. VARIABLES EXACTAS: X=${X}, W=${W}, Y=${Y}. NO inventes otras variables.`
+    },
+    'mediacion-moderada': {
+      pregunta: `¿En qué medida ${vars[3]||W} modera el efecto mediador de ${M} en la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Examinar el modelo de mediación moderada de',
+      hipotesis:`El efecto indirecto de ${X} sobre ${Y} a través de ${M} varía significativamente en función de ${vars[3]||W} en ${pop}.`,
+      nota:     `Pregunta sobre moderación del efecto mediador. Objetivo: "Examinar el modelo de mediación moderada". Hipótesis sobre índice de mediación moderada. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'path-analysis': {
+      pregunta: `¿Cuál es la estructura de relaciones causales entre ${vars.join(', ')} en ${pop}?`,
+      verbo:    'Analizar la estructura de relaciones causales entre',
+      hipotesis:`El modelo de rutas propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) en ${pop}.`,
+      nota:     `Pregunta sobre estructura causal. Objetivo con "Analizar las trayectorias directas e indirectas". Hipótesis sobre ajuste del modelo. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'sem-mediacion': {
+      pregunta: `¿En qué medida ${M} media la relación entre ${X} y ${Y} como constructos latentes en ${pop}?`,
+      verbo:    'Examinar el efecto mediador de',
+      hipotesis:`El modelo SEM de mediación presenta ajuste adecuado (CFI≥.95, RMSEA≤.06) y el efecto indirecto de ${X} sobre ${Y} a través de ${M} es significativo en ${pop}.`,
+      nota:     `Pregunta sobre mediación con latentes. Objetivo: "Examinar el efecto mediador de M (latente) en la relación X→Y mediante SEM". Hipótesis sobre ajuste del modelo Y efecto indirecto. VARIABLES EXACTAS: X=${X}, M=${M}, Y=${Y}. MENCIONA EXPLÍCITAMENTE que son variables latentes. NO inventes otras variables.`
+    },
+    'sem-moderacion': {
+      pregunta: `¿En qué medida el constructo latente ${W} modera la relación entre los constructos latentes ${X} e ${Y} en ${pop}?`,
+      verbo:    'Analizar el efecto moderador del constructo latente',
+      hipotesis:`La interacción latente entre ${X} y ${W} (ξ₁×ξ₂) predice significativamente ${Y} en ${pop}, con índices de ajuste adecuados (CFI≥.95, RMSEA≤.06).`,
+      nota:     `IMPORTANTE: X, W e Y son CONSTRUCTOS LATENTES (no variables observadas). Pregunta: "¿En qué medida W (latente) modera X→Y (latentes)?". Hipótesis: menciona explícitamente la interacción latente ξ₁×ξ₂ y los índices de ajuste del modelo. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'sem-completo': {
+      pregunta: `¿Cuál es la estructura de relaciones entre los constructos latentes ${vars.join(', ')} en ${pop}?`,
+      verbo:    'Analizar el modelo estructural completo de',
+      hipotesis:`El modelo SEM propuesto presenta índices de ajuste adecuados (CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08) y las trayectorias estructurales son estadísticamente significativas en ${pop}.`,
+      nota:     `Pregunta sobre modelo estructural completo. Objetivo: "Analizar el modelo SEM con variables latentes". Hipótesis sobre ajuste global. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    }
+  };
+  return instrucciones[tecnica] || null;
+}
+
+// ── ADVERTENCIAS PREVENTIVAS ──────────────────────────────────────
+function getWarnings(variablesList, tecnica, nivel, enfoque) {
+  const warnings = [];
+  const nv = variablesList.length;
+
+  // Técnicas de mediación necesitan exactamente 3 variables (X, M, Y)
+  if(tecnica === 'mediacion' || tecnica === 'sem-mediacion') {
+    if(nv < 3) warnings.push(`⚠️ La mediación requiere exactamente 3 variables: X (predictor), M (mediador) e Y (criterio). Actualmente tienes ${nv}. Regresa al paso 3 y agrega las variables necesarias.`);
+    if(nv > 3) warnings.push(`⚠️ Tienes ${nv} variables pero la mediación simple usa solo 3 (X, M, Y). Las variables extra no serán usadas en el modelo. Considera mediación múltiple o SEM completo.`);
+  }
+  // Moderación necesita exactamente 3 variables (X, W, Y)
+  if(tecnica === 'moderacion' || tecnica === 'sem-moderacion') {
+    if(nv < 3) warnings.push(`⚠️ La moderación requiere 3 variables: X (predictor), W (moderador) e Y (criterio). Actualmente tienes ${nv}.`);
+  }
+  // Mediación moderada necesita 4 variables
+  if(tecnica === 'mediacion-moderada') {
+    if(nv < 4) warnings.push(`⚠️ La mediación moderada requiere 4 variables: X, M (mediador), Y y W (moderador). Actualmente tienes ${nv}. Regresa al paso 3 y agrega la variable faltante.`);
+  }
+  // Regresión múltiple necesita al menos 3 variables (2 predictores + Y)
+  if(tecnica === 'regresion-multiple') {
+    if(nv < 3) warnings.push(`⚠️ La regresión múltiple requiere al menos 2 predictores y 1 variable dependiente (mínimo 3 variables). Actualmente tienes ${nv}.`);
+  }
+  // SEM con latentes: cada variable necesita ≥3 indicadores (advertencia conceptual)
+  if(['sem-mediacion','sem-moderacion','sem-completo','path-analysis'].includes(tecnica)) {
+    warnings.push(`📌 Recuerda: Para SEM con variables latentes, cada constructo debe medirse con al menos 3 indicadores observables (ítems de escala). Las variables que seleccionaste serán los constructos latentes del modelo.`);
+  }
+  // Correlación con más de 2 variables
+  if(tecnica === 'correlacion' && nv > 2) {
+    warnings.push(`💡 Tienes ${nv} variables. La correlación de Pearson/Spearman mide pares de variables. Para múltiples correlaciones simultáneas considera una matriz de correlaciones o regresión múltiple.`);
+  }
+  // Nivel descriptivo con técnica avanzada (no debería pasar, pero por si acaso)
+  if((nivel === 'descriptivo' || nivel === 'exploratorio') && tecnica && tecnica !== '') {
+    warnings.push(`⚠️ El nivel ${nivel} no es compatible con técnicas de análisis inferencial. Considera cambiar el nivel a correlacional o explicativo.`);
+  }
+  // Path analysis / SEM correlacional (incoherente)
+  if(['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(tecnica) && nivel==='correlacional'){
+    warnings.push(`⚠️ Las técnicas SEM/Path Analysis requieren nivel explicativo, no correlacional. Regresa al paso 3 y cambia el nivel.`);
+  }
+  return warnings;
+}
+
+async function generate(){
+  state.loading=true;state.result=null;renderContent();
+  
+  let variablesList = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
+    variablesList = variablesList.concat(otrasVars);
+  }
+  
+  const nv = variablesList.length;
+  const nivelLabel  = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+  const enfoqueKey  = state.enfoque.toLowerCase();
+  const disenoObj   = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+    : 'Estadística descriptiva';
+
+  // Obtener instrucciones específicas para la técnica
+  const tecInstr = getTecnicaInstructions(
+    state.tecnica, variablesList, efectivePoblacion(), state.nivel
+  );
+
+  // Construir instrucción específica de hipótesis según enfoque y técnica
+  let hipInstruccion;
+  if(state.enfoque === "Cualitativo") {
+    hipInstruccion = "HIPOTESIS DE TRABAJO: Supuesto tentativo y flexible sobre el fenómeno. Usa 'Se espera comprender...' o 'Las experiencias de X están relacionadas con...'. NO uses hipótesis cuantitativas.";
+  } else if(state.enfoque === "Mixto") {
+    hipInstruccion = "HIPOTESIS: Formula una hipótesis mixta coherente con el diseño mixto seleccionado.";
+  } else if(tecInstr) {
+    hipInstruccion = `HIPOTESIS DE INVESTIGACION específica para ${tecnicaLabel}: ${tecInstr.nota} Ejemplo de hipótesis correcta: "${tecInstr.hipotesis}"`;
+  } else {
+    hipInstruccion = "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico coherente con el nivel y las variables seleccionadas.";
+  }
+
+  // Construir instrucción de pregunta según técnica
+  let preguntaInstruccion = "2. PREGUNTA DE INVESTIGACION principal:";
+  if(tecInstr) {
+    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION específica para ${tecnicaLabel}. Ejemplo correcto: "${tecInstr.pregunta}". REGLA: Usa exactamente las variables seleccionadas (${variablesList.join(', ')}), no inventes ni cambies variables.`;
+  }
+
+  // Construir instrucción de objetivo según técnica
+  let objetivoInstruccion = "3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y técnica; medible y alcanzable).";
+  if(tecInstr) {
+    objetivoInstruccion = `3. OBJETIVO GENERAL: Empieza con "${tecInstr.verbo}" y usa EXACTAMENTE las variables seleccionadas (${variablesList.join(', ')}). NO uses verbos genéricos como "Determinar la relación" si la técnica es mediación o SEM.`;
+  }
+
+  const prompt = `Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018; Hayes, 2018 para mediacion/moderacion; Kline, 2016 para SEM).
+
+DATOS DEL ESTUDIANTE:
+- Area: ${efectiveArea()}
+- Poblacion: ${efectivePoblacion()}
+- Problema/fenomeno: ${efectiveProblema()}
+- Variables seleccionadas (${nv} exactas, NO uses otras): ${variablesList.join(", ")}
+- Enfoque metodologico: ${state.enfoque}
+- Nivel de investigacion: ${nivelLabel}
+- Diseño de investigacion: ${disenoLabel}
+- Técnica de análisis estadístico: ${tecnicaLabel}
+- Experiencia previa: ${state.experiencia}
+- Viabilidad de acceso: ${state.viabilidad}
+- Contexto: ${state.contexto||"No especificado"}
+- Motivacion: ${state.motivacion||"No especificada"}
+
+REGLA CRÍTICA: SOLO puedes usar las ${nv} variables listadas arriba. NUNCA agregues, inventes ni sustituyas variables. Si la técnica requiere roles específicos (X, M, Y, W), asígnalos en el orden en que fueron seleccionadas.
+
+Genera los siguientes 4 elementos:
+1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con la técnica "${tecnicaLabel}" y las variables exactas. NO uses variables no seleccionadas.
+${preguntaInstruccion}
+${objetivoInstruccion}
+4. ${hipInstruccion}
+
+IMPORTANTE: Los 4 elementos son OBLIGATORIOS. Sé preciso con la técnica estadística indicada.
+
+Responde SOLO en JSON sin texto adicional ni markdown:
+{"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
+
+  try{
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: La API no está disponible.`);
+    }
+    
+    const data=await res.json();
+    const text=data.content?.map(b=>b.text||"").join("")||"";
+    const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
+    
+    if(!parsed.hipotesis) {
+      parsed.hipotesis = tecInstr ? tecInstr.hipotesis
+        : state.enfoque==="Cualitativo" ? `Se espera comprender el fenómeno de ${efectiveProblema()} en ${efectivePoblacion()}.`
+        : `Existe una relación significativa entre ${variablesList.slice(0,2).join(' y ')} en ${efectivePoblacion()}.`;
+    }
+    
+    state.result=parsed;
+    state.edited={...parsed};
+    saveState();
+  }catch(e){
+    console.error("Error:", e);
+
+    // Fallbacks coherentes con la técnica
+    const X = variablesList[0]||'Variable X';
+    const M = variablesList[1]||'Variable M';
+    const Y = variablesList[variablesList.length-1]||'Variable Y';
+    const W = variablesList[1]||'Moderador';
+    const pop = efectivePoblacion();
+    const prob = efectiveProblema();
+
+    let fb = { tema:'', pregunta:'', objetivo:'', hipotesis:'' };
+
+    if(state.enfoque === "Cualitativo") {
+      fb.tema      = `${prob} en ${pop}`;
+      fb.pregunta  = `¿Cómo se experimenta ${prob} en ${pop}?`;
+      fb.objetivo  = `Comprender las experiencias de ${prob} en ${pop}.`;
+      fb.hipotesis = `Se espera que ${pop} experimente ${prob} de forma diversa según su contexto.`;
+    } else if(state.tecnica === 'correlacion') {
+      fb.tema      = `Relación entre ${X} y ${Y} en ${pop}`;
+      fb.pregunta  = `¿Existe relación entre ${X} y ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la relación entre ${X} e ${Y} en ${pop}.`;
+      fb.hipotesis = `Existe una relación estadísticamente significativa entre ${X} e ${Y} en ${pop}.`;
+    } else if(state.tecnica === 'regresion-simple') {
+      fb.tema      = `Capacidad predictiva de ${X} sobre ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${X} predice ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la capacidad predictiva de ${X} sobre ${Y} en ${pop}.`;
+      fb.hipotesis = `${X} predice significativamente ${Y} en ${pop} (β significativo).`;
+    } else if(state.tecnica === 'regresion-multiple') {
+      const preds = variablesList.slice(0,-1).join(', ');
+      fb.tema      = `Predictores de ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${preds} predicen ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la capacidad predictiva de ${preds} sobre ${Y} en ${pop}.`;
+      fb.hipotesis = `${preds} predicen significativamente ${Y} en ${pop}.`;
+    } else if(state.tecnica === 'mediacion' || state.tecnica === 'sem-mediacion') {
+      const latente = state.tecnica === 'sem-mediacion' ? ' (constructos latentes)' : '';
+      fb.tema      = `Efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${M} media la relación entre ${X} e ${Y}${latente} en ${pop}?`;
+      fb.objetivo  = `Examinar el efecto mediador de ${M} en la relación entre ${X} e ${Y}${latente} en ${pop}.`;
+      fb.hipotesis = `${M} media significativamente la relación entre ${X} e ${Y} en ${pop} (efecto indirecto a×b significativo).`;
+    } else if(state.tecnica === 'moderacion' || state.tecnica === 'sem-moderacion') {
+      fb.tema      = `Efecto moderador de ${W} en la relación entre ${X} e ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${W} modera la relación entre ${X} e ${Y} en ${pop}?`;
+      fb.objetivo  = `Analizar el efecto moderador de ${W} en la relación entre ${X} e ${Y} en ${pop}.`;
+      fb.hipotesis = `${W} modera significativamente la relación entre ${X} e ${Y} en ${pop} (interacción X×W significativa).`;
+    } else if(state.tecnica === 'mediacion-moderada') {
+      const W4 = variablesList[3]||'Moderador';
+      fb.tema      = `Modelo de mediación moderada: ${X}, ${M}, ${Y} y ${W4} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${W4} modera el efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}?`;
+      fb.objetivo  = `Examinar el modelo de mediación moderada con ${X}, ${M}, ${Y} y ${W4} en ${pop}.`;
+      fb.hipotesis = `El efecto indirecto de ${X} sobre ${Y} a través de ${M} varía significativamente en función de ${W4} en ${pop}.`;
+    } else if(['path-analysis','sem-completo'].includes(state.tecnica)) {
+      fb.tema      = `Modelo estructural entre ${variablesList.slice(0,3).join(', ')} en ${pop}`;
+      fb.pregunta  = `¿Cuál es la estructura de relaciones entre ${variablesList.join(', ')} en ${pop}?`;
+      fb.objetivo  = `Analizar el modelo de rutas entre ${variablesList.join(', ')} en ${pop}.`;
+      fb.hipotesis = `El modelo propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) en ${pop}.`;
+    } else {
+      fb.tema      = `${prob} en ${pop}`;
+      fb.pregunta  = `¿Cómo se relaciona ${prob} con ${variablesList.join(' y ')} en ${pop}?`;
+      fb.objetivo  = `Analizar ${prob} y su relación con las variables seleccionadas en ${pop}.`;
+      fb.hipotesis = `Existe una relación significativa entre las variables seleccionadas en ${pop}.`;
+    }
+    fb.tema = fb.tema.substring(0, 120);
+
+    state.result={ ...fb,
+      error:`⚠️ API no disponible. Se generó un ejemplo coherente con tu técnica (${tecnicaLabel}). Edítalo según tu criterio.`
+    };
+    state.edited={ tema:fb.tema, pregunta:fb.pregunta, objetivo:fb.objetivo, hipotesis:fb.hipotesis };
+    saveState();
+  }
+  state.loading=false;
+  renderContent();
+}
+
+// ── DOCX GENERATOR — sin librerías externas ─────────────────────
+// Genera un .docx real usando ZIP + Open XML directamente en el browser
+
+// Returns diagram title based on current tecnica
+function titulo_diagrama() {
+  const map = {
+    'regresion-simple':   'Modelo de Regresión Simple',
+    'regresion-multiple': 'Modelo de Regresión Múltiple',
+    'mediacion':          'Modelo de Mediación Simple',
+    'moderacion':         'Modelo de Moderación Simple',
+    'mediacion-moderada': 'Modelo de Mediación Moderada',
+    'path-analysis':      'Diagrama de Rutas (Path Analysis)',
+    'sem-mediacion':      'SEM — Mediación con Variables Latentes',
+    'sem-moderacion':     'SEM — Moderación con Variables Latentes',
+    'sem-completo':       'SEM — Modelo Estructural Completo',
+  };
+  return map[state.tecnica] || 'Modelo Teórico';
+}
+
+async function downloadDoc() {
+  const btn = document.querySelector('.btn-download');
+  if(btn){ btn.classList.add('loading'); btn.innerHTML='⏳ Generando...'; }
+
+  try {
+    // ── Datos ─────────────────────────────────────────────────────
+    const nivelLabel  = NIVELES.find(n=>n.id===state.nivel)?.label || state.nivel;
+    const enfoqueKey  = state.enfoque.toLowerCase();
+    const disenoObj   = DISENOS[enfoqueKey]?.find(d=>d.id===state.diseno);
+    const disenoLabel = disenoObj?.label || state.diseno;
+    const tecnicaLabel = state.tecnica
+      ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+      : 'Estadística descriptiva';
+    let vars = state.variables.filter(v=>v!=='otro');
+    if(state.variables.includes('otro')&&state.variablesOtro.trim())
+      state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>vars.push(v));
+    const hipLabel = state.enfoque==="Cuantitativo"?"HIPÓTESIS DE INVESTIGACIÓN"
+                   : state.enfoque==="Cualitativo" ?"HIPÓTESIS DE TRABAJO":"HIPÓTESIS";
+
+    // ── Escapar XML ───────────────────────────────────────────────
+    const xe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    // ── Helpers Open XML ─────────────────────────────────────────
+    const heading = (text, color='4F46E5') =>
+      `<w:p><w:pPr><w:spacing w:before="320" w:after="120"/>
+        <w:pBdr><w:bottom w:val="single" w:sz="8" w:space="1" w:color="${color}"/></w:pBdr></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="26"/><w:color w:val="${color}"/><w:caps/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const fieldLabel = (text) =>
+      `<w:p><w:pPr><w:spacing w:before="240" w:after="60"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/><w:caps/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const fieldValue = (text) =>
+      `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
+          <w:t xml:space="preserve">${xe(text||'—')}</w:t></w:r></w:p>`;
+
+    const tableRow = (label, value, shade=true) =>
+      `<w:tr>
+        <w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/>
+          ${shade?'<w:shd w:val="clear" w:color="auto" w:fill="EEF2FF"/>':''}
+        </w:tcPr>
+          <w:p><w:r><w:rPr><w:b/><w:sz w:val="18"/><w:color w:val="4F46E5"/></w:rPr>
+            <w:t>${xe(label)}</w:t></w:r></w:p></w:tc>
+        <w:tc><w:tcPr><w:tcW w:w="5000" w:type="dxa"/></w:tcPr>
+          <w:p><w:r><w:rPr><w:sz w:val="18"/><w:color w:val="111827"/></w:rPr>
+            <w:t xml:space="preserve">${xe(value||'—')}</w:t></w:r></w:p></w:tc>
+      </w:tr>`;
+
+    const stepItem = (num, text) =>
+      `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:before="120" w:after="60"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="D97706"/></w:rPr>
+          <w:t xml:space="preserve">${num}.  </w:t></w:r>
+        <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="111827"/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const emptyPara = (before=200) =>
+      `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0"/></w:pPr></w:p>`;
+
+    // ── Imagen del diagrama ───────────────────────────────────────
+    const tecnicasConDiagrama = ['regresion-multiple','mediacion','moderacion',
+      'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
+    let imageRels = '';
+    let imageXml  = '';
+    let imageBytes = null;
+
+    if(tecnicasConDiagrama.includes(state.tecnica)){
+      try {
+        // Siempre generar SVG fresco — no depender de si el modal fue abierto antes
+        window._lastDiagramSVG = null; // forzar regeneración
+        showModelDiagram();
+        document.getElementById('modal-diagram')?.remove();
+        const svgStr = window._lastDiagramSVG;
+
+        if(svgStr && svgStr.length > 50){
+          // Convertir SVG a PNG via Canvas
+          imageBytes = await svgToBase64Png(svgStr, 600, 300);
+
+          if(imageBytes && imageBytes.byteLength > 100){
+            imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
+            imageXml  = `
+              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
+                <w:r>
+                  <w:drawing>
+                    <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0">
+                      <wp:extent cx="5486400" cy="2743200"/>
+                      <wp:docPr id="1" name="ModeloDiagrama"/>
+                      <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                          <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                            <pic:nvPicPr>
+                              <pic:cNvPr id="1" name="ModeloDiagrama"/>
+                              <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                              <a:blip r:embed="rId10" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+                              <a:stretch><a:fillRect/></a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                              <a:xfrm><a:off x="0" y="0"/><a:ext cx="5486400" cy="2743200"/></a:xfrm>
+                              <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                            </pic:spPr>
+                          </pic:pic>
+                        </a:graphicData>
+                      </a:graphic>
+                    </wp:inline>
+                  </w:drawing>
+                </w:r>
+              </w:p>
+              <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
+                <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+                  <w:t>Figura 1. ${xe(titulo_diagrama())}. Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+          } else {
+            // PNG falló pero tenemos SVG — incluir nota
+            imageXml = `
+              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+                <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
+                  <w:t>Ver diagrama en la aplicación web: ${xe(tecnicaLabel)}. El diagrama no pudo incluirse como imagen en este dispositivo.</w:t></w:r></w:p>`;
+          }
+        }
+      } catch(e){
+        console.warn('Diagram generation failed:', e.message);
+        imageXml = `
+          ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+          <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+            <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
+              <w:t>Ver diagrama en la aplicación web usando el botón "Ver modelo teórico". Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+      }
+    }
+
+    // ── Instrumentos sugeridos por variable ─────────────────────
+    const INSTRUMENTOS = {
+      'Ansiedad':           {nombre:'Escala de Ansiedad de Beck (BAI)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = En absoluto · 3 = Severamente. Ej: "Entumecimiento u hormigueo"'},
+      'Estrés percibido':   {nombre:'Escala de Estrés Percibido (PSS-14, Cohen)', items:'14 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Muy a menudo. Ej: "¿Con qué frecuencia se ha sentido incapaz de controlar las cosas importantes de su vida?"'},
+      'Burnout':            {nombre:'Inventario de Burnout de Maslach (MBI)', items:'22 ítems, escala Likert 0-6', ejemplo:'0 = Nunca · 6 = Todos los días. Ej: "Me siento emocionalmente agotado/a por mi trabajo"'},
+      'Autoeficacia':       {nombre:'Escala de Autoeficacia General (Schwarzer & Bäßler)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Incorrecto · 4 = Totalmente correcto. Ej: "Siempre logro resolver problemas difíciles si me esfuerzo"'},
+      'Depresión':          {nombre:'Inventario de Depresión de Beck (BDI-II)', items:'21 ítems, escala Likert 0-3', ejemplo:'0 = No me siento triste · 3 = Estoy tan triste o tan desdichado que no puedo soportarlo'},
+      'Autoestima':         {nombre:'Escala de Autoestima de Rosenberg (EAR)', items:'10 ítems, escala Likert 1-4', ejemplo:'1 = Muy en desacuerdo · 4 = Muy de acuerdo. Ej: "En general estoy satisfecho/a conmigo mismo/a"'},
+      'Bienestar psicológico':{nombre:'Escala de Bienestar Psicológico de Ryff (versión española)', items:'39 ítems, escala Likert 1-6', ejemplo:'1 = Totalmente en desacuerdo · 6 = Totalmente de acuerdo. Ej: "Me siento bien cuando pienso en lo que he hecho en el pasado"'},
+      'Satisfacción laboral':{nombre:'Escala de Satisfacción Laboral (SL-SPC, Palma)', items:'27 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Mi trabajo me permite desarrollarme profesionalmente"'},
+      'Motivación':         {nombre:'Escala de Motivación en el Trabajo (R-MAWS)', items:'19 ítems, escala Likert 1-7', ejemplo:'1 = No corresponde en absoluto · 7 = Corresponde exactamente. Ej: "Porque encuentro que es un trabajo interesante"'},
+      'Resiliencia':        {nombre:'Escala de Resiliencia de Connor-Davidson (CD-RISC)', items:'25 ítems, escala Likert 0-4', ejemplo:'0 = En absoluto · 4 = Siempre. Ej: "Soy capaz de adaptarme a los cambios"'},
+      'Apoyo social':       {nombre:'Escala de Apoyo Social Percibido de Zimet (MSPSS)', items:'12 ítems, escala Likert 1-7', ejemplo:'1 = Muy en desacuerdo · 7 = Muy de acuerdo. Ej: "Hay una persona especial que se alegra de mis logros"'},
+      'Calidad de vida':    {nombre:'WHOQOL-BREF (OMS, versión española)', items:'26 ítems, escala Likert 1-5', ejemplo:'1 = Nada · 5 = Completamente. Ej: "¿En qué medida piensa que el dolor le impide hacer lo que necesita?"'},
+      'Inteligencia emocional':{nombre:'TMMS-24 (Trait Meta-Mood Scale)', items:'24 ítems, escala Likert 1-5', ejemplo:'1 = Totalmente en desacuerdo · 5 = Totalmente de acuerdo. Ej: "Presto mucha atención a los sentimientos"'},
+      'Clima organizacional':{nombre:'Escala de Clima Organizacional (EDCO)', items:'40 ítems, escala Likert 1-5', ejemplo:'1 = Nunca · 5 = Siempre. Ej: "En esta empresa se reconoce el buen desempeño"'},
+      'Liderazgo':          {nombre:'Cuestionario Multifactorial de Liderazgo (MLQ-5X)', items:'45 ítems, escala Likert 0-4', ejemplo:'0 = Nunca · 4 = Frecuentemente, sino siempre. Ej: "Me siento bien cuando estoy cerca de él/ella"'},
+      'Rendimiento académico':{nombre:'Escala de Estrategias de Aprendizaje (ACRA)', items:'118 ítems, escala Likert 1-4', ejemplo:'1 = Nunca o casi nunca · 4 = Siempre o casi siempre. Ej: "Cuando estudio hago esquemas o resúmenes"'},
+      'Cohesión familiar':  {nombre:'FACES-III (Olson)', items:'20 ítems, escala Likert 1-5', ejemplo:'1 = Casi nunca · 5 = Casi siempre. Ej: "Los miembros de la familia se piden ayuda entre sí"'},
+      'Estrés laboral':     {nombre:'Escala de Estrés Laboral de la OIT-OMS', items:'25 ítems, escala Likert 1-7', ejemplo:'1 = Si la condición nunca es fuente de estrés · 7 = Si la condición es una fuente muy frecuente de estrés'},
+      'Satisfacción marital':{nombre:'Escala de Satisfacción Marital (ESM, Pick y Andrade)', items:'24 ítems, escala Likert 1-3', ejemplo:'1 = Me disgusta · 3 = Me gusta mucho. Ej: "La forma en que mi pareja me demuestra su amor"'},
+      'Bullying':           {nombre:'Escala de Victimización entre Iguales (VIE)', items:'15 ítems, escala Likert 1-4', ejemplo:'1 = Nunca · 4 = Muchas veces. Ej: "Mis compañeros me ignoran o no me hacen caso"'},
+    };
+
+    // Find instruments for selected variables
+    const instrXml_list = vars.map(v => {
+      // Try exact match first, then partial
+      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      if(!instr) return null;
+      return `
+        ${tableRow(xe(v), xe(instr.nombre))}`;
+    }).filter(Boolean);
+
+    const instrDetailXml = vars.map(v => {
+      let instr = INSTRUMENTOS[v] || Object.entries(INSTRUMENTOS).find(([k])=>v.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(v.toLowerCase()))?.[1];
+      if(!instr) return '';
+      return `
+        ${fieldLabel('Variable: '+v)}
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>Instrumento: </w:t></w:r>
+          <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="111827"/></w:rPr><w:t>${xe(instr.nombre)}</w:t></w:r></w:p>
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Formato: ${xe(instr.items)}</w:t></w:r></w:p>
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+          <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Ejemplo: "${xe(instr.ejemplo)}"</w:t></w:r></w:p>`;
+    }).join('');
+
+    const hasInstruments = instrDetailXml.trim().length > 0;
+
+    // ── Section numbers (imageXml is now fully set) ───────────────
+    const secModelo = imageXml ? 3 : 0;
+    const secPasos  = imageXml ? 4 : 3;
+    const secInstr  = hasInstruments ? (imageXml ? 5 : 4) : 0;
+    const instrSectionXml = hasInstruments ? `
+      ${heading(secInstr+'. INSTRUMENTOS SUGERIDOS','7C3AED')}
+      <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
+          <w:t>Los siguientes instrumentos han sido validados en población hispanohablante y son coherentes con las variables seleccionadas. Verifique la validez y confiabilidad para su contexto específico.</w:t></w:r></w:p>
+      ${instrDetailXml}` : '';
+    const nextN = secPasos;
+
+    // ── document.xml ─────────────────────────────────────────────
+    const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<w:body>
+  <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="100"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:sz w:val="34"/><w:color w:val="4F46E5"/><w:caps/></w:rPr>
+      <w:t>PROPUESTA DE PROYECTO DE INVESTIGACIÓN</w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="480"/></w:pPr>
+    <w:r><w:rPr><w:i/><w:sz w:val="20"/><w:color w:val="9CA3AF"/></w:rPr>
+      <w:t>Asistente de Investigación en Psicología</w:t></w:r></w:p>
+
+  ${heading('1. ELEMENTOS DE LA INVESTIGACIÓN')}
+  ${fieldLabel('Tema de Investigación')}${fieldValue(state.edited.tema)}
+  ${fieldLabel('Pregunta de Investigación')}${fieldValue(state.edited.pregunta)}
+  ${fieldLabel('Objetivo General')}${fieldValue(state.edited.objetivo)}
+  ${fieldLabel(hipLabel)}${fieldValue(state.edited.hipotesis)}
+
+  ${heading('2. PERFIL METODOLÓGICO','059669')}
+  <w:tbl>
+    <w:tblPr><w:tblW w:w="7000" w:type="dxa"/>
+      <w:tblBorders>
+        <w:top w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:left w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:bottom w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:right w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:insideH w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:insideV w:val="single" w:sz="4" w:color="E5E7EB"/>
+      </w:tblBorders>
+    </w:tblPr>
+    ${tableRow('Área', efectiveArea())}
+    ${tableRow('Población', efectivePoblacion())}
+    ${tableRow('Problema / Fenómeno', efectiveProblema())}
+    ${tableRow('Variables', vars.join(', '))}
+    ${tableRow('Enfoque', state.enfoque)}
+    ${tableRow('Nivel', nivelLabel)}
+    ${tableRow('Diseño', disenoLabel)}
+    ${tableRow('Técnica de análisis', tecnicaLabel)}
+  </w:tbl>
+
+  ${imageXml}
+
+  ${emptyPara(200)}
+  ${heading(secPasos+'. PRÓXIMOS PASOS','D97706')}
+  ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del tema.')}
+  ${stepItem(2,'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) recientes (últimos 5 años) en SCOPUS, Google Académico, Redalyc o SciELO.')}
+  ${stepItem(3,'Metodología: Define tu muestra, instrumentos y procedimiento de recolección.')}
+  ${stepItem(4,'Cronograma: Establece tiempos realistas para cada fase del proyecto.')}
+
+  ${instrSectionXml}
+  ${emptyPara(480)}
+  <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+      <w:t>Generado con Asistente de Investigación · Alan A. Vega Jacome · Powered by Claude</w:t></w:r></w:p>
+
+  <w:sectPr><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
+</w:body></w:document>`;
+
+    // ── Styles ────────────────────────────────────────────────────
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr>
+    <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+    <w:sz w:val="22"/><w:szCs w:val="22"/>
+  </w:rPr></w:rPrDefault></w:docDefaults>
+</w:styles>`;
+
+    // ── Construir ZIP ─────────────────────────────────────────────
+    const files = {
+      '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml"  ContentType="application/xml"/>
+  <Default Extension="png"  ContentType="image/png"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`,
+      '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`,
+      'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${imageRels}
+</Relationships>`,
+      'word/styles.xml': stylesXml,
+      'word/document.xml': docXml,
+    };
+
+    // Añadir imagen PNG si existe
+    const zip = await buildZip(files, imageBytes);
+    const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href=url; a.download='propuesta_investigacion.docx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+
+  } catch(err){
+    console.error('downloadDoc error:', err);
+    alert('Error al generar el documento: ' + err.message);
+  } finally {
+    if(btn){ btn.classList.remove('loading'); btn.innerHTML='📥 Descargar DOCX'; }
+  }
+}
+
+// ── ZIP builder (sin librerías) ───────────────────────────────────
+async function buildZip(files, pngBytes) {
+  // Use fflate if available, otherwise simple store-only ZIP
+  const entries = [];
+  const enc = new TextEncoder();
+
+  const crc32 = (buf) => {
+    let c=0xFFFFFFFF;
+    const t=new Uint8Array(256).map((_,i)=>{let n=i;for(let k=0;k<8;k++)n=n&1?(0xEDB88320^(n>>>1)):(n>>>1);return n;});
+    for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8);
+    return (c^0xFFFFFFFF)>>>0;
+  };
+
+  const u32le=(n)=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
+  const u16le=(n)=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+
+  // Add text files
+  for(const [name, content] of Object.entries(files)){
+    const nameBytes = enc.encode(name);
+    const data = enc.encode(content);
+    const crc  = crc32(data);
+    entries.push({name:nameBytes, data, crc, size:data.length});
+  }
+
+  // Add PNG image if provided
+  if(pngBytes){
+    const nameBytes = enc.encode('word/media/diagram.png');
+    const data = new Uint8Array(pngBytes);
+    const crc  = crc32(data);
+    entries.push({name:nameBytes, data, crc, size:data.length});
+  }
+
+  // Build ZIP
+  const localHeaders = [];
+  let offset = 0;
+  const parts = [];
+
+  for(const e of entries){
+    const lh = new Uint8Array([
+      0x50,0x4B,0x03,0x04, // signature
+      20,0,                 // version needed
+      0,0,                  // flags
+      0,0,                  // compression (stored)
+      0,0,0,0,              // mod time/date
+      ...u32le(e.crc),
+      ...u32le(e.size),
+      ...u32le(e.size),
+      ...u16le(e.name.length),
+      0,0,                  // extra len
+    ]);
+    localHeaders.push({offset, nameLen:e.name.length, crc:e.crc, size:e.size, name:e.name});
+    parts.push(lh, e.name, e.data);
+    offset += lh.length + e.name.length + e.size;
+  }
+
+  // Central directory
+  const cdParts = [];
+  let cdSize = 0;
+  for(let i=0;i<entries.length;i++){
+    const e=entries[i], lh=localHeaders[i];
+    const cd = new Uint8Array([
+      0x50,0x4B,0x01,0x02, // signature
+      20,0,20,0,            // version made/needed
+      0,0,0,0,              // flags, compression
+      0,0,0,0,              // mod time/date
+      ...u32le(e.crc),
+      ...u32le(e.size),
+      ...u32le(e.size),
+      ...u16le(e.name.length),
+      0,0,0,0,0,0,          // extra, comment, disk
+      0,0,                  // internal attr
+      0,0,0,0,              // external attr
+      ...u32le(lh.offset),
+    ]);
+    cdParts.push(cd, e.name);
+    cdSize += cd.length + e.name.length;
+  }
+
+  // End of central directory
+  const eocd = new Uint8Array([
+    0x50,0x4B,0x05,0x06, // signature
+    0,0,0,0,              // disk numbers
+    ...u16le(entries.length),
+    ...u16le(entries.length),
+    ...u32le(cdSize),
+    ...u32le(offset),
+    0,0,                  // comment len
+  ]);
+
+  // Concatenate all parts
+  const allParts = [...parts, ...cdParts, eocd];
+  const totalSize = allParts.reduce((s,p)=>s+p.length, 0);
+  const result = new Uint8Array(totalSize);
+  let pos = 0;
+  for(const p of allParts){ result.set(p, pos); pos += p.length; }
+  return result.buffer;
+}
+
+// ── SVG → PNG via Canvas ──────────────────────────────────────────
+async function svgToBase64Png(svgStr, w=600, h=300) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w*2; canvas.height = h*2;
+    const ctx = canvas.getContext('2d');
+    if(!ctx){ reject(new Error('Canvas not supported')); return; }
+    ctx.scale(2,2);
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,w,h);
+
+    // Encode SVG as data URI to avoid CORS/tainted canvas issues
+    const svgClean = svgStr
+      .replace(/&/g,'&amp;')
+      .replace(/<br>/g,'<br/>')
+      // Ensure proper XML namespace
+      .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(b => {
+          if(!b){ reject(new Error('toBlob returned null')); return; }
+          b.arrayBuffer().then(resolve).catch(reject);
+        }, 'image/png', 0.95);
+      } catch(e) {
+        reject(new Error('Canvas draw failed: ' + e.message));
+      }
+    };
+    img.onerror = () => reject(new Error('SVG image load failed'));
+    img.src = encoded;
+  });
+}
+
+function downloadDiagram() {
+  if(!window._lastDiagramSVG) return;
+  const blob = new Blob([window._lastDiagramSVG], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='modelo_teorico.svg';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+
+// ── Build diagram SVG without showing modal ───────────────────────
+function buildDiagramSVG() {
+  if(!DISENOS_CON_DIAGRAMA.includes(state.tecnica)) return null;
+  if(window._lastDiagramSVG) return window._lastDiagramSVG;
+  showModelDiagram();
+  document.getElementById('modal-diagram')?.remove();
+  return window._lastDiagramSVG || null;
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+// DIAGRAMAS — SOLO PARA DISEÑOS QUE LO REQUIEREN
+// Pregrado:  regresion-multiple | mediacion | moderacion | mediacion-moderada
+// Posgrado:  path-analysis | sem-mediacion | sem-moderacion | sem-completo
+// ══════════════════════════════════════════════════════════════════
+
+// Los diagramas se generan según la TÉCNICA seleccionada (no el diseño)
+const DISENOS_CON_DIAGRAMA = [
+  'regresion-multiple','mediacion','moderacion','mediacion-moderada',
+  'path-analysis','sem-mediacion','sem-moderacion','sem-completo',
+  'correlacion','regresion-simple'
+];
+
+function getVarsList() {
+  const vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean).forEach(v => vars.push(v));
+  }
+  return vars;
+}
+
+// ── SVG helpers ───────────────────────────────────────────────────────
+function svgBox(x, y, w, h, label, stroke, fill, fontSize=11) {
+  const words = label.split(' ');
+  let lines = [], cur = '';
+  words.forEach(wd => {
+    const test = cur ? cur + ' ' + wd : wd;
+    if (test.length > 17 && cur) { lines.push(cur); cur = wd; }
+    else cur = test;
+  });
+  if (cur) lines.push(cur);
+  lines = lines.slice(0, 2);
+  const lh = 15, totalH = lines.length * lh;
+  const startY = y + h/2 - totalH/2 + lh*0.75;
+  const rects = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+  const texts = lines.map((l,i) => `<text x="${x+w/2}" y="${startY+i*lh}" text-anchor="middle" font-size="${fontSize}" font-weight="600" fill="${stroke}" font-family="system-ui,sans-serif">${l}</text>`).join('');
+  return rects + texts;
+}
+
+function svgEllipse(cx, cy, rx, ry, label, stroke, fill, fontSize=11) {
+  const lines = label.length > 14 ? [label.substring(0,14), label.substring(14)] : [label];
+  const lh = 15, startY = cy - (lines.length-1)*lh/2;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+    ${lines.map((l,i)=>`<text x="${cx}" y="${startY+i*lh}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="700" fill="${stroke}" font-family="system-ui,sans-serif">${l}</text>`).join('')}`;
+}
+
+function svgArrow(x1,y1,x2,y2,color,label='',dashed=false,curved=false) {
+  const id = 'ar'+Math.abs(x1*100+y1*10+x2+y2)|0;
+  const marker = `<marker id="${id}" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 z" fill="${color}"/></marker>`;
+  const dash = dashed ? 'stroke-dasharray="6,3"' : '';
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  let path;
+  if(curved) {
+    const cpx = mx, cpy = Math.min(y1,y2) - 50;
+    path = `<path d="M${x1},${y1} Q${cpx},${cpy} ${x2},${y2}" fill="none" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#${id})"/>`;
+  } else {
+    path = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#${id})"/>`;
+  }
+  const lbl = label ? `<rect x="${mx-26}" y="${my-10}" width="52" height="16" rx="3" fill="white" opacity="0.92"/><text x="${mx}" y="${my+4}" text-anchor="middle" font-size="10" fill="${color}" font-weight="600" font-family="system-ui,sans-serif">${label}</text>` : '';
+  return `<defs>${marker}</defs>${path}${lbl}`;
+}
+
+// ── Colores estándar ──────────────────────────────────────────────────
+const DC = {
+  x:{s:"#534AB7",f:"#EEEDFE"}, y:{s:"#993C1D",f:"#FAECE7"},
+  m:{s:"#0F6E56",f:"#E1F5EE"}, w:{s:"#7C3AED",f:"#F3E8FF"},
+  obs:{s:"#374151",f:"#F9FAFB"}, lat:{s:"#1D4ED8",f:"#EFF6FF"}
+};
+
+// ════════════════════════════════════════════════════════════════════════
+function showModelDiagram() {
+  const vars = getVarsList();
+  const d = state.tecnica;
+  const W=580, H=290;
+  let svg='', titulo='', nota='', nivel='';
+
+  // ── Shared helpers ────────────────────────────────────────────
+  const f = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Truncate label to fit in box
+  const trunc = (s, n=16) => s.length > n ? s.substring(0,n-1)+'…' : s;
+
+  // Box with 1-2 line label
+  function box(x,y,w,h,label,sc,fc,fs=11){
+    const words = trunc(label,20).split(' ');
+    let L1='', L2='';
+    for(const w of words){
+      if((L1+' '+w).trim().length<=16) L1=(L1+' '+w).trim();
+      else { L2=(L2+' '+w).trim(); }
+    }
+    const tY = L2 ? y+h/2-7 : y+h/2+4;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fc}" stroke="${sc}" stroke-width="2"/>
+      <text x="${x+w/2}" y="${tY}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${sc}" font-family="system-ui,sans-serif">${f(L1)}</text>
+      ${L2?`<text x="${x+w/2}" y="${tY+14}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${sc}" font-family="system-ui,sans-serif">${f(L2)}</text>`:''}`;
+  }
+
+  // Ellipse with label
+  function ellipse(cx,cy,rx,ry,label,sc,fc,fs=11){
+    const t = trunc(label,18);
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fc}" stroke="${sc}" stroke-width="2"/>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${sc}" font-family="system-ui,sans-serif">${f(t)}</text>`;
+  }
+
+  // Arrow with label
+  function arrow(x1,y1,x2,y2,sc,lbl='',dashed=false){
+    const id='ar'+((x1*7+y1*13+x2*5+y2*3)&0xFFFF);
+    const mk=`<marker id="${id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${sc}"/></marker>`;
+    const dash=dashed?'stroke-dasharray="6,3"':'';
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const line=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sc}" stroke-width="2" ${dash} marker-end="url(#${id})"/>`;
+    const tag=lbl?`<rect x="${mx-22}" y="${my-9}" width="44" height="16" rx="3" fill="white" opacity=".9"/>
+      <text x="${mx}" y="${my+4}" text-anchor="middle" font-size="10" fill="${sc}" font-weight="600" font-family="system-ui">${f(lbl)}</text>`:'';
+    return `<defs>${mk}</defs>${line}${tag}`;
+  }
+
+  // Color palette
+  const Cx={s:"#4F46E5",f:"#EEF2FF"}, Cy={s:"#993C1D",f:"#FAECE7"},
+        Cm={s:"#059669",f:"#ECFDF5"}, Cw={s:"#7C3AED",f:"#F3E8FF"},
+        Cl={s:"#1D4ED8",f:"#EFF6FF"};
+
+  // ── REGRESIÓN SIMPLE ─────────────────────────────────────────
+  if(d==='regresion-simple'){
+    titulo='Modelo de Regresión Simple';
+    nivel='Pregrado · OLS';
+    nota='X predice linealmente a Y. Se reporta β, R² y la significancia del modelo.';
+    const X=vars[0]||'Predictor (X)', Y=vars[1]||'Criterio (Y)';
+    const px=50, py=30, gh=H-py-40;
+    // Axes
+    svg+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${py+gh}" stroke="#CBD5E1" stroke-width="2"/>`;
+    svg+=`<line x1="${px}" y1="${py+gh}" x2="${W-30}" y2="${py+gh}" stroke="#CBD5E1" stroke-width="2"/>`;
+    // Axis arrows
+    svg+=arrow(px,py+gh,W-30,py+gh,'#94A3B8');
+    svg+=arrow(px,py+gh,px,py,'#94A3B8');
+    // Axis labels
+    svg+=`<text x="${W-25}" y="${py+gh+5}" font-size="11" fill="${Cx.s}" font-weight="600" font-family="system-ui">${f(trunc(X,12))}</text>`;
+    svg+=`<text x="${px-6}" y="${py-6}" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="600" font-family="system-ui">${f(trunc(Y,12))}</text>`;
+    // Scatter points
+    [[75,220],[105,195],[130,210],[160,175],[185,180],[215,155],[245,145],[268,160],[295,130],[320,115],[350,130],[378,100],[405,92],[430,108],[460,80]].forEach(([px2,py2])=>{
+      svg+=`<circle cx="${px2}" cy="${py2}" r="5" fill="${Cx.s}" opacity=".5"/>`;
+    });
+    // Regression line
+    svg+=`<line x1="60" y1="228" x2="470" y2="68" stroke="${Cy.s}" stroke-width="2.5" stroke-linecap="round"/>`;
+    // β label on line
+    svg+=`<rect x="330" y="95" width="30" height="18" rx="3" fill="white" opacity=".9"/>`;
+    svg+=`<text x="345" y="108" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="700" font-family="system-ui">β₁</text>`;
+    // Formula box bottom-center
+    svg+=`<rect x="${W/2-78}" y="${H-32}" width="156" height="22" rx="5" fill="${Cy.f}" stroke="${Cy.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W/2}" y="${H-17}" text-anchor="middle" font-size="11" fill="${Cy.s}" font-weight="700" font-family="system-ui">Ŷ = β₀ + β₁X + ε</text>`;
+    // R² top-right
+    svg+=`<rect x="${W-100}" y="${py}" width="90" height="36" rx="6" fill="${Cm.f}" stroke="${Cm.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W-55}" y="${py+14}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-weight="700" font-family="system-ui">R² = var.</text>`;
+    svg+=`<text x="${W-55}" y="${py+28}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-family="system-ui">explicada</text>`;
+  }
+
+  // ── REGRESIÓN MÚLTIPLE ────────────────────────────────────────
+  else if(d==='regresion-multiple'){
+    titulo='Modelo de Regresión Múltiple';
+    nivel='Pregrado · OLS / Hayes';
+    nota='Cada predictor aporta independientemente a explicar Y. Se reportan β estandarizados, R² y ΔR².';
+    const preds=vars.length>=2?vars.slice(0,vars.length-1):[vars[0]||'Predictor 1','Predictor 2'];
+    const Y=vars.length>=2?vars[vars.length-1]:'Variable Y';
+    const n=Math.min(preds.length,5);
+    const stepY=(H-20)/(n+1);
+    for(let i=0;i<n;i++){
+      const py2=10+stepY*(i+1)-20;
+      svg+=box(10,py2,155,40,preds[i],Cx.s,Cx.f);
+      svg+=arrow(165,py2+20,385,H/2-20,Cx.s,`β${i+1}`);
+    }
+    svg+=box(385,H/2-22,155,44,Y,Cy.s,Cy.f);
+    svg+=`<text x="462" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">R² = varianza total explicada</text>`;
+    if(preds.length>5) svg+=`<text x="90" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">+${preds.length-5} predictores más</text>`;
+  }
+
+  // ── MEDIACIÓN SIMPLE ──────────────────────────────────────────
+  else if(d==='mediacion'){
+    titulo='Modelo de Mediación Simple';
+    nivel='Pregrado · Hayes PROCESS Modelo 4';
+    nota="El efecto de X sobre Y opera directamente (c') e indirectamente a través de M. Efecto indirecto = a × b.";
+    const X=vars[0]||'Variable X', M=vars[1]||'Mediador (M)', Y=vars[2]||'Variable Y';
+    svg+=box(15,H/2-22,145,44,X,Cx.s,Cx.f);
+    svg+=box(W/2-72,18,145,44,M,Cm.s,Cm.f);
+    svg+=box(W-160,H/2-22,145,44,Y,Cy.s,Cy.f);
+    svg+=arrow(160,H/2,W-160,H/2,Cx.s,"c' (directo)");
+    svg+=arrow(160,H/2-14,W/2-72,40,Cm.s,'a');
+    svg+=arrow(W/2+73,40,W-160,H/2-14,Cm.s,'b');
+    svg+=`<rect x="${W/2-85}" y="${H-34}" width="170" height="22" rx="5" fill="${Cm.f}" stroke="${Cm.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${W/2}" y="${H-19}" text-anchor="middle" font-size="10" fill="${Cm.s}" font-weight="700" font-family="system-ui">Efecto indirecto = a × b</text>`;
+  }
+
+  // ── MODERACIÓN SIMPLE ─────────────────────────────────────────
+  else if(d==='moderacion'){
+    titulo='Modelo de Moderación Simple';
+    nivel='Pregrado · Hayes PROCESS Modelo 1';
+    nota='W modifica la fuerza o dirección de X→Y. El término de interacción X×W es el componente clave.';
+    const X=vars[0]||'Variable X', Wv=vars[1]||'Moderador (W)', Y=vars[2]||'Variable Y';
+    // X box left, Y box right, W box top-center
+    svg+=box(15,H/2-20,140,40,X,Cx.s,Cx.f);
+    svg+=box(W-155,H/2-20,140,40,Y,Cy.s,Cy.f);
+    svg+=box(W/2-72,22,145,40,Wv,Cw.s,Cw.f);
+    // Main arrow X→Y
+    svg+=arrow(155,H/2,W-155,H/2,Cx.s,'');
+    // Moderator arrow (dashed, top-down to midpoint)
+    const mid=W/2, midY=H/2;
+    const id2='modArr';
+    svg+=`<defs><marker id="${id2}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${Cw.s}"/></marker></defs>`;
+    svg+=`<line x1="${mid}" y1="62" x2="${mid}" y2="${midY-14}" stroke="${Cw.s}" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#${id2})"/>`;
+    // Interaction label at midpoint of arrow
+    svg+=`<rect x="${mid-52}" y="${midY-14}" width="104" height="20" rx="4" fill="white" stroke="${Cw.s}" stroke-width="1.5"/>`;
+    svg+=`<text x="${mid}" y="${midY-1}" text-anchor="middle" font-size="10" fill="${Cw.s}" font-weight="700" font-family="system-ui">X × W (interacción)</text>`;
+    // Bottom note
+    svg+=`<rect x="${W/2-120}" y="${H-32}" width="240" height="20" rx="4" fill="${Cw.f}" stroke="${Cw.s}" stroke-width="1"/>`;
+    svg+=`<text x="${W/2}" y="${H-18}" text-anchor="middle" font-size="10" fill="${Cw.s}" font-weight="600" font-family="system-ui">β(X×W) significativo → moderación confirmada</text>`;
+  }
+
+  // ── MEDIACIÓN MODERADA ────────────────────────────────────────
+  else if(d==='mediacion-moderada'){
+    titulo='Modelo de Mediación Moderada';
+    nivel='Pregrado avanzado · Hayes PROCESS Modelos 7, 14 o 58';
+    nota='W modera la ruta a (X→M) o b (M→Y). El índice de mediación moderada indica si el efecto indirecto varía según W.';
+    const X=vars[0]||'X',M=vars[1]||'Mediador',Y=vars[2]||'Y',Wv=vars[3]||'Moderador';
+    svg+=box(10,H/2-20,125,40,X,Cx.s,Cx.f);
+    svg+=box(W/2-62,14,125,40,M,Cm.s,Cm.f);
+    svg+=box(W-135,H/2-20,125,40,Y,Cy.s,Cy.f);
+    svg+=box(W/2-62,H-55,125,40,Wv,Cw.s,Cw.f);
+    svg+=arrow(135,H/2,W-135,H/2,Cx.s,"c'");
+    svg+=arrow(135,H/2-12,W/2-62,34,Cm.s,'a');
+    svg+=arrow(W/2+63,34,W-135,H/2-12,Cm.s,'b');
+    const idw='mmArr';
+    svg+=`<defs><marker id="${idw}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="${Cw.s}"/></marker></defs>`;
+    svg+=`<line x1="${W/2}" y1="${H-55}" x2="${W/2}" y2="54" stroke="${Cw.s}" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#${idw})"/>`;
+    svg+=`<text x="${W/2+6}" y="${H/2-32}" font-size="9" fill="${Cw.s}" font-family="system-ui" font-style="italic">modera a y/o b</text>`;
+  }
+
+  // ── PATH ANALYSIS ─────────────────────────────────────────────
+  else if(d==='path-analysis'){
+    titulo='Path Analysis — Variables Observadas';
+    nivel='Posgrado · AMOS, lavaan, Mplus';
+    nota='Variables observadas directamente. Se estiman efectos directos e indirectos. No requiere indicadores múltiples.';
+    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
+    svg+=box(10, 45,130,40,v[0],Cx.s,Cx.f);
+    svg+=box(10,170,130,40,v[1],Cx.s,Cx.f);
+    svg+=box(225,108,130,40,v[2],Cm.s,Cm.f);
+    svg+=box(430,108,130,40,v[3],Cy.s,Cy.f);
+    svg+=arrow(140, 65,225,120,Cx.s,'β₁');
+    svg+=arrow(140,190,225,136,Cx.s,'β₂');
+    svg+=arrow(355,128,430,128,Cm.s,'β₃');
+    svg+=arrow(140, 65,430,118,Cx.s,'',true);
+    svg+=`<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Índices: CFI, TLI, RMSEA, SRMR</text>`;
+  }
+
+  // ── SEM MEDIACIÓN CON LATENTES ────────────────────────────────
+  else if(d==='sem-mediacion'){
+    titulo='SEM — Mediación con Latentes';
+    nivel='Posgrado · AMOS, Mplus, lavaan';
+    nota='X, M e Y son constructos latentes medidos por indicadores. Corrige el error de medición.';
+    const X=vars[0]||'ξ (X)',M=vars[1]||'η₁ (M)',Y=vars[2]||'η₂ (Y)';
+    // Three ellipses in triangle layout
+    svg+=ellipse(110,155, 78,36,'ξ: '+trunc(X,9),Cl.s,Cl.f);
+    svg+=ellipse(300, 65, 72,32,'η₁: '+trunc(M,8),Cm.s,Cm.f);
+    svg+=ellipse(490,155, 75,36,'η₂: '+trunc(Y,9),Cy.s,Cy.f);
+    // Indicators exogenous
+    svg+=box(5, 40, 80,28,'x₁',Cl.s,'#F8FAFF',9);
+    svg+=box(5,195, 80,28,'x₂',Cl.s,'#F8FAFF',9);
+    svg+=arrow(85, 54,100,128,Cl.s,'λ₁');
+    svg+=arrow(85,209,100,172,Cl.s,'λ₂');
+    // Indicators mediator
+    svg+=box(250, 10, 80,28,'m₁',Cm.s,'#F0FDF8',9);
+    svg+=arrow(290, 38,292, 44,Cm.s,'λ₃');
+    // Indicators outcome
+    svg+=box(500, 55, 75,28,'y₁',Cy.s,'#FFF8F5',9);
+    svg+=box(500,218, 75,28,'y₂',Cy.s,'#FFF8F5',9);
+    svg+=arrow(500, 69,498,128,Cy.s,'λ₄');
+    svg+=arrow(500,232,498,180,Cy.s,'λ₅');
+    // Structural paths
+    svg+=arrow(188,148,228, 88,Cm.s,'a');
+    svg+=arrow(372, 82,418,138,Cm.s,'b');
+    svg+=arrow(188,162,418,162,Cl.s,"c'",true);
+    svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Efecto indirecto a×b — bootstrapping</text>`;
+  }
+
+  // ── SEM MODERACIÓN CON LATENTES ───────────────────────────────
+  else if(d==='sem-moderacion'){
+    titulo='SEM — Moderación con Latentes';
+    nivel='Posgrado · Mplus (LMS), lavaan (modsem)';
+    nota='Interacción entre constructos latentes ξ₁×ξ₂. Técnica LMS o PI. Mayor complejidad que moderación por regresión.';
+    const X=vars[0]||'ξ₁ (X)',Wv=vars[1]||'ξ₂ (W)',Y=vars[2]||'η (Y)';
+    svg+=ellipse(110, 95, 80,36,trunc(X,12),Cl.s,Cl.f);
+    svg+=ellipse(110,210, 80,36,trunc(Wv,12),Cw.s,Cw.f);
+    svg+=ellipse(460,152, 82,40,trunc(Y,12),Cy.s,Cy.f);
+    svg+=ellipse(290,152, 72,32,'ξ₁ × ξ₂','#B45309','#FEF3E8');
+    svg+=arrow(190,103,222,135,Cl.s,'γ₁');
+    svg+=arrow(190,202,222,168,Cw.s,'γ₂');
+    svg+=arrow(362,152,380,152,'#B45309','γ₃');
+    svg+=`<rect x="${W/2-130}" y="${H-30}" width="260" height="20" rx="4" fill="#FEF3E8" stroke="#B45309" stroke-width="1"/>`;
+    svg+=`<text x="${W/2}" y="${H-16}" text-anchor="middle" font-size="9" fill="#B45309" font-family="system-ui">γ₃ sig. → moderación entre latentes confirmada</text>`;
+  }
+
+  // ── SEM COMPLETO ──────────────────────────────────────────────
+  else if(d==='sem-completo'){
+    titulo='SEM — Modelo Estructural Completo';
+    nivel='Posgrado · AMOS, Mplus, lavaan';
+    nota='CFA (modelo de medición) + modelo estructural. Índices: CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08.';
+    // Use real variable names — assign roles: exógenas = primeras vars, endógena = última
+    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
+    const ex1=v[0], ex2=v[1], end1=v[2], end2=v[v.length-1];
+
+    // Measurement model left — exógenas
+    svg+=`<rect x="8" y="8" width="138" height="${H-16}" rx="8" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="73" y="22" text-anchor="middle" font-size="8" fill="#1D4ED8" font-weight="600" font-family="system-ui">VARIABLES EXÓGENAS</text>`;
+    svg+=ellipse(73, 88,62,28,trunc(ex1,10),Cl.s,'white',10);
+    svg+=ellipse(73,192,62,28,trunc(ex2,10),Cl.s,'white',10);
+    svg+=box(10, 50,38,20,'x₁x₂',Cl.s,'#F8FAFF',8);
+    svg+=box(10,155,38,20,'x₃x₄',Cl.s,'#F8FAFF',8);
+    svg+=arrow(48, 60,52, 68,Cl.s,'');
+    svg+=arrow(48,158,52,172,Cl.s,'');
+
+    // Structural model center
+    svg+=`<rect x="158" y="8" width="262" height="${H-16}" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="289" y="22" text-anchor="middle" font-size="8" fill="#059669" font-weight="600" font-family="system-ui">MODELO ESTRUCTURAL</text>`;
+    svg+=ellipse(205, 88,55,26,trunc(ex1,9),Cl.s,Cl.f,10);
+    svg+=ellipse(205,192,55,26,trunc(ex2,9),Cl.s,Cl.f,10);
+    svg+=ellipse(305,140,55,28,trunc(end1,9),Cm.s,Cm.f,10);
+    svg+=ellipse(403,140,52,26,trunc(end2,9),Cy.s,Cy.f,10);
+    svg+=arrow(136, 88,152, 88,Cl.s,'');
+    svg+=arrow(136,182,152,188,Cl.s,'');
+    svg+=arrow(260, 95,255,120,Cl.s,'γ₁');
+    svg+=arrow(260,188,255,158,Cl.s,'γ₂');
+    svg+=arrow(360,140,355,140,Cm.s,'β');
+
+    // Output CFA right — endógena
+    svg+=`<rect x="432" y="8" width="140" height="${H-16}" rx="8" fill="#FFF8F5" stroke="#993C1D" stroke-width="1" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="502" y="22" text-anchor="middle" font-size="8" fill="#993C1D" font-weight="600" font-family="system-ui">VARIABLE ENDÓGENA</text>`;
+    svg+=ellipse(502, 80,58,26,trunc(end2,9),Cy.s,Cy.f,10);
+    svg+=box(458,148,42,20,'y₁y₂',Cy.s,'#FFF8F5',8);
+    svg+=box(508,148,42,20,'y₃y₄',Cy.s,'#FFF8F5',8);
+    svg+=arrow(455,130,460,130,Cy.s,'');
+    svg+=arrow(455,100,502, 68,Cy.s,'');
+
+    svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">CFI≥.95 · TLI≥.95 · RMSEA≤.06 · SRMR≤.08</text>`;
+  }
+
+  // Modal
+  const isPost=['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(d);
+  const badgeColor=isPost?'#1D4ED8':'#059669';
+  const badgeLabel=isPost?'Posgrado':'Pregrado';
+
+  const modalHtml=`
+    <div id="modal-diagram" class="modal-overlay" onclick="if(event.target===this)this.remove()">
+      <div class="modal-inner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:12px">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:${badgeColor}18;color:${badgeColor};border:1px solid ${badgeColor}40">${badgeLabel}</span>
+              <span style="font-size:11px;color:#888">${f(nivel)}</span>
+            </div>
+            <h3 style="font-size:15px;font-weight:700;color:#111;margin:0">${f(titulo)}</h3>
+          </div>
+          <button onclick="document.getElementById('modal-diagram').remove()" style="border:none;background:#f5f5f5;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;flex-shrink:0">✕</button>
+        </div>
+        <p style="font-size:12px;color:#555;margin:0 0 14px;line-height:1.5">${f(nota)}</p>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;border:1px solid #eee;border-radius:10px;background:#fafafa" xmlns="http://www.w3.org/2000/svg">
+          ${svg}
+        </svg>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
+          <p style="font-size:11px;color:#bbb;margin:0">Generado según técnica metodológica seleccionada</p>
+          <button onclick="downloadDiagram()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #4F46E5;color:#4F46E5;background:transparent;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;min-height:36px">📥 Descargar SVG</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  window._lastDiagramSVG=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svg}</svg>`;
+}
+
+render();
+</script>
+</body>
+</html>
