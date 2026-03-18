@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Asistente para la creación de proyectos de investigación</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;display:flex;justify-content:center;padding:24px 16px}
+.card{background:#fff;border-radius:16px;border:0.5px solid #e0e0e0;padding:28px 24px;width:100%;max-width:620px;height:fit-content}
+h2{font-size:18px;font-weight:500;margin-bottom:4px;color:#111}
+.steps{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:default;transition:all .2s}
+.step-circle.done{background:#534AB7;color:#fff;cursor:pointer}
+.step-circle.active{background:#EEEDFE;color:#534AB7;border:2px solid #534AB7}
+.step-circle.pending{background:#f0f0f0;color:#aaa}
+.step-line{height:1px;width:16px}
+.step-line.done{background:#534AB7}
+.step-line.pending{background:#e0e0e0}
+.step-label{font-size:12px;color:#888;margin-bottom:20px}
+.section-label{font-size:13px;color:#888;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.tooltip{position:relative;display:inline-flex;cursor:help}
+.tooltip-icon{width:16px;height:16px;background:#534AB7;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold}
+.tooltip-text{visibility:hidden;width:240px;background:#333;color:#fff;text-align:left;border-radius:6px;padding:8px 10px;position:absolute;z-index:1;bottom:125%;left:50%;margin-left:-120px;opacity:0;transition:opacity .3s;font-size:12px;line-height:1.4;font-weight:normal}
+.tooltip-text::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border-width:5px;border-style:solid;border-color:#333 transparent transparent transparent}
+.tooltip:hover .tooltip-text{visibility:visible;opacity:1}
+.options{display:flex;flex-direction:column;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.badge{padding:10px 16px;border-radius:8px;cursor:pointer;text-align:left;border:0.5px solid #ccc;background:transparent;font-size:14px;font-weight:400;width:100%;transition:all .15s;position:relative}
+.badge:hover{border-color:#999}
+.badge.active{border:2px solid #534AB7;background:#EEEDFE;color:#3C3489;font-weight:500}
+.badge-title{font-weight:500;margin-bottom:2px}
+.badge-desc{font-size:12px;color:#777;margin-top:2px}
+.badge-hint{font-size:11px;color:#6b7280;margin-top:4px;font-style:italic}
+.badge-hint.recommended{color:#0F6E56;font-weight:500}
+.chip{padding:6px 12px;border-radius:20px;cursor:pointer;font-size:13px;border:0.5px solid #ccc;background:transparent;transition:all .15s}
+.chip:hover{border-color:#0F6E56}
+.chip.active{border:2px solid #0F6E56;background:#E1F5EE;color:#0F6E56;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.hint{background:#EEEDFE;border-radius:8px;padding:8px 12px;font-size:13px;color:#3C3489;margin-top:4px}
+.hint.warning{background:#FEF3E8;color:#B45309}
+.hint.success{background:#E1F5EE;color:#0F6E56}
+input[type=text],textarea{width:100%;font-size:14px;padding:8px 10px;border-radius:8px;border:0.5px solid #ccc;font-family:inherit;margin-top:4px}
+input[type=text]:focus,textarea:focus{outline:none;border-color:#534AB7}
+textarea{min-height:60px;resize:vertical}
+.otro-input{border:1px solid #534AB7 !important;margin-top:6px}
+.nav{display:flex;justify-content:space-between;margin-top:28px;padding-top:16px;border-top:0.5px solid #e5e5e5}
+.btn{padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;border:none;transition:all .2s}
+.btn-back{border:0.5px solid #ccc;background:transparent;color:#333}
+.btn-back:disabled{opacity:0.4;cursor:not-allowed}
+.btn-next{background:#534AB7;color:#fff;font-weight:500;padding:10px 24px}
+.btn-next:disabled{background:#ccc;cursor:not-allowed}
+.content{min-height:280px}
+.gap20{display:flex;flex-direction:column;gap:20px}
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.result-header p{font-size:13px;color:#888}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;border:0.5px solid #ccc;background:transparent;transition:all .2s}
+.btn-sm:hover{background:#f5f5f5}
+.btn-edit{border-color:#ccc}
+.btn-regen{border-color:#534AB7;color:#534AB7}
+.btn-download{border-color:#0F6E56;color:#0F6E56}
+.result-block{border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.result-block-label{font-size:11px;font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+.result-block p{font-size:15px;line-height:1.6;color:#222}
+.result-block textarea{font-size:14px;padding:8px;border-radius:6px;min-height:60px;width:100%;border:0.5px solid #ccc}
+.summary{margin-top:4px;padding:12px 16px;background:#f9f9f7;border-radius:8px;border:0.5px solid #e0dfd5}
+.summary p.title{font-size:12px;color:#888;margin-bottom:6px;font-weight:500}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.summary-grid p{font-size:12px;color:#555}
+.summary-grid span{color:#888}
+.loading{text-align:center;padding:40px 0}
+.loading .icon{font-size:32px;margin-bottom:12px}
+.loading p{color:#888;font-size:14px}
+.generate-box{text-align:center;padding:32px 0}
+.generate-box p{margin-bottom:20px;font-size:15px;color:#555}
+.btn-generate{padding:12px 32px;border-radius:8px;background:#534AB7;color:#fff;border:none;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-generate:hover{background:#3C3489}
+.error{color:red;font-size:14px}
+.footer{text-align:center;margin-top:24px;padding-top:16px;border-top:0.5px solid #e5e5e5;font-size:12px;color:#888}
+.footer strong{color:#534AB7}
+.next-steps{margin-top:16px;padding:16px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac}
+.next-steps-title{font-size:14px;font-weight:600;color:#166534;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.next-steps ul{list-style:none;padding:0}
+.next-steps li{padding:8px 0;font-size:13px;color:#166534;display:flex;align-items:start;gap:8px}
+.next-steps li::before{content:"✓";color:#22c55e;font-weight:bold;font-size:16px}
+.auto-save{position:fixed;bottom:16px;right:16px;background:#fff;border:1px solid #e5e5e5;padding:8px 12px;border-radius:20px;font-size:11px;color:#888;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:none}
+.auto-save.show{display:block;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* RESPONSIVE MOBILE */
+@media (max-width: 768px) {
+  body{padding:16px 12px}
+  .card{padding:20px 16px;max-width:100%;border-radius:12px}
+  h2{font-size:16px;line-height:1.3}
+  .steps{gap:3px}
+  .step-circle{width:24px;height:24px;font-size:11px}
+  .step-line{width:12px}
+  .step-label{font-size:11px;margin-bottom:16px}
+  .section-label{font-size:12px}
+  .grid2,.grid3{grid-template-columns:1fr;gap:8px}
+  .badge{padding:12px 14px;font-size:13px}
+  .badge-title{font-size:13px}
+  .badge-desc{font-size:11px}
+  .badge-hint{font-size:10px}
+  .chip{padding:8px 12px;font-size:12px}
+  .hint{padding:10px 12px;font-size:12px}
+  .tooltip-text{width:200px;margin-left:-100px;font-size:11px;padding:6px 8px}
+  .nav{flex-direction:column;gap:10px;margin-top:20px}
+  .btn{width:100%;padding:12px 20px;font-size:14px}
+  .btn-next{order:-1}
+  .result-header{flex-direction:column;align-items:flex-start;gap:12px}
+  .result-actions{width:100%;flex-direction:column}
+  .btn-sm{width:100%;padding:10px 14px;text-align:center}
+  .result-block{padding:12px 14px}
+  .result-block p{font-size:14px}
+  .result-block textarea{font-size:13px}
+  .summary-grid{grid-template-columns:1fr;gap:8px}
+  .next-steps{padding:14px}
+  .next-steps-title{font-size:13px}
+  .next-steps li{font-size:12px;padding:6px 0}
+  .auto-save{bottom:12px;right:12px;font-size:10px;padding:6px 10px}
+  .generate-box{padding:24px 0}
+  .generate-box p{font-size:14px}
+  .btn-generate{padding:12px 24px;font-size:14px;width:100%}
+  .footer{font-size:11px;margin-top:20px}
+}
+
+@media (max-width: 480px) {
+  .card{padding:16px 12px}
+  h2{font-size:15px}
+  .steps{overflow-x:auto;padding-bottom:8px}
+  .badge{font-size:12px;padding:10px 12px}
+  .chip{font-size:11px;padding:6px 10px}
+  .result-block p{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Asistente para la creación de proyectos de investigación</h2>
+  <div class="steps" id="steps-bar"></div>
+  <p class="step-label" id="step-label"></p>
+  <div class="content" id="content"></div>
+  <div class="nav">
+    <button class="btn btn-back" id="btn-back" onclick="prevStep()">Atras</button>
+    <button class="btn btn-next" id="btn-next" onclick="nextStep()">Siguiente</button>
+  </div>
+  <div class="footer">
+    Creado por: <strong>Alan A. Vega Jacome</strong>
+  </div>
+</div>
+<div class="auto-save" id="auto-save">💾 Progreso guardado</div>
+
+<script>
+const STEPS = ["Area","Poblacion","Problema","Metodologia","Contexto","Resultado"];
+
+const AREAS = [
+  {id:"clinica", label:"Psicologia clinica y salud mental", icon:"🧠"},
+  {id:"educativa", label:"Psicologia educativa", icon:"📚"},
+  {id:"organizacional", label:"Psicologia organizacional", icon:"🏢"},
+  {id:"social", label:"Psicologia social y comunitaria", icon:"🤝"},
+  {id:"deporte", label:"Psicologia del deporte", icon:"🏃"},
+  {id:"consumidor", label:"Psicologia del consumidor", icon:"🛒"},
+  {id:"juridica", label:"Psicologia juridica/forense", icon:"⚖️"},
+  {id:"ambiental", label:"Psicologia ambiental", icon:"🌱"},
+  {id:"positiva", label:"Psicologia positiva", icon:"✨"},
+  {id:"pareja-familia", label:"Psicologia de pareja y familia", icon:"💑"},
+  {id:"salud", label:"Psicologia de la salud", icon:"🏥"},
+  {id:"desarrollo", label:"Psicologia del desarrollo", icon:"👶"},
+  {id:"neuropsicologia", label:"Neuropsicologia", icon:"🧠"},
+  {id:"adicciones", label:"Psicologia de las adicciones", icon:"🚭"},
+  {id:"digital", label:"Psicologia digital/cibernetica", icon:"📱"},
+  {id:"emergencias", label:"Psicologia de emergencias y desastres", icon:"🚨"},
+  {id:"transcultural", label:"Psicologia transcultural", icon:"🌍"},
+  {id:"otro", label:"Otro", icon:"✏️"},
+];
+
+const POBLACIONES = {
+  clinica:["Ninos y adolescentes","Adultos en general","Adultos mayores","Pacientes con trastornos especificos","Cuidadores / familias"],
+  educativa:["Ninos de educacion inicial","Estudiantes de primaria","Estudiantes de secundaria","Estudiantes universitarios","Docentes"],
+  organizacional:["Trabajadores de empresas privadas","Trabajadores del sector publico","Lideres / jefes","Emprendedores","Personal de salud"],
+  social:["Comunidades rurales","Comunidades urbanas marginales","Grupos vulnerables (migrantes, etc.)","Jovenes en riesgo","Poblacion general"],
+  deporte:["Deportistas amateurs","Deportistas profesionales","Entrenadores","Estudiantes deportistas","Equipos deportivos"],
+  consumidor:["Consumidores jovenes","Consumidores adultos","Compradores online","Clientes de retail","Usuarios de servicios"],
+  juridica:["Victimas de delitos","Testigos","Menores infractores","Reclusos","Personal policial o juridico"],
+  ambiental:["Residentes urbanos","Estudiantes","Trabajadores de oficina","Comunidades locales","Poblacion general"],
+  positiva:["Estudiantes universitarios","Adultos en general","Profesionales","Jovenes","Adultos mayores"],
+  "pareja-familia":["Parejas","Familias con hijos","Padres","Adolescentes en familias","Parejas en conflicto"],
+  salud:["Pacientes cronicos","Pacientes oncologicos","Personal de salud","Cuidadores","Pacientes ambulatorios"],
+  desarrollo:["Ninos (0-5 anos)","Ninos (6-11 anos)","Adolescentes","Adultos emergentes (18-25)","Adultos mayores"],
+  neuropsicologia:["Pacientes con dano cerebral","Adultos mayores","Ninos con dificultades","Pacientes neurologicos","Estudiantes"],
+  adicciones:["Personas en rehabilitacion","Consumidores activos","Familias de adictos","Jovenes en riesgo","Adultos con adicciones conductuales"],
+  digital:["Adolescentes usuarios de redes","Jovenes gamers","Usuarios de apps","Estudiantes","Trabajadores remotos"],
+  emergencias:["Sobrevivientes de desastres","Primeros respondientes","Victimas de violencia","Comunidades afectadas","Personal de emergencias"],
+  transcultural:["Migrantes","Estudiantes internacionales","Comunidades indigenas","Grupos etnicos","Familias multiculturales"],
+  otro:[],
+};
+
+const PROBLEMAS = {
+  clinica:["Ansiedad y estres","Depresion","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia"],
+  educativa:["Rendimiento academico","Motivacion y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Desercion escolar","Estilos de aprendizaje"],
+  organizacional:["Estres laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfaccion y compromiso laboral","Desempeno","Bienestar en el trabajo"],
+  social:["Exclusion e identidad social","Convivencia y cohesion comunitaria","Violencia de genero","Resiliencia comunitaria","Prejuicios y discriminacion","Participacion ciudadana"],
+  deporte:["Ansiedad competitiva","Motivacion deportiva","Cohesion de equipo","Lesiones y recuperacion","Rendimiento bajo presion","Burnout deportivo"],
+  consumidor:["Decision de compra","Lealtad a marcas","Publicidad y persuasion","Consumo impulsivo","Influencia de redes sociales","Satisfaccion del cliente"],
+  juridica:["Testimonio y memoria","Victimizacion","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilacion criminal"],
+  ambiental:["Conducta proambiental","Estres por hacinamiento","Apego al lugar","Contaminacion acustica","Espacios verdes y bienestar","Comportamiento sostenible"],
+  positiva:["Felicidad y bienestar","Gratitud","Optimismo","Fortalezas personales","Sentido de vida","Resiliencia"],
+  "pareja-familia":["Comunicacion de pareja","Conflicto familiar","Satisfaccion marital","Crianza positiva","Divorcio y separacion","Violencia domestica"],
+  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor cronico","Estilos de vida saludables","Ansiedad ante procedimientos"],
+  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transicion a la adultez","Envejecimiento exitoso","Desarrollo moral"],
+  neuropsicologia:["Funciones ejecutivas","Memoria","Atencion y concentracion","Rehabilitacion cognitiva","Deterioro cognitivo","Lenguaje"],
+  adicciones:["Dependencia a sustancias","Adiccion a videojuegos","Recaida","Craving","Comorbilidad psiquiatrica","Adiccion a redes sociales"],
+  digital:["Adiccion a redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Nomofobia (miedo a no tener celular)","Identidad digital","Relaciones online"],
+  emergencias:["Estres postraumatico","Resiliencia post-desastre","Primeros auxilios psicologicos","Duelo traumatico","Panico y evacuacion","Intervencion en crisis"],
+  transcultural:["Aculturacion","Choque cultural","Identidad etnica","Discriminacion percibida","Estres de aculturacion","Integracion social"],
+  otro:[],
+};
+
+const VARIABLES = {
+  "Ansiedad y estres":["Ansiedad","Estres percibido","Regulacion emocional","Apoyo social","Estrategias de afrontamiento","Autoeficacia"],
+  "Depresion":["Depresion","Autoestima","Apoyo social","Ideacion suicida","Ansiedad","Bienestar subjetivo"],
+  "Autoestima y bienestar":["Autoestima","Bienestar psicologico","Satisfaccion con la vida","Autoeficacia","Resiliencia"],
+  "Adicciones":["Dependencia a sustancias","Impulsividad","Autocontrol","Apoyo familiar","Ansiedad"],
+  "Trauma y violencia":["Estres postraumatico","Violencia familiar","Resiliencia","Apoyo social","Ansiedad"],
+  "Salud mental post-pandemia":["Ansiedad","Depresion","Estres percibido","Aislamiento social","Bienestar psicologico"],
+  "Rendimiento academico":["Rendimiento academico","Motivacion","Autoeficacia","Ansiedad ante examenes","Habitos de estudio"],
+  "Motivacion y aprendizaje":["Motivacion intrinseca","Motivacion extrinseca","Autoeficacia","Rendimiento academico","Engagement"],
+  "Acoso escolar (bullying)":["Bullying","Autoestima","Ansiedad","Clima escolar","Apoyo docente"],
+  "Habilidades socioemocionales":["Inteligencia emocional","Empatia","Habilidades sociales","Autoregulacion","Bienestar"],
+  "Desercion escolar":["Desercion escolar","Motivacion","Apoyo familiar","Rendimiento academico","Estres"],
+  "Estilos de aprendizaje":["Estilos de aprendizaje","Rendimiento academico","Motivacion","Estrategias cognitivas"],
+  "Estres laboral y burnout":["Burnout","Estres laboral","Satisfaccion laboral","Autoeficacia","Apoyo organizacional"],
+  "Clima y cultura organizacional":["Clima organizacional","Satisfaccion laboral","Compromiso organizacional","Liderazgo"],
+  "Liderazgo":["Estilo de liderazgo","Clima organizacional","Desempeno laboral","Satisfaccion laboral","Motivacion"],
+  "Satisfaccion y compromiso laboral":["Satisfaccion laboral","Compromiso organizacional","Motivacion","Bienestar laboral"],
+  "Desempeno":["Desempeno laboral","Motivacion","Autoeficacia","Liderazgo","Estres laboral"],
+  "Bienestar en el trabajo":["Bienestar laboral","Estres","Satisfaccion laboral","Apoyo social","Autonomia"],
+  "Exclusion e identidad social":["Identidad social","Exclusion social","Autoestima","Prejuicio","Bienestar"],
+  "Convivencia y cohesion comunitaria":["Cohesion social","Confianza interpersonal","Participacion comunitaria","Bienestar"],
+  "Violencia de genero":["Violencia de genero","Autoestima","Apoyo social","Estres postraumatico","Empoderamiento"],
+  "Resiliencia comunitaria":["Resiliencia","Apoyo social","Cohesion comunitaria","Autoeficacia colectiva"],
+  "Prejuicios y discriminacion":["Prejuicio","Discriminacion percibida","Identidad social","Bienestar psicologico"],
+  "Participacion ciudadana":["Participacion ciudadana","Identidad comunitaria","Autoeficacia","Cohesion social"],
+  "Ansiedad competitiva":["Ansiedad competitiva","Autoconfianza","Estres precompetitivo","Rendimiento deportivo","Autoeficacia"],
+  "Motivacion deportiva":["Motivacion intrinseca","Motivacion extrinseca","Compromiso deportivo","Metas de logro","Pasion"],
+  "Cohesion de equipo":["Cohesion grupal","Comunicacion","Liderazgo deportivo","Confianza","Rendimiento colectivo"],
+  "Lesiones y recuperacion":["Bienestar psicologico","Adherencia a rehabilitacion","Miedo a re-lesion","Autoeficacia","Apoyo social"],
+  "Rendimiento bajo presion":["Ansiedad","Autoeficacia","Concentracion","Estres","Rendimiento deportivo"],
+  "Burnout deportivo":["Burnout","Agotamiento","Despersonalizacion","Motivacion","Satisfaccion deportiva"],
+  "Decision de compra":["Intencion de compra","Actitud hacia marca","Precio percibido","Confianza","Influencia social"],
+  "Lealtad a marcas":["Lealtad","Satisfaccion","Confianza en marca","Valor percibido","Engagement"],
+  "Publicidad y persuasion":["Actitud hacia publicidad","Credibilidad","Persuasion","Atencion","Intencion de compra"],
+  "Consumo impulsivo":["Impulsividad","Autocontrol","Emociones","Compra impulsiva","Arrepentimiento"],
+  "Influencia de redes sociales":["Influencia social","Confianza en influencers","Intencion de compra","Engagement","Credibilidad"],
+  "Satisfaccion del cliente":["Satisfaccion","Expectativas","Calidad percibida","Lealtad","Quejas"],
+  "Testimonio y memoria":["Memoria de testigos","Sugestionabilidad","Exactitud","Confianza en memoria","Estres"],
+  "Victimizacion":["Sintomas postraumaticos","Revictimizacion","Apoyo social","Autoestima","Miedo al delito"],
+  "Reincidencia delictiva":["Conducta antisocial","Empatia","Impulsividad","Autocontrol","Apoyo social"],
+  "Credibilidad del testigo":["Credibilidad","Consistencia","Confianza","Exactitud","Lenguaje no verbal"],
+  "Violencia intrafamiliar":["Violencia","Autoestima","Depresion","Apoyo social","Estres postraumatico"],
+  "Perfilacion criminal":["Rasgos de personalidad","Conducta criminal","Motivacion","Psicopatia","Impulsividad"],
+  "Conducta proambiental":["Conducta proambiental","Conciencia ambiental","Normas sociales","Valores","Autoeficacia"],
+  "Estres por hacinamiento":["Estres","Privacidad","Hacinamiento percibido","Bienestar","Irritabilidad"],
+  "Apego al lugar":["Apego","Identidad de lugar","Satisfaccion residencial","Bienestar","Arraigo"],
+  "Contaminacion acustica":["Estres","Molestia","Calidad de vida","Salud mental","Irritabilidad"],
+  "Espacios verdes y bienestar":["Bienestar","Estres","Contacto con naturaleza","Restauracion atencional","Satisfaccion"],
+  "Comportamiento sostenible":["Conducta sostenible","Actitudes ambientales","Valores","Conocimiento ambiental","Normas"],
+  "Felicidad y bienestar":["Felicidad","Bienestar subjetivo","Satisfaccion con la vida","Afecto positivo","Sentido de vida"],
+  "Gratitud":["Gratitud","Bienestar","Afecto positivo","Satisfaccion","Optimismo"],
+  "Optimismo":["Optimismo","Bienestar","Resiliencia","Esperanza","Afrontamiento"],
+  "Fortalezas personales":["Fortalezas del caracter","Bienestar","Satisfaccion","Autoeficacia","Virtudes"],
+  "Sentido de vida":["Sentido de vida","Proposito","Bienestar","Satisfaccion","Significado"],
+  "Resiliencia":["Resiliencia","Afrontamiento","Bienestar","Autoeficacia","Apoyo social"],
+  "Comunicacion de pareja":["Comunicacion","Satisfaccion de pareja","Conflicto","Empatia","Asertividad"],
+  "Conflicto familiar":["Conflicto","Cohesion familiar","Comunicacion","Estres","Funcionamiento familiar"],
+  "Satisfaccion marital":["Satisfaccion marital","Compromiso","Comunicacion","Intimidad","Conflicto"],
+  "Crianza positiva":["Estilo de crianza","Autoestima infantil","Disciplina","Calidez parental","Conducta infantil"],
+  "Divorcio y separacion":["Ajuste al divorcio","Bienestar","Estres","Apoyo social","Coparentalidad"],
+  "Violencia domestica":["Violencia de pareja","Autoestima","Depresion","Estres postraumatico","Apoyo social"],
+  "Adherencia al tratamiento":["Adherencia","Autoeficacia","Creencias de salud","Apoyo social","Conocimiento de enfermedad"],
+  "Afrontamiento de enfermedad":["Estrategias de afrontamiento","Bienestar","Ansiedad","Depresion","Apoyo social"],
+  "Calidad de vida":["Calidad de vida","Bienestar","Funcionamiento fisico","Salud mental","Satisfaccion"],
+  "Dolor cronico":["Dolor percibido","Catastrofizacion","Depresion","Ansiedad","Funcionalidad"],
+  "Estilos de vida saludables":["Ejercicio","Alimentacion","Autoeficacia","Motivacion","Habitos de salud"],
+  "Ansiedad ante procedimientos":["Ansiedad","Miedo","Afrontamiento","Conocimiento","Apoyo social"],
+  "Apego temprano":["Apego","Sensibilidad materna","Seguridad","Interaccion madre-hijo","Desarrollo socioemocional"],
+  "Desarrollo cognitivo":["Funciones ejecutivas","Memoria","Atencion","Lenguaje","Inteligencia"],
+  "Identidad en adolescencia":["Identidad","Autoestima","Exploracion","Compromiso","Bienestar"],
+  "Transicion a la adultez":["Autonomia","Identidad","Bienestar","Exploracion","Inestabilidad"],
+  "Envejecimiento exitoso":["Bienestar","Funcionamiento cognitivo","Actividad","Apoyo social","Satisfaccion"],
+  "Desarrollo moral":["Razonamiento moral","Empatia","Conducta prosocial","Valores","Justicia"],
+  "Funciones ejecutivas":["Funciones ejecutivas","Memoria de trabajo","Inhibicion","Flexibilidad cognitiva","Planificacion"],
+  "Memoria":["Memoria","Atencion","Aprendizaje","Funciones ejecutivas","Metamemoria"],
+  "Atencion y concentracion":["Atencion","Concentracion","Funciones ejecutivas","Rendimiento","Distractibilidad"],
+  "Rehabilitacion cognitiva":["Funciones cognitivas","Mejora","Transferencia","Motivacion","Autoeficacia"],
+  "Deterioro cognitivo":["Deterioro","Memoria","Funciones ejecutivas","Actividades diarias","Depresion"],
+  "Lenguaje":["Lenguaje","Comprension","Expresion","Funciones ejecutivas","Memoria"],
+  "Dependencia a sustancias":["Dependencia","Craving","Recaida","Impulsividad","Autocontrol"],
+  "Adiccion a videojuegos":["Adiccion","Uso problematico","Autocontrol","Bienestar","Rendimiento academico"],
+  "Recaida":["Recaida","Craving","Autoeficacia","Apoyo social","Estres"],
+  "Craving":["Craving","Ansiedad","Autocontrol","Estres","Gatillos"],
+  "Comorbilidad psiquiatrica":["Depresion","Ansiedad","Adiccion","Impulsividad","Bienestar"],
+  "Adiccion a redes sociales":["Adiccion","Uso problematico","Tiempo de uso","Autoestima","Ansiedad social"],
+  "Cyberbullying":["Victimizacion online","Autoestima","Depresion","Ansiedad","Apoyo social"],
+  "FOMO (miedo a perderse algo)":["FOMO","Ansiedad","Uso de redes","Bienestar","Autoestima"],
+  "Nomofobia (miedo a no tener celular)":["Nomofobia","Ansiedad","Dependencia","Autocontrol","Estres"],
+  "Identidad digital":["Identidad online","Autopresentacion","Autoestima","Comparacion social","Autenticidad"],
+  "Relaciones online":["Calidad de relaciones","Intimidad","Comunicacion","Satisfaccion","Apoyo social"],
+  "Estres postraumatico":["TEPT","Ansiedad","Evitacion","Reexperimentacion","Hiperactivacion"],
+  "Resiliencia post-desastre":["Resiliencia","Afrontamiento","Crecimiento postraumatico","Apoyo social","Bienestar"],
+  "Primeros auxilios psicologicos":["Intervencion","Efectividad","Estres agudo","Apoyo","Estabilizacion"],
+  "Duelo traumatico":["Duelo","Depresion","Ansiedad","Aceptacion","Apoyo social"],
+  "Panico y evacuacion":["Panico","Conducta de evacuacion","Miedo","Preparacion","Percepcion de riesgo"],
+  "Intervencion en crisis":["Efectividad","Estabilizacion","Apoyo","Afrontamiento","Sintomas"],
+  "Aculturacion":["Aculturacion","Estres de aculturacion","Identidad etnica","Adaptacion","Bienestar"],
+  "Choque cultural":["Choque cultural","Adaptacion","Ansiedad","Apoyo social","Ajuste"],
+  "Identidad etnica":["Identidad etnica","Autoestima","Pertenencia","Discriminacion","Bienestar"],
+  "Discriminacion percibida":["Discriminacion percibida","Autoestima","Bienestar","Estres","Salud mental"],
+  "Estres de aculturacion":["Estres","Aculturacion","Apoyo social","Bienestar","Adaptacion"],
+  "Integracion social":["Integracion","Apoyo social","Participacion","Bienestar","Sentido de pertenencia"],
+};
+
+const NIVELES = [
+  {id:"exploratorio", label:"Exploratorio", desc:"Tema poco conocido, primeras aproximaciones", hint:"Recomendado cuando hay poca investigación previa"},
+  {id:"descriptivo", label:"Descriptivo", desc:"Caracterizar y describir el fenómeno", hint:"Recomendado con 1 variable o para caracterizar"},
+  {id:"correlacional", label:"Correlacional", desc:"Analizar relaciones entre 2 o más variables", hint:"Recomendado con 2-3 variables"},
+  {id:"explicativo", label:"Explicativo / Causal", desc:"Explicar causas y efectos del fenómeno", hint:"Recomendado con 3+ variables y relaciones de causa"},
+];
+
+const DISENOS = {
+  cuantitativo: [
+    {id:"experimental", label:"Experimental", desc:"Manipulas variables con grupo control", hint:"⭐ Máximo control, establece causalidad"},
+    {id:"cuasiexperimental", label:"Cuasi-experimental", desc:"Manipulas variables sin asignación aleatoria", hint:"Control moderado, grupos preexistentes"},
+    {id:"no-experimental-transversal", label:"No experimental transversal", desc:"Observas en un momento único del tiempo", hint:"⭐ Más común en pregrado, sin manipulación"},
+    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas a través del tiempo (panel, tendencia)", hint:"Requiere seguimiento temporal"},
+  ],
+  cualitativo: [
+    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados", hint:"⭐ Ideal para comprender vivencias profundas"},
+    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en contexto", hint:"Requiere inmersión prolongada"},
+    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos"},
+    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos", hint:"⭐ Muy común en pregrado, flexible"},
+    {id:"narrativo", label:"Narrativo", desc:"Historias de vida y relatos biográficos", hint:"Ideal para trayectorias individuales"},
+    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para cambio", hint:"Combina investigación con intervención"},
+  ],
+  mixto: [
+    {id:"secuencial-explicativo", label:"Secuencial Explicativo (CUAN → cual)", desc:"Primero cuantitativo, luego cualitativo para profundizar", hint:"⭐ Usas datos cualitativos para explicar resultados cuantitativos"},
+    {id:"secuencial-exploratorio", label:"Secuencial Exploratorio (CUAL → cuan)", desc:"Primero cualitativo, luego cuantitativo para generalizar", hint:"⭐ Exploras primero, luego mides en muestra mayor"},
+    {id:"convergente-paralelo", label:"Convergente Paralelo (CUAN + CUAL)", desc:"Recolectas ambos tipos de datos simultáneamente", hint:"Comparas y triangulas resultados"},
+    {id:"transformativo", label:"Transformativo", desc:"Enfoque en justicia social y cambio", hint:"Perspectiva crítica, emancipadora"},
+    {id:"anidado", label:"Anidado o Incrustado", desc:"Un enfoque dentro de otro (secundario)", hint:"Un método apoya al otro (ej: entrevistas en experimento)"},
+  ]
+};
+
+const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
+const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mi","Algo (he leido sobre el tema)","Bastante (me interesa mucho)"];
+const VIABILIDADES = ["Si, tengo acceso directo","Tal vez, con esfuerzo podria acceder","No estoy seguro","No, no tengo acceso"];
+
+const NIVEL_HINT = {
+  1:"Con 1 variable se recomienda nivel descriptivo.",
+  2:"Con 2 variables puedes optar por descriptivo o correlacional.",
+  3:"Con 3 o más variables puedes optar por correlacional o explicativo.",
+};
+
+// CARGAR ESTADO DESDE LOCALSTORAGE
+let savedState = null;
+try {
+  savedState = JSON.parse(localStorage.getItem('investigacion_state'));
+} catch(e) {}
+
+let state = savedState || {
+  step:0,
+  area:"",
+  areaOtro:"",
+  poblacion:"",
+  poblacionOtro:"",
+  problema:"",
+  problemaOtro:"",
+  variables:[],
+  variablesOtro:"",
+  enfoque:"",
+  nivel:"",
+  diseno:"",
+  experiencia:"",
+  viabilidad:"",
+  contexto:"",
+  motivacion:"",
+  result:null,
+  loading:false,
+  editMode:false,
+  edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+};
+
+// GUARDAR ESTADO AUTOMÁTICAMENTE
+function saveState() {
+  try {
+    localStorage.setItem('investigacion_state', JSON.stringify(state));
+    showAutoSave();
+  } catch(e) {}
+}
+
+function showAutoSave() {
+  const el = document.getElementById('auto-save');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function efectiveArea(){return state.area==="otro"?state.areaOtro:AREAS.find(a=>a.id===state.area)?.label||"";}
+function efectivePoblacion(){return state.poblacion==="otro"?state.poblacionOtro:state.poblacion;}
+function efectiveProblema(){return state.problema==="otro"?state.problemaOtro:state.problema;}
+
+function canNext(){
+  const s=state.step;
+  if(s===0){
+    if(state.area==="otro") return state.areaOtro.trim()!=="";
+    return state.area!=="";
+  }
+  if(s===1){
+    if(state.poblacion==="otro") return state.poblacionOtro.trim()!=="";
+    return state.poblacion!=="";
+  }
+  if(s===2){
+    // Si problema es "otro", necesita problema especificado Y variables
+    if(state.problema==="otro") {
+      return state.problemaOtro.trim()!=="" && state.variablesOtro.trim()!=="";
+    }
+    // Si seleccionó "otro" en variables, necesita variables especificadas
+    if(state.variables.includes('otro')) {
+      return state.variables.length>0 && state.variablesOtro.trim()!=="";
+    }
+    // Caso normal: problema seleccionado y al menos una variable
+    return state.problema!=="" && state.variables.length>0;
+  }
+  if(s===3) return state.enfoque!=="" && state.nivel!=="" && state.diseno!=="";
+  if(s===4) return state.experiencia!=="" && state.viabilidad!=="";
+  return true;
+}
+
+function badge(label, active, click){
+  return `<button class="badge ${active?'active':''}" onclick="${click}">${label}</button>`;
+}
+
+function badgeWithDesc(title, desc, hint, active, click, recommended=false){
+  const hintClass = recommended ? 'recommended' : '';
+  return `<button class="badge ${active?'active':''}" onclick="${click}">
+    <div class="badge-title">${title}</div>
+    <div class="badge-desc">${desc}</div>
+    ${hint ? `<div class="badge-hint ${hintClass}">${hint}</div>` : ''}
+  </button>`;
+}
+
+function sectionLabel(t, tooltip=""){
+  if(tooltip) {
+    return `<p class="section-label">${t} <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">${tooltip}</span></span></p>`;
+  }
+  return `<p class="section-label">${t}</p>`;
+}
+
+function renderStepsBar(){
+  let h="";
+  STEPS.forEach((name,i)=>{
+    const done=i<state.step;
+    const active=i===state.step;
+    const pending=i>state.step;
+    let cls=done?"done":active?"active":"pending";
+    h+=`<div class="step-circle ${cls}" onclick="${done?`state.step=${i};render()`:''}">${done?'✓':i+1}</div>`;
+    if(i<STEPS.length-1){
+      h+=`<div class="step-line ${done?'done':'pending'}"></div>`;
+    }
+  });
+  document.getElementById("steps-bar").innerHTML=h;
+  document.getElementById("step-label").textContent=`Paso ${state.step+1} de 6: ${STEPS[state.step]}`;
+}
+
+// SUGERENCIAS AUTOMÁTICAS
+function getAutoSuggestion() {
+  if(!state.enfoque || !state.variables.length) return "";
+  
+  const nv = state.variables.filter(v => v !== 'otro').length;
+  const enfoque = state.enfoque.toLowerCase();
+  
+  // Validación: Cualitativo con muchas variables
+  if(enfoque === "cualitativo" && nv >= 4) {
+    return `<div class="hint warning">⚠️ Para enfoque cualitativo, usualmente se trabaja con menos variables (1-2) y se profundiza más en cada una. ¿Estás seguro de necesitar ${nv} variables?</div>`;
+  }
+  
+  // Sugerencia automática según variables
+  if(nv === 1) {
+    return `<div class="hint success">💡 Sugerencia: Con 1 variable, nivel <strong>descriptivo</strong> es ideal. Diseño recomendado: <strong>${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso'}</strong>.</div>`;
+  }
+  if(nv === 2) {
+    return `<div class="hint success">💡 Sugerencia: Con 2 variables, nivel <strong>correlacional</strong> es apropiado. Diseño recomendado: <strong>${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso múltiple'}</strong>.</div>`;
+  }
+  if(nv >= 3 && enfoque === 'cuantitativo') {
+    return `<div class="hint success">💡 Sugerencia: Con ${nv} variables, nivel <strong>correlacional o explicativo</strong>. Diseño recomendado: <strong>no experimental transversal</strong> (o experimental si puedes manipular).</div>`;
+  }
+  
+  return "";
+}
+
+function renderContent(){
+  const el=document.getElementById("content");
+  const s=state.step;
+
+  if(s===0){
+    let h=sectionLabel("¿Que area de la psicologia te interesa?");
+    h+=`<div class="grid3">`;
+    AREAS.forEach(a=>{
+      h+=`<button class="badge ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')">${a.icon} ${a.label}</button>`;
+    });
+    h+=`</div>`;
+    if(state.area==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu area" value="${state.areaOtro}" oninput="state.areaOtro=this.value;updateNav();saveState()"/>`;
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===1){
+    let h=sectionLabel("¿Con que poblacion quieres trabajar?");
+    const pobs=state.area&&state.area!=="otro"?POBLACIONES[state.area]:[];
+    if(pobs.length>0){
+      h+=`<div class="options">`;
+      pobs.forEach(p=>{
+        const esc=p.replace(/'/g,"\\'");
+        h+=badge(p, state.poblacion===p, `selectPoblacion('${esc}')`);
+      });
+      h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
+      h+=`</div>`;
+    } else {
+      h+=`<div class="options">`;
+      h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
+      h+=`</div>`;
+    }
+    if(state.poblacion==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu poblacion" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState()"/>`;
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===2){
+    let h=sectionLabel("¿Que problema o fenomeno quieres investigar?");
+    const probs=state.area&&state.area!=="otro"?PROBLEMAS[state.area]:[];
+    if(probs.length>0){
+      h+=`<div class="options">`;
+      probs.forEach(p=>{
+        const esc=p.replace(/'/g,"\\'");
+        h+=badge(p, state.problema===p, `selectProblema('${esc}')`);
+      });
+      h+=badge("Otro", state.problema==="otro", `selectProblema('otro')`);
+      h+=`</div>`;
+    } else {
+      h+=`<div class="options">`;
+      h+=badge("Otro", state.problema==="otro", `selectProblema('otro')`);
+      h+=`</div>`;
+    }
+    if(state.problema==="otro"){
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu problema/fenomeno" value="${state.problemaOtro}" oninput="state.problemaOtro=this.value;updateNav();saveState()" onblur="renderContent()" onkeypress="if(event.key==='Enter'){renderContent()}"/>`;
+    }
+    
+    // Mostrar campo de variables solo si ya confirmó el problema (tiene al menos 3 caracteres Y no está vacío después de trim)
+    const problemaConfirmado = state.problema === "otro" && state.problemaOtro.trim().length >= 3;
+    const mostrarVariables = (state.problema && state.problema !== "otro") || problemaConfirmado;
+    
+    if(mostrarVariables){
+      h+=sectionLabel("¿Que variables quieres estudiar?");
+      const vars=state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
+      if(vars.length>0){
+        h+=`<div class="chips">`;
+        vars.forEach(v=>{
+          const esc=v.replace(/'/g,"\\'");
+          h+=`<button class="chip ${state.variables.includes(v)?'active':''}" onclick="toggleVar('${esc}')">${v}</button>`;
+        });
+        h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
+        h+=`</div>`;
+        const nv=state.variables.filter(v => v !== 'otro').length;
+        if(nv>0&&NIVEL_HINT[nv]){
+          h+=`<div class="hint">${NIVEL_HINT[nv]}</div>`;
+        }
+        if(state.variables.includes('otro')){
+          h+=`<input type="text" class="otro-input" placeholder="Especifica tus variables separadas por comas" value="${state.variablesOtro}" oninput="state.variablesOtro=this.value;updateNav();saveState()"/>`;
+        }
+      } else {
+        h+=`<textarea placeholder="Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)" oninput="state.variablesOtro=this.value;setVarsFromText(this.value);saveState()">${state.variablesOtro}</textarea>`;
+      }
+    }
+    el.innerHTML=h;
+  }
+
+  else if(s===3){
+    let h=`<div class="gap20">`;
+    
+    h+=sectionLabel("¿Que enfoque metodologico prefieres?");
+    h+=`<div class="options">`;
+    ENFOQUES.forEach(e=>{
+      let desc="";
+      if(e==="Cuantitativo") desc="Numeros, estadisticas, medicion";
+      if(e==="Cualitativo") desc="Experiencias, significados, profundidad";
+      if(e==="Mixto") desc="Combina ambos enfoques";
+      h+=badgeWithDesc(e, desc, null, state.enfoque===e, `selectEnfoque('${e}')`);
+    });
+    h+=`</div>`;
+
+    if(state.enfoque){
+      h+=sectionLabel("¿Que nivel de investigacion buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
+      h+=`<div class="options">`;
+      NIVELES.forEach(n=>{
+        const esc=n.id.replace(/'/g,"\\'");
+        h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
+      });
+      h+=`</div>`;
+    }
+
+    if(state.enfoque){
+      h+=sectionLabel("¿Que diseño de investigacion utilizarás?", "El diseño es la estrategia concreta que usarás para recolectar datos: experimental (manipulas), no experimental (solo observas), etnográfico, estudio de caso, etc.");
+      const enfoqueKey = state.enfoque.toLowerCase();
+      const disenosDisponibles = DISENOS[enfoqueKey] || [];
+      h+=`<div class="options">`;
+      disenosDisponibles.forEach(d=>{
+        const esc=d.id.replace(/'/g,"\\'");
+        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+      });
+      h+=`</div>`;
+    }
+
+    // SUGERENCIA AUTOMÁTICA
+    h+=getAutoSuggestion();
+
+    h+=`</div>`;
+    el.innerHTML=h;
+  }
+
+  else if(s===4){
+    let h=`<div class="gap20">`;
+    h+=sectionLabel("¿Cuanta experiencia tienes con este tema o poblacion?");
+    h+=`<div class="options">`;
+    EXPERIENCIAS.forEach(e=>{
+      const esc=e.replace(/'/g,"\\'");
+      h+=badge(e, state.experiencia===e, `state.experiencia='${esc}';updateNav();renderContent();saveState()`);
+    });
+    h+=`</div>`;
+    h+=sectionLabel("¿Tienes acceso a la poblacion que quieres estudiar?");
+    h+=`<div class="options">`;
+    VIABILIDADES.forEach(v=>{
+      const esc=v.replace(/'/g,"\\'");
+      h+=badge(v, state.viabilidad===v, `state.viabilidad='${esc}';updateNav();renderContent();saveState()`);
+    });
+    h+=`</div>`;
+    h+=sectionLabel("¿En que contexto realizarias tu investigacion? — opcional");
+    h+=`<textarea placeholder="Ej: Lima, en un colegio privado..." oninput="state.contexto=this.value;saveState()">${state.contexto}</textarea>`;
+    h+=sectionLabel("¿Por que te interesa este tema? — opcional");
+    h+=`<textarea placeholder="Ej: Lo observe en mi practica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
+    h+=`</div>`;
+    el.innerHTML=h;
+  }
+
+  else if(s===5){
+    if(state.loading){
+      el.innerHTML=`<div class="loading"><div class="icon">⏳</div><p>Generando tu propuesta de investigacion...</p></div>`;
+      return;
+    }
+    if(!state.result){
+      el.innerHTML=`<div class="generate-box"><p>Todo listo! Con tus respuestas generaremos un tema, pregunta de investigacion y objetivo general. Podras ajustarlos a tu criterio.</p><button class="btn-generate" onclick="generate()">Generar propuesta</button></div>`;
+      return;
+    }
+    
+    let errorMsg = "";
+    if(state.result.error){
+      errorMsg = `<div style="padding:20px;background:#FEF3E8;border:1px solid #F59E0B;border-radius:8px;margin-bottom:20px">
+        <p style="color:#B45309;font-size:14px;line-height:1.6;margin:0">${state.result.error}</p>
+      </div>`;
+    }
+    
+    const fields=[
+      {key:"tema", label:"Tema de investigacion", color:"#534AB7", bg:"#EEEDFE"},
+      {key:"pregunta", label:"Pregunta de investigacion", color:"#0F6E56", bg:"#E1F5EE"},
+      {key:"objetivo", label:"Objetivo general", color:"#993C1D", bg:"#FAECE7"},
+      {key:"hipotesis", label: state.enfoque === "Cuantitativo" ? "Hipotesis de investigacion" : state.enfoque === "Cualitativo" ? "Hipotesis de trabajo" : "Hipotesis", color:"#7C3AED", bg:"#F3E8FF"},
+    ];
+    let h= errorMsg + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
+    h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
+    h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
+    h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
+    h+=`<button class="btn-sm btn-nuevo" onclick="nuevoProyecto()" style="border-color:#dc2626;color:#dc2626">🔄 Nuevo proyecto</button>`;
+    h+=`</div></div>`;
+    fields.forEach(f=>{
+      h+=`<div class="result-block" style="background:${f.bg}">`;
+      h+=`<p class="result-block-label" style="color:${f.color}">${f.label}</p>`;
+      if(state.editMode){
+        const esc=state.edited[f.key].replace(/"/g,"&quot;");
+        h+=`<textarea style="border:1px solid ${f.color}" oninput="state.edited.${f.key}=this.value;saveState()">${state.edited[f.key]}</textarea>`;
+      } else {
+        h+=`<p>${state.edited[f.key]}</p>`;
+      }
+      h+=`</div>`;
+    });
+    h+=`<div class="summary"><p class="title">Resumen de tu perfil metodologico</p><div class="summary-grid">`;
+    const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+    const enfoqueKey = state.enfoque.toLowerCase();
+    const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+    const disenoLabel = disenoObj?.label || state.diseno;
+    
+    let variablesDisplay = state.variables.filter(v => v !== 'otro');
+    if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+      const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
+      variablesDisplay = variablesDisplay.concat(otrasVars);
+    }
+    
+    [["Area",efectiveArea()],["Poblacion",efectivePoblacion()],["Problema",efectiveProblema()],
+     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],["Nivel",nivelLabel],["Diseño",disenoLabel]].forEach(([k,v])=>{
+      h+=`<p><span>${k}:</span> ${v}</p>`;
+    });
+    h+=`</div></div>`;
+
+    // PRÓXIMOS PASOS
+    h+=`<div class="next-steps">
+      <div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div>
+      <ul>
+        <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social)</li>
+        <li><strong>Marco teórico:</strong> Busca 5-10 artículos recientes (últimos 5 años) sobre tu tema en Google Académico, Redalyc o SciELO</li>
+        <li><strong>Metodología:</strong> Define tu muestra, instrumentos de medición y procedimiento de recolección</li>
+        <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase de tu investigación</li>
+      </ul>
+    </div>`;
+    
+    el.innerHTML=h;
+  }
+}
+
+function updateNav(){
+  document.getElementById("btn-back").disabled=state.step===0;
+  const nb=document.getElementById("btn-next");
+  nb.disabled=!canNext();
+  nb.style.display=state.step===5?"none":"block";
+}
+
+function render(){
+  renderStepsBar();
+  renderContent();
+  updateNav();
+}
+
+function nextStep(){if(canNext()&&state.step<5){state.step++;render();saveState();}}
+function prevStep(){if(state.step>0){state.step--;render();saveState();}}
+
+function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];updateNav();renderContent();saveState();}
+function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";updateNav();renderContent();saveState();}
+function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";updateNav();renderContent();saveState();}
+function selectNivel(v){state.nivel=v;updateNav();renderContent();saveState();}
+function selectDiseno(v){state.diseno=v;updateNav();renderContent();saveState();}
+
+function toggleVar(v){
+  const i=state.variables.indexOf(v);
+  if(i>-1) state.variables.splice(i,1); else state.variables.push(v);
+  updateNav();renderContent();saveState();
+}
+function setVarsFromText(val){
+  const vars = val.split(",").map(v=>v.trim()).filter(Boolean);
+  state.variables = vars;
+  state.variablesOtro = val;
+  updateNav();
+}
+function toggleEdit(){state.editMode=!state.editMode;renderContent();}
+
+function nuevoProyecto(){
+  if(confirm('¿Estás seguro de que quieres empezar un nuevo proyecto? Se perderá toda la información actual.')){
+    // Limpiar localStorage
+    localStorage.removeItem('investigacion_state');
+    
+    // Reiniciar estado
+    state = {
+      step:0,
+      area:"",
+      areaOtro:"",
+      poblacion:"",
+      poblacionOtro:"",
+      problema:"",
+      problemaOtro:"",
+      variables:[],
+      variablesOtro:"",
+      enfoque:"",
+      nivel:"",
+      diseno:"",
+      experiencia:"",
+      viabilidad:"",
+      contexto:"",
+      motivacion:"",
+      result:null,
+      loading:false,
+      editMode:false,
+      edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+    };
+    
+    // Volver al inicio
+    render();
+  }
+}
+
+async function generate(){
+  state.loading=true;state.result=null;renderContent();
+  
+  let variablesList = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
+    variablesList = variablesList.concat(otrasVars);
+  }
+  
+  const nv = variablesList.length;
+  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  
+  const prompt=`Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018).
+Un estudiante de 9no ciclo de Psicologia respondio:
+- Area: ${efectiveArea()}
+- Poblacion: ${efectivePoblacion()}
+- Problema/fenomeno: ${efectiveProblema()}
+- Variables seleccionadas (${nv}): ${variablesList.join(", ")}
+- Enfoque metodologico: ${state.enfoque}
+- Nivel de investigacion: ${nivelLabel}
+- Diseño de investigacion: ${disenoLabel}
+- Experiencia previa: ${state.experiencia}
+- Viabilidad de acceso: ${state.viabilidad}
+- Contexto: ${state.contexto||"No especificado"}
+- Motivacion: ${state.motivacion||"No especificada"}
+
+Genera:
+1. TEMA DE INVESTIGACION delimitado (max 15 palabras), claro, coherente con el nivel y diseño, viable para pregrado.
+2. PREGUNTA DE INVESTIGACION principal (interrogativa, coherente con enfoque, nivel, diseño y variables).
+3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y diseño; medible y alcanzable).
+4. ${state.enfoque === "Cuantitativo" ? "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico que predice la relación entre las variables (ej: 'Existe una relación positiva entre X e Y en...')" : state.enfoque === "Cualitativo" ? "HIPOTESIS DE TRABAJO: Supuesto tentativo y flexible sobre el fenómeno (ej: 'Las experiencias de X influyen en...'). Si el nivel es exploratorio puro, usa: 'Se busca comprender...'" : "HIPOTESIS: Según tu diseño mixto, formula una hipótesis predictiva o tentativa"}
+
+IMPORTANTE: Debes generar las 4 elementos. La hipótesis es OBLIGATORIA.
+
+Responde SOLO en JSON exacto sin texto adicional ni markdown:
+{"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
+
+  try{
+    // Llamar a la API de Claude (requiere backend configurado)
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: La API no está disponible. Verifica que el servidor backend esté corriendo.`);
+    }
+    
+    const data=await res.json();
+    const text=data.content?.map(b=>b.text||"").join("")||"";
+    const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
+    
+    // Asegurar que hipótesis existe
+    if(!parsed.hipotesis) {
+      if(state.enfoque === "Cuantitativo") {
+        parsed.hipotesis = "Existe una relación significativa entre las variables seleccionadas.";
+      } else if(state.enfoque === "Cualitativo") {
+        parsed.hipotesis = "Se espera identificar patrones emergentes relacionados con el fenómeno de estudio.";
+      } else {
+        parsed.hipotesis = "Se plantean supuestos iniciales que guiarán la investigación mixta.";
+      }
+    }
+    
+    state.result=parsed;
+    state.edited={...parsed};
+    saveState();
+  }catch(e){
+    console.error("Error completo:", e);
+    
+    // Generar propuesta de ejemplo si falla la API
+    const ejemploTema = `${efectiveProblema()} en ${efectivePoblacion()} - ${efectiveArea()}`;
+    const ejemploPregunta = state.enfoque === "Cuantitativo" 
+      ? `¿Cuál es la relación entre ${variablesList[0] || 'las variables'} y ${variablesList[1] || 'el fenómeno'} en ${efectivePoblacion()}?`
+      : `¿Cómo se manifiesta ${efectiveProblema()} en las experiencias de ${efectivePoblacion()}?`;
+    const ejemploObjetivo = state.enfoque === "Cuantitativo"
+      ? `Determinar la relación entre ${variablesList.slice(0,2).join(' y ')} en ${efectivePoblacion()}.`
+      : `Comprender el fenómeno de ${efectiveProblema()} en ${efectivePoblacion()}.`;
+    const ejemploHipotesis = state.enfoque === "Cuantitativo"
+      ? `Existe una relación positiva entre ${variablesList[0] || 'las variables seleccionadas'} y ${variablesList[1] || 'el fenómeno de estudio'} en ${efectivePoblacion()}.`
+      : `Las experiencias de ${efectivePoblacion()} en relación a ${efectiveProblema()} están influenciadas por factores contextuales y personales.`;
+    
+    state.result={
+      tema: ejemploTema.substring(0, 100),
+      pregunta: ejemploPregunta,
+      objetivo: ejemploObjetivo,
+      hipotesis: ejemploHipotesis,
+      error: `⚠️ API no disponible. Se generó un ejemplo basado en tus selecciones. IMPORTANTE: Debes configurar el backend (/api/chat) para usar la generación con IA. Mientras tanto, edita manualmente este ejemplo.`
+    };
+    state.edited={...state.result};
+    delete state.edited.error;
+    saveState();
+  }
+  state.loading=false;
+  renderContent();
+}
+
+// FUNCIÓN DE DESCARGA EN DOCX
+function downloadDoc() {
+  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  
+  let variablesDisplay = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
+    variablesDisplay = variablesDisplay.concat(otrasVars);
+  }
+
+  const content = `
+PROPUESTA DE PROYECTO DE INVESTIGACIÓN
+
+TEMA DE INVESTIGACIÓN
+${state.edited.tema}
+
+PREGUNTA DE INVESTIGACIÓN
+${state.edited.pregunta}
+
+OBJETIVO GENERAL
+${state.edited.objetivo}
+
+${state.enfoque === "Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN" : state.enfoque === "Cualitativo" ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS"}
+${state.edited.hipotesis}
+
+RESUMEN METODOLÓGICO
+Área: ${efectiveArea()}
+Población: ${efectivePoblacion()}
+Problema/Fenómeno: ${efectiveProblema()}
+Variables: ${variablesDisplay.join(", ")}
+Enfoque metodológico: ${state.enfoque}
+Nivel de investigación: ${nivelLabel}
+Diseño de investigación: ${disenoLabel}
+
+---
+Generado con Asistente de Investigación
+Creado por: Alan A. Vega Jacome
+  `.trim();
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'propuesta_investigacion.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+render();
+</script>
+</body>
+</html>
