@@ -1634,19 +1634,17 @@ async function downloadDoc() {
     }).join('');
 
     const hasInstruments = instrDetailXml.trim().length > 0;
-    // Section numbers: 1=Elementos, 2=Metodológico, 3=Modelo(si hay), 4=Próximos pasos(si no hay modelo)
-    // With model: 1,2,3(modelo),4(pasos),5(instrumentos si hay)
-    // Without model: 1,2,3(pasos),4(instrumentos si hay)
-    const secModelo   = imageXml     ? 3 : 0;
-    const secPasos    = imageXml     ? 4 : 3;
-    const secInstr    = hasInstruments ? (imageXml ? 5 : 4) : 0;
+
+    // ── Section numbers (imageXml is now fully set) ───────────────
+    const secModelo = imageXml ? 3 : 0;
+    const secPasos  = imageXml ? 4 : 3;
+    const secInstr  = hasInstruments ? (imageXml ? 5 : 4) : 0;
     const instrSectionXml = hasInstruments ? `
       ${heading(secInstr+'. INSTRUMENTOS SUGERIDOS','7C3AED')}
       <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
           <w:t>Los siguientes instrumentos han sido validados en población hispanohablante y son coherentes con las variables seleccionadas. Verifique la validez y confiabilidad para su contexto específico.</w:t></w:r></w:p>
       ${instrDetailXml}` : '';
-
     const nextN = secPasos;
 
     // ── document.xml ─────────────────────────────────────────────
