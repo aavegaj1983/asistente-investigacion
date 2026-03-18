@@ -579,27 +579,51 @@ const DISENOS = {
   ]
 };
 
-// TÉCNICAS DE ANÁLISIS (solo cuantitativo, por nivel)
-// correlacional: correlación simple, regresión simple
-// explicativo:   regresión múltiple, mediación, moderación, mediación moderada
-// explicativo+posgrado: path analysis, SEM variantes
-const TECNICAS = {
+// TÉCNICAS DE ANÁLISIS
+// Filtradas por: nivel + diseño
+// experimental/cuasiexperimental → ANOVA/t-test (fuera del alcance del asistente)
+// no-experimental-transversal    → todas según nivel
+// no-experimental-longitudinal   → regresión, path analysis, SEM longitudinal
+
+const TECNICAS_POR_NIVEL = {
   correlacional: [
-    {id:"correlacion",        label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"Nivel pregrado · r o ρ"},
-    {id:"regresion-simple",   label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X", hint:"Nivel pregrado · OLS"},
+    {id:"correlacion",       label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"r o ρ · Pregrado"},
+    {id:"regresion-simple",  label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X",                  hint:"📊 Diagrama · Pregrado · OLS"},
   ],
-  explicativo: [
-    // Pregrado
-    {id:"regresion-multiple",  label:"Regresión múltiple",    desc:"Predice Y con 2 o más predictores simultaneamente", hint:"📊 Diagrama disponible · Pregrado · OLS / Hayes"},
-    {id:"mediacion",           label:"Mediación simple",      desc:"M explica el mecanismo por el que X afecta a Y", hint:"📊 Diagrama disponible · Pregrado · Hayes PROCESS Modelo 4"},
-    {id:"moderacion",          label:"Moderación simple",     desc:"W cambia la fuerza o dirección del efecto X → Y", hint:"📊 Diagrama disponible · Pregrado · Hayes PROCESS Modelo 1"},
-    {id:"mediacion-moderada",  label:"Mediación moderada",    desc:"W modera la trayectoria de mediación X → M → Y", hint:"📊 Diagrama disponible · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
-    // Posgrado
-    {id:"path-analysis",   label:"Path Analysis (SEM observado)", desc:"Red de relaciones causales entre variables observadas", hint:"📊 Diagrama disponible · Posgrado · AMOS, lavaan, Mplus"},
-    {id:"sem-mediacion",   label:"SEM — Mediación con latentes",  desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama disponible · Posgrado · AMOS, Mplus"},
-    {id:"sem-moderacion",  label:"SEM — Moderación con latentes", desc:"Interacción entre variables latentes (producto de latentes)", hint:"📊 Diagrama disponible · Posgrado · Mplus (LMS)"},
-    {id:"sem-completo",    label:"SEM — Modelo completo",         desc:"CFA + modelo estructural con múltiples trayectorias", hint:"📊 Diagrama disponible · Posgrado · AMOS, Mplus, lavaan"},
+  explicativo_transversal: [
+    {id:"regresion-multiple", label:"Regresión múltiple",   desc:"Predice Y con 2 o más predictores simultáneamente",           hint:"📊 Diagrama · Pregrado · OLS / Hayes"},
+    {id:"mediacion",          label:"Mediación simple",     desc:"M explica el mecanismo por el que X afecta a Y",              hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 4"},
+    {id:"moderacion",         label:"Moderación simple",    desc:"W cambia la fuerza o dirección del efecto X → Y",             hint:"📊 Diagrama · Pregrado · Hayes PROCESS Modelo 1"},
+    {id:"mediacion-moderada", label:"Mediación moderada",   desc:"W modera la trayectoria de mediación X → M → Y",             hint:"📊 Diagrama · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
+    {id:"path-analysis",      label:"Path Analysis",        desc:"Red causal entre variables observadas, sin latentes",         hint:"📊 Diagrama · Posgrado · AMOS, lavaan, Mplus"},
+    {id:"sem-mediacion",      label:"SEM — Mediación con latentes",   desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama · Posgrado · AMOS, Mplus"},
+    {id:"sem-moderacion",     label:"SEM — Moderación con latentes",  desc:"Interacción entre variables latentes",                hint:"📊 Diagrama · Posgrado · Mplus (LMS)"},
+    {id:"sem-completo",       label:"SEM — Modelo completo",          desc:"CFA + modelo estructural con múltiples trayectorias", hint:"📊 Diagrama · Posgrado · AMOS, Mplus, lavaan"},
+  ],
+  explicativo_longitudinal: [
+    {id:"regresion-multiple", label:"Regresión múltiple longitudinal", desc:"Predice Y en distintos momentos con múltiples predictores", hint:"📊 Diagrama · Pregrado avanzado"},
+    {id:"path-analysis",      label:"Path Analysis longitudinal",      desc:"Trayectorias causales medidas en distintos tiempos",        hint:"📊 Diagrama · Posgrado · AMOS, lavaan"},
+    {id:"sem-completo",       label:"SEM longitudinal",                desc:"Modelo estructural con mediciones repetidas (panel)",       hint:"📊 Diagrama · Posgrado · Mplus, lavaan"},
   ]
+};
+
+// Función que devuelve las técnicas disponibles según nivel + diseño
+function getTecnicasDisponibles(nivel, diseno) {
+  // Experimental y cuasi-experimental: ANOVA/t-test, fuera del alcance
+  if(diseno === 'experimental' || diseno === 'cuasiexperimental') return null;
+  if(nivel === 'correlacional') return TECNICAS_POR_NIVEL.correlacional;
+  if(nivel === 'explicativo') {
+    if(diseno === 'no-experimental-longitudinal') return TECNICAS_POR_NIVEL.explicativo_longitudinal;
+    return TECNICAS_POR_NIVEL.explicativo_transversal;
+  }
+  return null; // exploratorio y descriptivo: sin técnica avanzada
+}
+
+// Alias para compatibilidad con getTecnicaInstructions y fallbacks
+const TECNICAS = {
+  correlacional: TECNICAS_POR_NIVEL.correlacional,
+  explicativo:   TECNICAS_POR_NIVEL.explicativo_transversal,
+  explicativo_longitudinal: TECNICAS_POR_NIVEL.explicativo_longitudinal
 };
 
 const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
@@ -684,9 +708,13 @@ function canNext(){
   }
   if(s===3){
     if(!state.enfoque || !state.nivel || !state.diseno) return false;
-    // Si cuantitativo + correlacional o explicativo → técnica requerida
-    if(state.enfoque==="Cuantitativo" && (state.nivel==="correlacional" || state.nivel==="explicativo")){
-      return state.tecnica !== "";
+    if(state.enfoque==="Cuantitativo"){
+      // Experimental/cuasi: no requieren técnica del menú
+      if(state.diseno==='experimental' || state.diseno==='cuasiexperimental') return true;
+      // Exploratorio/descriptivo: no requieren técnica avanzada
+      if(state.nivel==='exploratorio' || state.nivel==='descriptivo') return true;
+      // Correlacional/explicativo: requieren técnica
+      if(state.nivel==="correlacional" || state.nivel==="explicativo") return state.tecnica !== "";
     }
     return true;
   }
@@ -884,33 +912,35 @@ function renderContent(){
     }
 
     // ── Técnica de análisis ───────────────────────────────────────
-    // Solo aparece: cuantitativo + (correlacional o explicativo) + diseño seleccionado
-    const mostrarTecnica = state.enfoque==="Cuantitativo" &&
-                           (state.nivel==="correlacional" || state.nivel==="explicativo") &&
-                           state.diseno !== "";
+    if(state.enfoque==="Cuantitativo" && state.diseno && state.nivel) {
+      const tecnicasDisponibles = getTecnicasDisponibles(state.nivel, state.diseno);
 
-    if(mostrarTecnica){
-      const tecnicasDisponibles = TECNICAS[state.nivel] || [];
-      h+=sectionLabel("¿Qué técnica de análisis estadístico planeas usar?",
-        "La técnica define cómo analizarás los datos. Solo aparecen opciones coherentes con tu nivel de investigación.");
-      if(state.nivel==="correlacional"){
-        h+=`<div class="hint">📌 Nivel correlacional: estas técnicas miden asociaciones entre variables, no establecen causalidad.</div>`;
-      } else {
-        h+=`<div class="hint">📌 Nivel explicativo: puedes modelar relaciones causales. Las opciones SEM son de uso avanzado (posgrado).</div>`;
+      // Experimental / cuasi-experimental: ANOVA/t-test, fuera del alcance
+      if(state.diseno==='experimental' || state.diseno==='cuasiexperimental'){
+        h+=`<div class="hint warning">⚠️ Los diseños experimental y cuasi-experimental utilizan técnicas como ANOVA, t de Student o ANCOVA para comparar grupos. Estas técnicas están fuera del alcance de este asistente (orientado a correlación, regresión y modelos relacionales). Puedes continuar, pero el asistente generará una propuesta adaptada a tu diseño sin una técnica específica de comparación de grupos.</div>`;
       }
-      h+=`<div class="options">`;
-      tecnicasDisponibles.forEach(t=>{
-        const esc=t.id.replace(/'/g,"\'");
-        h+=badgeWithDesc(t.label, t.desc, t.hint, state.tecnica===t.id, `selectTecnica('${esc}')`);
-      });
-      h+=`</div>`;
-    }
-
-    // ── Nota para niveles sin técnica avanzada ────────────────────
-    if(state.enfoque==="Cuantitativo" &&
-       (state.nivel==="exploratorio" || state.nivel==="descriptivo") &&
-       state.diseno){
-      h+=`<div class="hint success">✅ Para nivel ${state.nivel} se usan estadísticos descriptivos (frecuencias, medias, dispersión). No se requieren técnicas avanzadas.</div>`;
+      // Exploratorio / descriptivo: sin técnica avanzada
+      else if(state.nivel==='exploratorio' || state.nivel==='descriptivo'){
+        h+=`<div class="hint success">✅ Para nivel ${state.nivel === 'exploratorio' ? 'exploratorio' : 'descriptivo'} se utilizan estadísticos descriptivos: frecuencias, medidas de tendencia central y dispersión. No se requieren técnicas avanzadas.</div>`;
+      }
+      // Técnicas disponibles según nivel + diseño
+      else if(tecnicasDisponibles && tecnicasDisponibles.length > 0){
+        h+=sectionLabel("¿Qué técnica de análisis estadístico planeas usar?",
+          "Solo aparecen técnicas coherentes con tu nivel y diseño de investigación.");
+        if(state.nivel==="correlacional"){
+          h+=`<div class="hint">📌 Nivel correlacional: estas técnicas miden asociaciones, no establecen causalidad.</div>`;
+        } else if(state.diseno==='no-experimental-longitudinal'){
+          h+=`<div class="hint">📌 Diseño longitudinal: las técnicas disponibles son adecuadas para datos con mediciones repetidas o en distintos tiempos.</div>`;
+        } else {
+          h+=`<div class="hint">📌 Nivel explicativo + diseño transversal: puedes modelar relaciones causales. Las opciones SEM son de uso avanzado (posgrado).</div>`;
+        }
+        h+=`<div class="options">`;
+        tecnicasDisponibles.forEach(t=>{
+          const esc=t.id.replace(/'/g,"\'");
+          h+=badgeWithDesc(t.label, t.desc, t.hint, state.tecnica===t.id, `selectTecnica('${esc}')`);
+        });
+        h+=`</div>`;
+      }
     }
 
     h+=getAutoSuggestion();
@@ -1173,10 +1203,10 @@ function getTecnicaInstructions(tecnica, vars, poblacion, nivel) {
       nota:     `Pregunta sobre mediación con latentes. Objetivo: "Examinar el efecto mediador de M (latente) en la relación X→Y mediante SEM". Hipótesis sobre ajuste del modelo Y efecto indirecto. VARIABLES EXACTAS: X=${X}, M=${M}, Y=${Y}. MENCIONA EXPLÍCITAMENTE que son variables latentes. NO inventes otras variables.`
     },
     'sem-moderacion': {
-      pregunta: `¿En qué medida ${W} (latente) modera la relación entre ${X} y ${Y} como constructos latentes en ${pop}?`,
-      verbo:    'Analizar el efecto moderador latente de',
-      hipotesis:`La interacción entre los constructos latentes ${X} y ${W} predice significativamente ${Y} en ${pop} (modelo SEM con ajuste adecuado).`,
-      nota:     `Pregunta sobre moderación entre latentes. Objetivo: "Analizar la interacción latente X×W sobre Y mediante SEM". Hipótesis sobre interacción latente y ajuste. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+      pregunta: `¿En qué medida el constructo latente ${W} modera la relación entre los constructos latentes ${X} e ${Y} en ${pop}?`,
+      verbo:    'Analizar el efecto moderador del constructo latente',
+      hipotesis:`La interacción latente entre ${X} y ${W} (ξ₁×ξ₂) predice significativamente ${Y} en ${pop}, con índices de ajuste adecuados (CFI≥.95, RMSEA≤.06).`,
+      nota:     `IMPORTANTE: X, W e Y son CONSTRUCTOS LATENTES (no variables observadas). Pregunta: "¿En qué medida W (latente) modera X→Y (latentes)?". Hipótesis: menciona explícitamente la interacción latente ξ₁×ξ₂ y los índices de ajuste del modelo. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
     },
     'sem-completo': {
       pregunta: `¿Cuál es la estructura de relaciones entre los constructos latentes ${vars.join(', ')} en ${pop}?`,
@@ -1221,6 +1251,10 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
   // Nivel descriptivo con técnica avanzada (no debería pasar, pero por si acaso)
   if((nivel === 'descriptivo' || nivel === 'exploratorio') && tecnica && tecnica !== '') {
     warnings.push(`⚠️ El nivel ${nivel} no es compatible con técnicas de análisis inferencial. Considera cambiar el nivel a correlacional o explicativo.`);
+  }
+  // Path analysis / SEM correlacional (incoherente)
+  if(['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(tecnica) && nivel==='correlacional'){
+    warnings.push(`⚠️ Las técnicas SEM/Path Analysis requieren nivel explicativo, no correlacional. Regresa al paso 3 y cambia el nivel.`);
   }
   return warnings;
 }
