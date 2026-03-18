@@ -2370,16 +2370,46 @@ function showModelDiagram() {
     titulo='Path Analysis — Variables Observadas';
     nivel='Posgrado · AMOS, lavaan, Mplus';
     nota='Variables observadas directamente. Se estiman efectos directos e indirectos. No requiere indicadores múltiples.';
-    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
-    svg+=box(10, 45,130,40,v[0],Cx.s,Cx.f);
-    svg+=box(10,170,130,40,v[1],Cx.s,Cx.f);
-    svg+=box(225,108,130,40,v[2],Cm.s,Cm.f);
-    svg+=box(430,108,130,40,v[3],Cy.s,Cy.f);
-    svg+=arrow(140, 65,225,120,Cx.s,'β₁');
-    svg+=arrow(140,190,225,136,Cx.s,'β₂');
-    svg+=arrow(355,128,430,128,Cm.s,'β₃');
-    svg+=arrow(140, 65,430,118,Cx.s,'',true);
-    svg+=`<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Índices: CFI, TLI, RMSEA, SRMR</text>`;
+
+    const nVars = vars.length;
+
+    if(nVars <= 1) {
+      // Solo 1 variable: advertencia
+      svg+=box(W/2-80,H/2-22,160,44,vars[0]||'Variable',Cx.s,Cx.f);
+      svg+=`<text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#D97706" font-family="system-ui">⚠️ Path Analysis requiere al menos 3 variables</text>`;
+
+    } else if(nVars === 2) {
+      // 2 variables: diagrama simple X → Y
+      svg+=box(40,H/2-22,160,44,vars[0],Cx.s,Cx.f);
+      svg+=box(W-200,H/2-22,160,44,vars[1],Cy.s,Cy.f);
+      svg+=arrow(200,H/2,W-200,H/2,Cx.s,'β');
+      svg+=`<text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Path Analysis · 2 variables</text>`;
+
+    } else if(nVars === 3) {
+      // 3 variables: X₁ y X₂ → Y  (sin Var 4 inventado)
+      svg+=box(10, 65,150,40,vars[0],Cx.s,Cx.f);
+      svg+=box(10,175,150,40,vars[1],Cx.s,Cx.f);
+      svg+=box(W-175,H/2-22,165,44,vars[2],Cy.s,Cy.f);
+      svg+=arrow(160, 85,W-175,H/2-10,Cx.s,'β₁');
+      svg+=arrow(160,195,W-175,H/2+10,Cx.s,'β₂');
+      svg+=`<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Índices: CFI, TLI, RMSEA, SRMR</text>`;
+
+    } else {
+      // 4+ variables: layout con mediador intermedio (usa solo primeras 4)
+      const v = vars.slice(0,4);
+      svg+=box(10, 45,130,40,v[0],Cx.s,Cx.f);
+      svg+=box(10,170,130,40,v[1],Cx.s,Cx.f);
+      svg+=box(225,108,130,40,v[2],Cm.s,Cm.f);
+      svg+=box(430,108,130,40,v[3],Cy.s,Cy.f);
+      svg+=arrow(140, 65,225,120,Cx.s,'β₁');
+      svg+=arrow(140,190,225,136,Cx.s,'β₂');
+      svg+=arrow(355,128,430,128,Cm.s,'β₃');
+      svg+=arrow(140, 65,430,118,Cx.s,'',true);
+      if(vars.length > 4) {
+        svg+=`<text x="${W/2}" y="16" text-anchor="middle" font-size="9" fill="#D97706" font-family="system-ui">Mostrando 4 de ${vars.length} variables</text>`;
+      }
+      svg+=`<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="#aaa" font-family="system-ui">Índices: CFI, TLI, RMSEA, SRMR</text>`;
+    }
   }
 
   // ── SEM MEDIACIÓN CON LATENTES ────────────────────────────────
@@ -2435,7 +2465,10 @@ function showModelDiagram() {
     nivel='Posgrado · AMOS, Mplus, lavaan';
     nota='CFA (modelo de medición) + modelo estructural. Índices: CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08.';
     // Use real variable names — assign roles: exógenas = primeras vars, endógena = última
-    const v=[...vars]; while(v.length<4) v.push('Var '+(v.length+1));
+    // Pad only with generic labels if truly needed (never "Var N")
+    const vRaw=[...vars];
+    while(vRaw.length<4) vRaw.push(vRaw.length===0?'Exógena 1':vRaw.length===1?'Exógena 2':vRaw.length===2?'Mediador':'Endógena');
+    const v=vRaw;
     const ex1=v[0], ex2=v[1], end1=v[2], end2=v[v.length-1];
 
     // Measurement model left — exógenas
