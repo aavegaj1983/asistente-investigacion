@@ -1436,6 +1436,22 @@ Responde SOLO en JSON sin texto adicional ni markdown:
 // ── DOCX GENERATOR — sin librerías externas ─────────────────────
 // Genera un .docx real usando ZIP + Open XML directamente en el browser
 
+// Returns diagram title based on current tecnica
+function titulo_diagrama() {
+  const map = {
+    'regresion-simple':   'Modelo de Regresión Simple',
+    'regresion-multiple': 'Modelo de Regresión Múltiple',
+    'mediacion':          'Modelo de Mediación Simple',
+    'moderacion':         'Modelo de Moderación Simple',
+    'mediacion-moderada': 'Modelo de Mediación Moderada',
+    'path-analysis':      'Diagrama de Rutas (Path Analysis)',
+    'sem-mediacion':      'SEM — Mediación con Variables Latentes',
+    'sem-moderacion':     'SEM — Moderación con Variables Latentes',
+    'sem-completo':       'SEM — Modelo Estructural Completo',
+  };
+  return map[state.tecnica] || 'Modelo Teórico';
+}
+
 async function downloadDoc() {
   const btn = document.querySelector('.btn-download');
   if(btn){ btn.classList.add('loading'); btn.innerHTML='⏳ Generando...'; }
@@ -1506,40 +1522,68 @@ async function downloadDoc() {
 
     if(tecnicasConDiagrama.includes(state.tecnica)){
       try {
-        // Obtener/generar SVG
-        if(!window._lastDiagramSVG){ showModelDiagram(); document.getElementById('modal-diagram')?.remove(); }
+        // Siempre generar SVG fresco — no depender de si el modal fue abierto antes
+        window._lastDiagramSVG = null; // forzar regeneración
+        showModelDiagram();
+        document.getElementById('modal-diagram')?.remove();
         const svgStr = window._lastDiagramSVG;
-        if(svgStr){
+
+        if(svgStr && svgStr.length > 50){
+          // Convertir SVG a PNG via Canvas
           imageBytes = await svgToBase64Png(svgStr, 600, 300);
-          imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
-          imageXml  = `
-            ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
-            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
-              <w:r><w:rPr></w:rPr>
-                <w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-                  distT="0" distB="0" distL="0" distR="0">
-                  <wp:extent cx="5486400" cy="2743200"/>
-                  <wp:docPr id="1" name="Diagrama"/>
-                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                        <pic:nvPicPr><pic:cNvPr id="1" name="Diagrama"/><pic:cNvPicPr/></pic:nvPicPr>
-                        <pic:blipFill>
-                          <a:blip r:embed="rId10" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
-                          <a:stretch><a:fillRect/></a:stretch>
-                        </pic:blipFill>
-                        <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5486400" cy="2743200"/></a:xfrm>
-                          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
-                      </pic:pic>
-                    </a:graphicData>
-                  </a:graphic>
-                </wp:inline></w:drawing>
-              </w:r></w:p>
-            <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
-              <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
-                <w:t>Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+
+          if(imageBytes && imageBytes.byteLength > 100){
+            imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
+            imageXml  = `
+              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
+                <w:r>
+                  <w:drawing>
+                    <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0">
+                      <wp:extent cx="5486400" cy="2743200"/>
+                      <wp:docPr id="1" name="ModeloDiagrama"/>
+                      <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                          <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                            <pic:nvPicPr>
+                              <pic:cNvPr id="1" name="ModeloDiagrama"/>
+                              <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                              <a:blip r:embed="rId10" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+                              <a:stretch><a:fillRect/></a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                              <a:xfrm><a:off x="0" y="0"/><a:ext cx="5486400" cy="2743200"/></a:xfrm>
+                              <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                            </pic:spPr>
+                          </pic:pic>
+                        </a:graphicData>
+                      </a:graphic>
+                    </wp:inline>
+                  </w:drawing>
+                </w:r>
+              </w:p>
+              <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
+                <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+                  <w:t>Figura 1. ${xe(titulo_diagrama())}. Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+          } else {
+            // PNG falló pero tenemos SVG — incluir nota
+            imageXml = `
+              ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+              <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+                <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
+                  <w:t>Ver diagrama en la aplicación web: ${xe(tecnicaLabel)}. El diagrama no pudo incluirse como imagen en este dispositivo.</w:t></w:r></w:p>`;
+          }
         }
-      } catch(e){ console.warn('Diagram image skipped:', e.message); }
+      } catch(e){
+        console.warn('Diagram generation failed:', e.message);
+        imageXml = `
+          ${heading(secModelo+'. MODELO TEÓRICO PROPUESTO','059669')}
+          <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+            <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
+              <w:t>Ver diagrama en la aplicación web usando el botón "Ver modelo teórico". Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+      }
     }
 
     // ── Instrumentos sugeridos por variable ─────────────────────
@@ -1815,18 +1859,34 @@ async function svgToBase64Png(svgStr, w=600, h=300) {
     const canvas = document.createElement('canvas');
     canvas.width = w*2; canvas.height = h*2;
     const ctx = canvas.getContext('2d');
+    if(!ctx){ reject(new Error('Canvas not supported')); return; }
     ctx.scale(2,2);
-    ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,w,h);
+
+    // Encode SVG as data URI to avoid CORS/tainted canvas issues
+    const svgClean = svgStr
+      .replace(/&/g,'&amp;')
+      .replace(/<br>/g,'<br/>')
+      // Ensure proper XML namespace
+      .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+
     const img = new Image();
-    const blob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
-    const url  = URL.createObjectURL(blob);
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      ctx.drawImage(img,0,0,w,h);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(b=>b.arrayBuffer().then(resolve).catch(reject),'image/png');
+      try {
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(b => {
+          if(!b){ reject(new Error('toBlob returned null')); return; }
+          b.arrayBuffer().then(resolve).catch(reject);
+        }, 'image/png', 0.95);
+      } catch(e) {
+        reject(new Error('Canvas draw failed: ' + e.message));
+      }
     };
-    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
-    img.src = url;
+    img.onerror = () => reject(new Error('SVG image load failed'));
+    img.src = encoded;
   });
 }
 
