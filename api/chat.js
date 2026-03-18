@@ -11,15 +11,14 @@ module.exports = async function handler(req, res) {
   }
   
   try {
-    // Extraer el contenido del mensaje
-    const { messages, model, max_tokens } = req.body;
+    const { messages, max_tokens } = req.body;
     const userMessage = messages?.[messages.length - 1]?.content || "";
     
     if (!userMessage) {
       return res.status(400).json({ error: "No se proporcionó ningún mensaje" });
     }
     
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -46,17 +45,15 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
     
     if (data.error) {
-      console.error("Error en respuesta de Gemini:", data.error);
       return res.status(400).json({ error: data.error.message });
     }
     
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
     if (!text) {
-      return res.status(500).json({ error: "Gemini no devolvió texto en la respuesta" });
+      return res.status(500).json({ error: "Gemini no devolvio texto en la respuesta" });
     }
     
-    // Formato compatible con Claude (esperado por el HTML)
     return res.status(200).json({ 
       content: [{ type: "text", text }] 
     });
