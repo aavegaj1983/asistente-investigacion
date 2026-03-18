@@ -395,35 +395,18 @@ textarea{min-height:70px;resize:vertical}
 const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
 
 const AREAS = [
-  {id:"clinica", label:"Psicología clínica y salud mental", icon:`<svg width="28" height="28" viewBox="0 0 40 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Vara de Esculapio">
-    <!-- Bastón vertical -->
-    <rect x="18.5" y="2" width="3" height="52" rx="1.5" fill="#4F46E5"/>
-    <!-- Bola superior -->
-    <circle cx="20" cy="3" r="3.5" fill="#4F46E5"/>
-    <!-- Serpiente — curvas suaves alrededor del bastón -->
-    <path d="M20 10 C27 10, 27 16, 20 16 C13 16, 13 22, 20 22 C27 22, 27 28, 20 28 C13 28, 13 34, 20 34 C27 34, 27 40, 20 40 C13 40, 13 46, 20 46"
-          stroke="#059669" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-    <!-- Cabeza de la serpiente -->
-    <ellipse cx="20" cy="8.5" rx="3.2" ry="2.2" fill="#059669"/>
-    <!-- Ojos -->
-    <circle cx="18.8" cy="8" r="0.7" fill="white"/>
-    <circle cx="21.2" cy="8" r="0.7" fill="white"/>
-    <circle cx="18.8" cy="8" r="0.32" fill="#111"/>
-    <circle cx="21.2" cy="8" r="0.32" fill="#111"/>
-    <!-- Lengua bífida -->
-    <path d="M19 7 L17.4 5.5 M21 7 L22.6 5.5" stroke="#DC2626" stroke-width="0.9" stroke-linecap="round"/>
-  </svg>`},
+  {id:"clinica", label:"Psicología clínica y salud mental", icon:`<svg width="28" height="28" viewBox="0 0 40 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="18.5" y="2" width="3" height="52" rx="1.5" fill="#4F46E5"/><circle cx="20" cy="3" r="3.5" fill="#4F46E5"/><path d="M20 10 C27 10, 27 16, 20 16 C13 16, 13 22, 20 22 C27 22, 27 28, 20 28 C13 28, 13 34, 20 34 C27 34, 27 40, 20 40 C13 40, 13 46, 20 46" stroke="#059669" stroke-width="2.4" stroke-linecap="round" fill="none"/><ellipse cx="20" cy="8.5" rx="3.2" ry="2.2" fill="#059669"/><circle cx="18.8" cy="8" r="0.7" fill="white"/><circle cx="21.2" cy="8" r="0.7" fill="white"/><circle cx="18.8" cy="8" r="0.32" fill="#111"/><circle cx="21.2" cy="8" r="0.32" fill="#111"/><path d="M19 7 L17.4 5.5 M21 7 L22.6 5.5" stroke="#DC2626" stroke-width="0.9" stroke-linecap="round"/></svg>`},
   {id:"educativa", label:"Psicología educativa", icon:"📚"},
   {id:"organizacional", label:"Psicología organizacional", icon:"🏢"},
   {id:"social", label:"Psicología social y comunitaria", icon:"🤝"},
-  {id:"deporte", label:"Psicología del deporte", icon:"🏃"},
+  {id:"deporte", label:"Psicología del deporte", icon:"🏅"},
   {id:"consumidor", label:"Psicología del consumidor", icon:"🛒"},
   {id:"juridica", label:"Psicología jurídica/forense", icon:"⚖️"},
   {id:"ambiental", label:"Psicología ambiental", icon:"🌱"},
   {id:"positiva", label:"Psicología positiva", icon:"✨"},
-  {id:"pareja-familia", label:"Psicología de pareja y familia", icon:"💑"},
+  {id:"pareja-familia", label:"Psicología de pareja y familia", icon:"🫂"},
   {id:"salud", label:"Psicología de la salud", icon:"🏥"},
-  {id:"desarrollo", label:"Psicología del desarrollo", icon:"👶"},
+  {id:"desarrollo", label:"Psicología del desarrollo", icon:"🍼"},
   {id:"neuropsicologia", label:"Neuropsicología", icon:"🧠"},
   {id:"adicciones", label:"Psicología de las adicciones", icon:"🚭"},
   {id:"digital", label:"Psicología digital/cibernética", icon:"📱"},
@@ -663,40 +646,107 @@ const TECNICAS = {
 };
 
 // ── REFERENCIAS BIBLIOGRÁFICAS ────────────────────────────────────
+// Cada referencia tiene tags: enfoque[] y diseños/tecnicas[] para filtrado inteligente
 const REFERENCIAS = [
   {
-    cita: "Nóblega, M., Vera, Á., Gutiérrez, G., y Otiniano, F. (2017). <em>Criterios Homologados de Investigación en Psicología (CHIP) — Investigaciones Cualitativas</em> (Versión 1.0). Departamento de Psicología, PUCP.",
-    nota: "Marco de referencia para investigaciones cualitativas de pregrado: criterios de integridad, rigor metodológico, supuestos de investigación, diseño de análisis temático y consideraciones éticas."
+    cita: "Hernández-Sampieri, R., y Mendoza, C. P. (2018). <em>Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta</em>. McGraw-Hill Education.",
+    nota: "Referencia principal del asistente. Marco para niveles de investigación, enfoques y diseños en psicología y ciencias sociales.",
+    enfoque: ["Cuantitativo","Cualitativo","Mixto"],
+    disenos: ["*"]
   },
   {
     cita: "Ato, M., López, J. J., y Benavente, A. (2013). Un sistema de clasificación de los diseños de investigación en psicología. <em>Anales de Psicología, 29</em>(3), 1038-1059. https://doi.org/10.6018/analesps.29.3.178511",
-    nota: "Sistema de clasificación de diseños: estrategia manipulativa, asociativa y descriptiva. Marco de referencia para la nomenclatura de diseños (DCS, DPT, DVO, DVL, DLEP, etc.)."
+    nota: "Sistema de clasificación de diseños: estrategia manipulativa, asociativa y descriptiva. Marco de referencia para la nomenclatura de diseños (DCS, DPT, DVO, DVL, DLEP, etc.).",
+    enfoque: ["Cuantitativo","Mixto"],
+    disenos: ["*"]
+  },
+  {
+    cita: "Nóblega, M., Vera, Á., Gutiérrez, G., y Otiniano, F. (2017). <em>Criterios Homologados de Investigación en Psicología (CHIP) — Investigaciones Cualitativas</em> (Versión 1.0). Departamento de Psicología, PUCP.",
+    nota: "Marco de referencia para investigaciones cualitativas de pregrado: criterios de integridad, rigor metodológico, supuestos de investigación, diseño de análisis temático y consideraciones éticas.",
+    enfoque: ["Cualitativo"],
+    disenos: ["*"]
+  },
+  {
+    cita: "Braun, V., y Clarke, V. (2006). Using thematic analysis in psychology. <em>Qualitative Research in Psychology, 3</em>(2), 77-101. https://doi.org/10.1191/1478088706qp063oa",
+    nota: "Referencia central para el análisis temático: fases del proceso, codificación inductiva y deductiva, criterios de calidad.",
+    enfoque: ["Cualitativo"],
+    disenos: ["analisis-tematico","fenomenologico"]
+  },
+  {
+    cita: "Hsieh, H., y Shannon, S. E. (2005). Three approaches to qualitative content analysis. <em>Qualitative Health Research, 15</em>(9), 1277-1288. https://doi.org/10.1177/1049732305276687",
+    nota: "Distingue tres tipos de análisis de contenido cualitativo: convencional, dirigido y sumativo. Complementa el análisis temático.",
+    enfoque: ["Cualitativo"],
+    disenos: ["analisis-tematico"]
+  },
+  {
+    cita: "Pistrang, N., y Barker, C. (2012). Varieties of qualitative research: A pragmatic approach to selecting methods. En H. Cooper (Ed.), <em>APA Handbook of Research Methods in Psychology, Vol. 2</em> (pp. 5-18). APA.",
+    nota: "Criterios de integridad para investigación cualitativa: fundamentación empírica, transparencia, coherencia y credibilidad. Marco taxonómico de familias de métodos.",
+    enfoque: ["Cualitativo"],
+    disenos: ["*"]
   },
   {
     cita: "Creswell, J. W. (2013). <em>Qualitative inquiry and research design: Choosing among five approaches</em> (3.ª ed.). Sage.",
-    nota: "Referencia para diseños cualitativos: fenomenológico, etnográfico, teoría fundamentada, estudio de caso y narrativo."
-  },
-  {
-    cita: "Creswell, J. W., y Plano Clark, V. L. (2017). <em>Designing and conducting mixed methods research</em> (3.ª ed.). Sage.",
-    nota: "Referencia para diseños mixtos: secuencial explicativo, secuencial exploratorio, convergente paralelo, transformativo y anidado."
-  },
-  {
-    cita: "Hayes, A. F. (2018). <em>Introduction to mediation, moderation, and conditional process analysis: A regression-based approach</em> (2.ª ed.). The Guilford Press.",
-    nota: "Referencia para mediación simple (Modelo 4), moderación simple (Modelo 1) y mediación moderada (Modelos 7, 14, 58). Software: PROCESS macro para SPSS/SAS."
-  },
-  {
-    cita: "Hernández-Sampieri, R., y Mendoza, C. P. (2018). <em>Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta</em>. McGraw-Hill Education.",
-    nota: "Referencia principal del asistente. Marco para niveles de investigación, enfoques y diseños en psicología y ciencias sociales."
-  },
-  {
-    cita: "Kline, R. B. (2016). <em>Principles and practice of structural equation modeling</em> (4.ª ed.). The Guilford Press.",
-    nota: "Referencia para modelos SEM, path analysis y modelos con variables latentes. Índices de ajuste: CFI, TLI, RMSEA, SRMR."
+    nota: "Referencia para diseños cualitativos: fenomenológico, etnográfico, teoría fundamentada, estudio de caso y narrativo.",
+    enfoque: ["Cualitativo","Mixto"],
+    disenos: ["fenomenologico","etnografico","teoria-fundamentada","narrativo","investigacion-accion","analisis-tematico","secuencial-exploratorio","secuencial-explicativo","convergente-paralelo"]
   },
   {
     cita: "Yin, R. K. (2018). <em>Case study research and applications: Design and methods</em> (6.ª ed.). Sage.",
-    nota: "Referencia para diseño de estudio de caso cualitativo: triangulación de fuentes y análisis en profundidad."
+    nota: "Referencia para diseño de estudio de caso: triangulación de fuentes, cadena de evidencia y validación con informantes clave.",
+    enfoque: ["Cualitativo"],
+    disenos: ["estudio-caso"]
+  },
+  {
+    cita: "Strauss, A., y Corbin, J. (1998). <em>Basics of qualitative research: Techniques and procedures for developing grounded theory</em> (2.ª ed.). Sage.",
+    nota: "Referencia para teoría fundamentada: codificación abierta, axial y selectiva, muestreo teórico y saturación.",
+    enfoque: ["Cualitativo"],
+    disenos: ["teoria-fundamentada"]
+  },
+  {
+    cita: "Smith, J. A., Flowers, P., y Larkin, M. (2009). <em>Interpretative phenomenological analysis: Theory, method and research</em>. Sage.",
+    nota: "Referencia para análisis fenomenológico interpretativo (IPA): proceso analítico, idiografía y doble hermenéutica.",
+    enfoque: ["Cualitativo"],
+    disenos: ["fenomenologico"]
+  },
+  {
+    cita: "Creswell, J. W., y Plano Clark, V. L. (2017). <em>Designing and conducting mixed methods research</em> (3.ª ed.). Sage.",
+    nota: "Referencia para diseños mixtos: secuencial explicativo, secuencial exploratorio, convergente paralelo, transformativo y anidado.",
+    enfoque: ["Mixto"],
+    disenos: ["*"]
+  },
+  {
+    cita: "Hayes, A. F. (2018). <em>Introduction to mediation, moderation, and conditional process analysis: A regression-based approach</em> (2.ª ed.). The Guilford Press.",
+    nota: "Referencia para mediación simple (Modelo 4), moderación simple (Modelo 1) y mediación moderada (Modelos 7, 14, 58). Software: PROCESS macro para SPSS/SAS.",
+    enfoque: ["Cuantitativo"],
+    tecnicas: ["mediacion","moderacion","mediacion-moderada"]
+  },
+  {
+    cita: "Kline, R. B. (2016). <em>Principles and practice of structural equation modeling</em> (4.ª ed.). The Guilford Press.",
+    nota: "Referencia para modelos SEM, path analysis y modelos con variables latentes. Índices de ajuste: CFI, TLI, RMSEA, SRMR.",
+    enfoque: ["Cuantitativo"],
+    tecnicas: ["path-analysis","sem-mediacion","sem-moderacion","sem-completo"]
   },
 ];
+
+// ── FILTRADO INTELIGENTE DE REFERENCIAS ─────────────────────────
+function getRefsFiltradas() {
+  return REFERENCIAS.filter(r => {
+    // 1. Filtro por enfoque
+    if(r.enfoque && !r.enfoque.includes(state.enfoque)) return false;
+
+    // 2. Filtro por técnica (solo para refs con campo tecnicas)
+    if(r.tecnicas) {
+      return r.tecnicas.includes(state.tecnica);
+    }
+
+    // 3. Filtro por diseño (para refs con campo disenos, si no es "*")
+    if(r.disenos && !r.disenos.includes('*')) {
+      return r.disenos.includes(state.diseno);
+    }
+
+    return true;
+  });
+}
 
 // EPISTEMOLOGÍAS para investigación cualitativa (Willig, 2013; CHIP-PUCP, 2017)
 const EPISTEMOLOGIAS_CUAL = [
@@ -796,9 +846,11 @@ function renderInstrumentosHtml(varsList) {
 }
 
 function renderReferenciasHtml() {
+  const refs = getRefsFiltradas();
+  if(refs.length === 0) return '';
   let h = `<div class="refs">`;
-  h += `<div class="refs-title">📚 Referencias metodológicas del proyecto</div>`;
-  REFERENCIAS.forEach(r => {
+  h += `<div class="refs-title">📚 Referencias metodológicas del proyecto <span style="font-weight:400;color:var(--gray-400);font-size:11px">(${refs.length} relevantes para tu diseño)</span></div>`;
+  refs.forEach(r => {
     h += `<div class="refs-item">${r.cita}`;
     if(r.nota) h += `<span class="refs-note">${r.nota}</span>`;
     h += `</div>`;
@@ -1048,8 +1100,24 @@ function renderContent(){
         ? "¿Qué categorías de análisis o ejes temáticos te interesan?"
         : "¿Qué variables quieres estudiar?";
       h+=sectionLabel(labelCategorias);
-      const vars=state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
-      if(vars.length>0){
+      // Merge static vars with AI-generated vars (AI vars take priority if available)
+      const staticVars = state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
+      const vars = state.aiVars.length > 0 ? state.aiVars : staticVars;
+
+      // Show AI loading indicator
+      if(state.aiVarsLoading){
+        h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;padding:10px 14px">
+          <span style="animation:pulse 1s infinite;font-size:16px">🤖</span>
+          <span>Generando variables personalizadas para tu proyecto...</span>
+        </div>`;
+      } else if(state.aiVars.length > 0){
+        h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px">
+          ✨ <strong>Variables generadas por IA</strong> para tu proyecto específico
+          <button onclick="state.aiVars=[];renderContent()" style="margin-left:8px;font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:1px 6px;cursor:pointer;color:var(--green)">Ver estáticas</button>
+        </div>`;
+      }
+
+      if(vars.length>0 && !state.aiVarsLoading){
         h+=`<div class="chips">`;
         vars.forEach(v=>{
           const esc=v.replace(/'/g,"\\'");
@@ -1221,10 +1289,62 @@ function renderContent(){
       const tecnicaLabel = state.tecnica
         ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
         : 'Estadística descriptiva';
+
+      // ── Validation panel ──────────────────────────────────────────
+      let validationHtml = '';
+      if(state.aiValidationLoading) {
+        validationHtml = `<div style="margin-bottom:20px;padding:16px;background:#F8FAFF;border:1px solid #C7D2FE;border-radius:12px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px;animation:pulse 1s infinite">🤖</span>
+          <div>
+            <div style="font-weight:600;font-size:14px;color:#3730A3">Analizando coherencia metodológica...</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">Revisando que tu diseño, variables y técnica sean compatibles</div>
+          </div>
+        </div>`;
+      } else if(state.aiValidation && state.aiValidation.nivel_coherencia !== 'error') {
+        const val = state.aiValidation;
+        const bgColor = val.nivel_coherencia==='alta' ? '#ECFDF5' : val.nivel_coherencia==='media' ? '#FFFBEB' : '#FEF2F2';
+        const borderColor = val.nivel_coherencia==='alta' ? '#A7F3D0' : val.nivel_coherencia==='media' ? '#FDE68A' : '#FECACA';
+        const titleColor = val.nivel_coherencia==='alta' ? '#065F46' : val.nivel_coherencia==='media' ? '#92400E' : '#991B1B';
+
+        validationHtml = `<div style="margin-bottom:20px;padding:16px;background:${bgColor};border:1px solid ${borderColor};border-radius:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:20px">${val.emoji}</span>
+            <span style="font-weight:700;font-size:14px;color:${titleColor}">${val.titulo}</span>
+            <span style="margin-left:auto;font-size:11px;color:#9CA3AF;font-weight:500;background:white;padding:2px 8px;border-radius:10px;border:1px solid #E5E7EB">Coherencia: ${val.nivel_coherencia}</span>
+          </div>`;
+
+        if(val.fortalezas && val.fortalezas.length > 0) {
+          validationHtml += `<div style="margin-bottom:8px">
+            ${val.fortalezas.map(f => `<div style="font-size:12px;color:${titleColor};padding:3px 0;display:flex;gap:6px"><span>✓</span><span>${f}</span></div>`).join('')}
+          </div>`;
+        }
+        if(val.alertas && val.alertas.length > 0) {
+          validationHtml += val.alertas.map(a =>
+            `<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:4px">⚠️ ${a}</div>`
+          ).join('');
+        }
+        if(val.sugerencia_clave) {
+          validationHtml += `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:8px 10px;border-radius:6px;margin-top:6px;border-left:3px solid #3B82F6">
+            💡 <strong>Sugerencia:</strong> ${val.sugerencia_clave}
+          </div>`;
+        }
+        validationHtml += `</div>`;
+      } else if(!state.aiValidation) {
+        // Not yet validated — show validate button
+        validationHtml = `<div style="margin-bottom:20px;padding:14px 16px;background:#F8FAFF;border:1px dashed #C7D2FE;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:600;font-size:13px;color:#3730A3">🤖 Validación IA del perfil metodológico</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">Verificar coherencia entre variables, diseño y técnica antes de generar</div>
+          </div>
+          <button onclick="validateCoherence()" style="padding:8px 16px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Validar perfil</button>
+        </div>`;
+      }
+
       el.innerHTML=`<div class="generate-box">
         ${warnHtml}
-        <p>Todo listo. Generaremos una propuesta coherente con tu técnica: <strong>${tecnicaLabel}</strong>.<br>
-        <span style="font-size:13px;color:#9CA3AF">Revisa las advertencias arriba si las hay. Podrás editar el resultado.</span></p>
+        ${validationHtml}
+        <p>Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
+        <span style="font-size:13px;color:#9CA3AF">Revisa advertencias y validación arriba si las hay.</span></p>
         <button class="btn-generate" onclick="generate()">✨ Generar propuesta</button>
       </div>`;
       return;
@@ -1325,12 +1445,12 @@ function prevStep(){if(state.step>0){state.step--;render();saveState();}}
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";updateNav();renderContent();saveState();}
-function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";updateNav();renderContent();saveState();}
-function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();prefetchAIVars();}
+function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3)prefetchAIVars();}
+function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
-function selectDiseno(v){state.diseno=v;state.tecnica="";updateNav();renderContent();saveState();}
-function selectTecnica(v){state.tecnica=v;updateNav();renderContent();saveState();}
+function selectDiseno(v){state.diseno=v;state.tecnica="";state.aiValidation=null;updateNav();renderContent();saveState();}
+function selectTecnica(v){state.tecnica=v;state.aiValidation=null;updateNav();renderContent();saveState();}
 
 function toggleVar(v){
   const i=state.variables.indexOf(v);
@@ -1365,6 +1485,11 @@ function nuevoProyecto(){
       nivel:"",
       epistemologia:"",
       diseno:"",
+      aiVars:[],
+      aiVarsLoading:false,
+      aiVarsError:false,
+      aiValidation:null,
+      aiValidationLoading:false,
       tecnica:"",
       experiencia:"",
       viabilidad:"",
@@ -1497,6 +1622,140 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
     warnings.push(`⚠️ Error metodológico: el enfoque cualitativo NO admite nivel correlacional ni explicativo/causal. Regresa al paso 4 y selecciona nivel "Exploratorio" o "Descriptivo" (Hernández et al., 2014).`);
   }
   return warnings;
+}
+
+// ── INTERVENCIÓN 1: Variables dinámicas prefetched en segundo plano ──
+async function prefetchAIVars() {
+  // Solo prefetch si hay problema definido y no hay ya vars de IA
+  const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
+  if(!problema || state.aiVarsLoading) return;
+
+  state.aiVarsLoading = true;
+  state.aiVars = [];
+  state.aiVarsError = false;
+  // Re-render chips area to show loading state
+  if(state.step === 2) renderContent();
+
+  const enfoque = state.enfoque || 'Cuantitativo';
+  const area = efectiveArea();
+  const poblacion = efectivePoblacion() || 'No especificada';
+  const isQual = enfoque === 'Cualitativo';
+
+  const varPrompt = `Eres un experto en metodología de investigación en psicología en el contexto peruano.
+
+Dado el siguiente perfil:
+- Área: ${area}
+- Población: ${poblacion}
+- Problema/fenómeno: ${problema}
+- Enfoque: ${enfoque}
+
+Genera exactamente 8 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que sean:
+1. Operacionalizables con instrumentos validados disponibles en Perú o Latinoamérica
+2. Relevantes para el problema específico en el contexto peruano
+3. ${isQual ? 'Ejes temáticos explorables mediante entrevistas o grupos focales' : 'Medibles con escalas tipo Likert validadas'}
+4. Diversas (no repetitivas ni sinónimas)
+5. Con nivel de especificidad adecuado para una tesis de pregrado
+
+Responde SOLO con un array JSON sin texto adicional ni markdown:
+["Variable 1","Variable 2","Variable 3","Variable 4","Variable 5","Variable 6","Variable 7","Variable 8"]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{role: 'user', content: varPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    if(Array.isArray(parsed) && parsed.length >= 4) {
+      state.aiVars = parsed.map(v => String(v).trim()).filter(Boolean);
+    }
+  } catch(e) {
+    state.aiVarsError = true;
+  } finally {
+    state.aiVarsLoading = false;
+    if(state.step === 2) renderContent();
+    saveState();
+  }
+}
+
+// ── INTERVENCIÓN 2: Validación de coherencia antes de generar ────
+async function validateCoherence() {
+  if(state.aiValidationLoading) return;
+  state.aiValidationLoading = true;
+  state.aiValidation = null;
+  renderContent();
+
+  let vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    vars = vars.concat(state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean));
+  }
+
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel || 'No aplica';
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t => t.id === state.tecnica)?.label || state.tecnica)
+    : 'Estadística descriptiva / Sin técnica avanzada';
+
+  const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa la coherencia metodológica del siguiente perfil de tesis de pregrado:
+
+- Área: ${efectiveArea()}
+- Población: ${getPoblacionCompleta()}
+- Problema: ${efectiveProblema()}
+- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'} (${vars.length}): ${vars.join(', ')}
+- Enfoque: ${state.enfoque}
+- Nivel/Paradigma: ${nivelLabel}
+- Diseño: ${disenoLabel}
+- Técnica de análisis: ${tecnicaLabel}
+- Contexto: ${state.contexto || 'No especificado'}
+
+Evalúa considerando:
+1. ¿Las variables/categorías son coherentes con el problema y el diseño?
+2. ¿El número de variables es adecuado para la técnica elegida?
+3. ¿El diseño y la técnica son apropiados para el nivel de investigación?
+4. ¿Hay algún riesgo metodológico importante que el tesista deba saber antes de continuar?
+5. ¿El proyecto es viable para un tesista de pregrado?
+
+Responde SOLO con JSON sin texto adicional ni markdown:
+{
+  "nivel_coherencia": "alta|media|baja",
+  "emoji": "✅|⚠️|🔴",
+  "titulo": "frase corta de 5 palabras máximo evaluando el perfil",
+  "fortalezas": ["fortaleza 1 específica al proyecto","fortaleza 2"],
+  "alertas": ["alerta específica 1 si existe, sino array vacío"],
+  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto antes de generar"
+}`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{role: 'user', content: valPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    state.aiValidation = parsed;
+  } catch(e) {
+    state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
+  } finally {
+    state.aiValidationLoading = false;
+    renderContent();
+    saveState();
+  }
 }
 
 async function generate(){
@@ -1701,60 +1960,341 @@ async function generate(){
       }`
     : `Técnica de análisis estadístico: ${tecnicaLabel}`;
 
-  const prompt = `Eres un experto en metodologia de la investigacion en psicologia. Dominas los siguientes marcos de referencia: Hernandez, Fernandez y Baptista (2014); Hernandez y Mendoza (2018); Creswell (2013) para diseños cualitativos; Yin (2018) para estudio de caso; Braun y Clarke (2006) para análisis temático; Hsieh y Shannon (2005) para análisis de contenido cualitativo; Pistrang y Barker (2012) para criterios de rigor en investigación cualitativa; los Criterios Homologados de Investigación en Psicología — CHIP (Nóblega, Vera, Gutiérrez y Otiniano, 2017) de la PUCP; y Ato, Lopez y Benavente (2013) para diseños cuantitativos.
+  // ── SYSTEM prompt (rol académico rico) ──────────────────────────
+  const systemPrompt = `Eres un metodólogo experto en investigación en Psicología, con amplia experiencia formando tesistas de pregrado y posgrado en universidades latinoamericanas. Dominas a profundidad: Hernández y Mendoza (2018), Creswell (2013), Braun y Clarke (2006), Yin (2018), Pistrang y Barker (2012), Ato, López y Benavente (2013), Hayes (2018), Kline (2016), y los CHIP-PUCP (Nóblega et al., 2017).
 
-DATOS DEL ESTUDIANTE:
-- Area: ${efectiveArea()}
-- Poblacion: ${getPoblacionCompleta()}
-- Problema/fenomeno: ${efectiveProblema()}
-- Categorias/Variables (${nv}, NO uses otras): ${variablesList.join(", ")}
-- Enfoque metodologico: ${state.enfoque}
-- Nivel/Paradigma: ${nivelLabel}
-- Diseño de investigacion: ${disenoLabel}
-- ${tecnicaInfo}
-- Experiencia previa: ${state.experiencia}
-- Viabilidad de acceso: ${state.viabilidad}
-- Lugar/Contexto: ${state.contexto||"No especificado"}
-- Motivacion: ${state.motivacion||"No especificada"}
+Tu estándar de calidad es el de una tesis aprobada con distinción. Cada elemento que produces debe ser:
+- PRECISO: usa exactamente las variables/categorías indicadas, sin inventar ni sustituir
+- ESPECÍFICO: menciona la población con su contexto geográfico real
+- COHERENTE: pregunta, objetivo e hipótesis forman una unidad lógica indisoluble
+- METODOLÓGICAMENTE CORRECTO: refleja el paradigma, diseño y técnica seleccionados
+- ACADÉMICAMENTE RIGUROSO: lenguaje formal, sin ambigüedades`;
 
-REGLA CRÍTICA: SOLO puedes usar las ${nv} categorías/variables listadas. NUNCA agregues, inventes ni sustituyas.
-REGLA DE POBLACIÓN: La población debe aparecer siempre especificada con su lugar geográfico tal como se indica en "Poblacion" arriba. No generalices ni omitas la ubicación.
-${state.enfoque === "Cualitativo" ? `
-REGLAS ABSOLUTAS PARA INVESTIGACIÓN CUALITATIVA (basadas en CHIP-PUCP, 2017 y Braun & Clarke, 2006):
-- NUNCA uses "relación entre", "predice", "correlaciona", "significativamente", "p<.05" ni ningún término estadístico
-- El objetivo NUNCA puede ser "analizar la relación entre X e Y" — eso es cuantitativo
-- La pregunta SIEMPRE debe iniciar con "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?"
-- Los supuestos son tentativas FLEXIBLES que anticipan posibles hallazgos sin predeterminar resultados (CHIP-PUCP, 2017)
-- Los supuestos deben incluir: la técnica de recolección, la técnica de análisis y los criterios de rigor del estudio
-- El verbo del objetivo debe ser: Comprender, Explorar, Describir, Interpretar, Generar, Analizar la experiencia de
-- Las "categorías de análisis" en cualitativo NO son variables estadísticas sino ejes temáticos de exploración
-- El tema debe ser delimitado, en 15 palabras máximo (CHIP-PUCP, 2017), sin términos estadísticos` : state.enfoque === "Mixto" ? `
-REGLAS PARA INVESTIGACIÓN MIXTA (diseño: ${disenoLabel}):
-- La PREGUNTA debe tener DOS componentes explícitos: uno cuantitativo y uno cualitativo
-- El OBJETIVO debe mencionar la integración de métodos y su propósito
-- La HIPÓTESIS debe anticipar hallazgos de ambos componentes
-- NO formules solo una pregunta cuantitativa ni solo cualitativa
-- Usa la lógica del diseño: ${(() => {
-    const l = {'secuencial-explicativo':'CUAN primero, luego cual para explicar resultados','secuencial-exploratorio':'CUAL primero, luego cuan para generalizar','convergente-paralelo':'CUAN + CUAL simultáneo, triangulación de resultados','transformativo':'Marco crítico que guía ambos métodos para el cambio','anidado':'Un método dominante contiene al otro como componente secundario'};
-    return l[state.diseno] || 'integración de ambos métodos';
-  })()}` : ''}
+  // ── Ejemplos few-shot por enfoque ────────────────────────────────
+  const getFewShot = () => {
+    if(state.enfoque === "Cualitativo") {
+      const dQ = state.diseno;
+      const cats = variablesList.join(', ');
+      const pop = getPoblacionCompleta();
 
-Genera los siguientes 4 elementos:
-1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con el diseño "${disenoLabel}". Sin términos estadísticos si es cualitativo. Debe incluir el constructo o fenómeno central y la población.
+      if(dQ === 'fenomenologico') return `
+EJEMPLO DE CALIDAD ALTA — Fenomenológico (IPA):
+Variables: Significado del diagnóstico | Estrategias de afrontamiento | Apoyo social percibido
+Población: Mujeres adultas con cáncer de mama, Lima, Perú
+✅ TEMA: Experiencia vivida del diagnóstico de cáncer de mama en mujeres adultas de Lima
+✅ PREGUNTA: ¿Cuál es la experiencia vivida de las mujeres adultas con cáncer de mama en Lima respecto al significado del diagnóstico, sus estrategias de afrontamiento y el apoyo social percibido?
+✅ OBJETIVO: Comprender la experiencia vivida de mujeres adultas con cáncer de mama en Lima respecto al significado del diagnóstico, las estrategias de afrontamiento empleadas y el apoyo social percibido durante su proceso de enfermedad.
+✅ SUPUESTO: Se espera que las participantes describan experiencias subjetivas diversas y significativas sobre el diagnóstico, el afrontamiento y el apoyo social, exploradas mediante entrevistas semi-estructuradas en profundidad (n≈8-12) y analizadas con IPA (Smith et al., 2009), garantizando credibilidad mediante reducción fenomenológica, triangulación y reflexividad del investigador.
+❌ MALO: "¿Cómo significan el cáncer las mujeres?" → genérica, no usa las variables
+❌ MALO: "Determinar el nivel de apoyo social" → verbo cuantitativo`;
+
+      if(dQ === 'analisis-tematico') return `
+EJEMPLO DE CALIDAD ALTA — Análisis Temático (Braun & Clarke, 2006):
+Variables: Identidad profesional | Bienestar psicológico | Demandas laborales
+Población: Psicólogos clínicos del sector público, Lima, Perú
+✅ TEMA: Identidad profesional, bienestar y demandas laborales en psicólogos clínicos del sector público de Lima
+✅ PREGUNTA: ¿Cómo construyen y experimentan su identidad profesional, bienestar psicológico y demandas laborales los psicólogos clínicos del sector público de Lima?
+✅ OBJETIVO: Explorar y describir los patrones temáticos en torno a la identidad profesional, el bienestar psicológico y las demandas laborales de psicólogos clínicos del sector público de Lima.
+✅ SUPUESTO: Se espera identificar patrones temáticos recurrentes sobre identidad profesional, bienestar y demandas laborales mediante entrevistas semi-estructuradas o grupos focales, analizados con análisis temático inductivo (Braun & Clarke, 2006), asegurando integridad mediante fundamentación empírica, transparencia analítica y revisión de pares (Pistrang & Barker, 2012).
+❌ MALO: "¿Existe relación entre identidad y bienestar?" → lenguaje cuantitativo
+❌ MALO: "Analizar la relación entre demandas laborales y bienestar" → correlacional`;
+
+      if(dQ === 'etnografico') return `
+EJEMPLO DE CALIDAD ALTA — Etnográfico:
+Variables: Prácticas comunitarias | Identidad colectiva | Narrativas de resistencia
+Población: Comunidad indígena shipibo-konibo del río Ucayali, Loreto, Perú
+✅ TEMA: Prácticas culturales, identidad colectiva y narrativas de resistencia en comunidad shipibo-konibo del Ucayali
+✅ PREGUNTA: ¿Cómo se construyen y reproducen las prácticas comunitarias, la identidad colectiva y las narrativas de resistencia en la comunidad shipibo-konibo del río Ucayali?
+✅ OBJETIVO: Describir y analizar las prácticas comunitarias, la identidad colectiva y las narrativas de resistencia en la comunidad shipibo-konibo del río Ucayali mediante un abordaje etnográfico.
+✅ SUPUESTO: Se espera encontrar patrones culturales compartidos y tensiones entre prácticas tradicionales y procesos de cambio, explorados mediante observación participante prolongada, entrevistas en profundidad y análisis documental, analizados con descripción densa (Geertz), garantizando credibilidad mediante triangulación de fuentes y prolongada permanencia en campo.
+❌ MALO: "¿Cuántas prácticas comunitarias existen?" → cuantitativo
+❌ MALO: "Analizar la relación entre identidad y resistencia" → correlacional`;
+
+      if(dQ === 'teoria-fundamentada') return `
+EJEMPLO DE CALIDAD ALTA — Teoría Fundamentada (Strauss & Corbin, 1998):
+Variables: Proceso de adaptación | Redes de apoyo | Estrategias de supervivencia
+Población: Migrantes venezolanos en situación de vulnerabilidad, Lima, Perú
+✅ TEMA: Proceso de adaptación, redes de apoyo y estrategias de supervivencia en migrantes venezolanos vulnerables de Lima
+✅ PREGUNTA: ¿Cómo se desarrollan el proceso de adaptación, las redes de apoyo y las estrategias de supervivencia en migrantes venezolanos en situación de vulnerabilidad en Lima?
+✅ OBJETIVO: Generar una teoría sustantiva sobre el proceso de adaptación, las redes de apoyo y las estrategias de supervivencia de migrantes venezolanos en situación de vulnerabilidad en Lima.
+✅ SUPUESTO: Se espera generar categorías emergentes que expliquen el proceso de adaptación de los migrantes, exploradas mediante entrevistas en profundidad con muestreo teórico progresivo, analizadas con codificación abierta, axial y selectiva (Strauss & Corbin, 1998), alcanzando saturación teórica como criterio de rigor central.
+❌ MALO: "Comprender la experiencia de los migrantes" → objetivo demasiado genérico, no orienta teoría
+❌ MALO: "Describir las estrategias" → no apunta a generar teoría`;
+
+      if(dQ === 'estudio-caso') return `
+EJEMPLO DE CALIDAD ALTA — Estudio de Caso (Yin, 2018):
+Variables: Modelo de intervención | Factores protectores | Resultados terapéuticos
+Población: Programa de salud mental comunitaria del Centro de Salud Villa El Salvador, Lima
+✅ TEMA: Modelo de intervención, factores protectores y resultados terapéuticos en el programa de salud mental de Villa El Salvador
+✅ PREGUNTA: ¿Cómo se manifiestan el modelo de intervención, los factores protectores y los resultados terapéuticos en el programa de salud mental comunitaria del Centro de Salud de Villa El Salvador?
+✅ OBJETIVO: Analizar en profundidad el modelo de intervención, los factores protectores y los resultados terapéuticos del programa de salud mental comunitaria del Centro de Salud de Villa El Salvador, Lima.
+✅ SUPUESTO: Se espera que el análisis del caso revele la complejidad del modelo de intervención y los factores protectores que inciden en los resultados, explorados mediante entrevistas, observación y análisis documental (triangulación de fuentes), analizados con la metodología de estudio de caso (Yin, 2018), asegurando credibilidad mediante cadena de evidencia y revisión de informantes clave.
+❌ MALO: "Evaluar si el programa es efectivo" → evaluativo, no descriptivo-comprensivo
+❌ MALO: "Comparar resultados entre grupos" → comparativo cuantitativo`;
+
+      if(dQ === 'narrativo') return `
+EJEMPLO DE CALIDAD ALTA — Narrativo / Historia de vida:
+Variables: Trayectoria de vida | Significados de la enfermedad | Reconstrucción identitaria
+Población: Adultos mayores sobrevivientes de accidente cerebrovascular, Hospital Rebagliati, Lima
+✅ TEMA: Trayectorias de vida, significados de la enfermedad y reconstrucción identitaria en adultos mayores con ACV del Hospital Rebagliati
+✅ PREGUNTA: ¿Cuáles son las trayectorias de vida, los significados de la enfermedad y los procesos de reconstrucción identitaria en adultos mayores sobrevivientes de ACV del Hospital Rebagliati de Lima?
+✅ OBJETIVO: Explorar las trayectorias de vida, los significados atribuidos a la enfermedad y los procesos de reconstrucción identitaria de adultos mayores sobrevivientes de ACV del Hospital Rebagliati de Lima.
+✅ SUPUESTO: Se espera que las narrativas de los participantes revelen trayectorias vitales diversas y procesos de resignificación sobre la enfermedad y la identidad, recogidas mediante entrevistas narrativas en profundidad, analizadas con análisis narrativo (Murray, 2003; Creswell, 2013), verificando coherencia narrativa y resonancia como criterios de calidad.
+❌ MALO: "¿Cómo afecta el ACV a los adultos mayores?" → no usa las categorías específicas
+❌ MALO: "Determinar la trayectoria" → verbo cuantitativo`;
+
+      if(dQ === 'investigacion-accion') return `
+EJEMPLO DE CALIDAD ALTA — Investigación-Acción Participativa:
+Variables: Participación comunitaria | Empoderamiento colectivo | Estrategias de cambio
+Población: Mujeres líderes de comedores populares del Cono Norte, Lima
+✅ TEMA: Participación comunitaria, empoderamiento colectivo y estrategias de cambio en mujeres líderes de comedores populares del Cono Norte de Lima
+✅ PREGUNTA: ¿Cómo pueden fortalecerse la participación comunitaria, el empoderamiento colectivo y las estrategias de cambio de mujeres líderes de comedores populares del Cono Norte de Lima mediante un proceso de investigación-acción?
+✅ OBJETIVO: Comprender y transformar participativamente los procesos de participación comunitaria, empoderamiento colectivo y estrategias de cambio de mujeres líderes de comedores populares del Cono Norte de Lima.
+✅ SUPUESTO: Se espera que los ciclos participativos de reflexión-acción con las mujeres líderes permitan identificar barreras y fortalecer su empoderamiento y participación, explorados mediante grupos focales, talleres participativos y observación, con validación colaborativa y consenso grupal como criterios de rigor central.
+❌ MALO: "Describir la participación comunitaria" → no apunta a transformación
+❌ MALO: "Medir el nivel de empoderamiento" → cuantitativo`;
+
+      // Generic cualitativo fallback
+      return `
+EJEMPLO ORIENTADOR — Cualitativo (${dQ}):
+Variables del proyecto: ${cats}
+Población del proyecto: ${pop}
+✅ TEMA (MODELO): [Categoría 1] + [Categoría 2] + [Categoría 3] en [Población + Lugar] → máx 15 palabras
+✅ PREGUNTA (MODELO): ¿Cómo [verbo de comprensión] [Categoría 1], [Categoría 2] y [Categoría 3] los/las [Población] de [Lugar]?
+✅ OBJETIVO (MODELO): [Verbo cualitativo: Explorar/Comprender/Describir/Generar] [Categoría 1], [Categoría 2] y [Categoría 3] de [Población] de [Lugar].
+✅ SUPUESTO (MODELO): Se espera [hallazgo tentativo sobre las categorías] en [Población], explorado mediante [técnica de recolección], analizado con [técnica de análisis del diseño], garantizando [criterios de rigor específicos].
+❌ ERRORES A EVITAR: pregunta sin las categorías | verbos cuantitativos | supuesto sin método ni rigor`;
+    }
+
+    if(state.enfoque === "Cuantitativo") {
+      const X = variablesList[0]||'Variable X';
+      const M = variablesList[1]||'Variable M';
+      const Y = variablesList[variablesList.length-1]||'Variable Y';
+      const W = variablesList[1]||'Moderador';
+      const pop = getPoblacionCompleta();
+      const preds = variablesList.slice(0,-1).join(' | ');
+
+      if(state.tecnica === 'correlacion') return `
+EJEMPLO DE CALIDAD ALTA — Correlación (Pearson/Spearman):
+Variables: Autoestima (X) | Satisfacción con la vida (Y)
+Población: Adolescentes de 14–17 años, colegios públicos de Lima
+✅ TEMA: Autoestima y satisfacción con la vida en adolescentes de colegios públicos de Lima
+✅ PREGUNTA: ¿Existe relación estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima?
+✅ OBJETIVO: Determinar la relación entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima.
+✅ HIPÓTESIS: Existe una relación positiva y estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima (r de Pearson, p<.05).
+❌ MALO: "¿Cómo influye la autoestima en la satisfacción?" → implica causalidad
+❌ MALO: "Determinar el nivel de autoestima" → descriptivo, no correlacional`;
+
+      if(state.tecnica === 'regresion-simple') return `
+EJEMPLO DE CALIDAD ALTA — Regresión Simple (OLS):
+Variables: Autoeficacia (X predictor) | Rendimiento académico (Y criterio)
+Población: Estudiantes universitarios de primer año, UNMSM, Lima
+✅ TEMA: Capacidad predictiva de la autoeficacia sobre el rendimiento académico en estudiantes de primer año de la UNMSM
+✅ PREGUNTA: ¿En qué medida la autoeficacia predice el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima?
+✅ OBJETIVO: Determinar la capacidad predictiva de la autoeficacia sobre el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima.
+✅ HIPÓTESIS: La autoeficacia predice significativamente el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima (β significativo, p<.05, R²>0).
+❌ MALO: "¿Existe relación entre autoeficacia y rendimiento?" → solo correlación, no predicción
+❌ MALO: "Analizar la autoeficacia" → genérico, no menciona predicción`;
+
+      if(state.tecnica === 'regresion-multiple') return `
+EJEMPLO DE CALIDAD ALTA — Regresión Múltiple (OLS):
+Variables: Motivación intrínseca (X1) | Apoyo familiar (X2) | Autoeficacia (X3) | Rendimiento académico (Y)
+Población: Estudiantes de secundaria, colegios privados, Arequipa, Perú
+✅ TEMA: Predictores del rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa
+✅ PREGUNTA: ¿En qué medida la motivación intrínseca, el apoyo familiar y la autoeficacia predicen el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa?
+✅ OBJETIVO: Determinar la capacidad predictiva de la motivación intrínseca, el apoyo familiar y la autoeficacia sobre el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa.
+✅ HIPÓTESIS: La motivación intrínseca, el apoyo familiar y la autoeficacia predicen significativamente el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa (R² significativo, p<.05).
+❌ MALO: "¿Cuál variable tiene más efecto?" → no es el objetivo principal de la regresión múltiple sin especificar β comparativos
+❌ MALO: "Determinar si existe relación" → correlacional, no predictivo`;
+
+      if(state.tecnica === 'mediacion') return `
+EJEMPLO DE CALIDAD ALTA — Mediación Simple (Hayes PROCESS Modelo 4):
+Variables: Estrés laboral (X) | Agotamiento emocional (M mediador) | Intención de renuncia (Y)
+Población: Enfermeras de hospitales públicos, Lima, Perú
+✅ TEMA: Efecto mediador del agotamiento emocional en la relación entre estrés laboral e intención de renuncia en enfermeras de hospitales públicos de Lima
+✅ PREGUNTA: ¿En qué medida el agotamiento emocional media la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima?
+✅ OBJETIVO: Examinar el efecto mediador del agotamiento emocional en la relación entre el estrés laboral (X) y la intención de renuncia (Y) en enfermeras de hospitales públicos de Lima.
+✅ HIPÓTESIS: El agotamiento emocional media significativamente la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima (efecto indirecto a×b significativo, IC bootstrap 95% excluye el cero).
+❌ MALO: "¿Existe relación entre estrés y renuncia?" → ignora el mediador
+❌ MALO: "Analizar el agotamiento emocional" → descriptivo`;
+
+      if(state.tecnica === 'moderacion') return `
+EJEMPLO DE CALIDAD ALTA — Moderación Simple (Hayes PROCESS Modelo 1):
+Variables: Autoeficacia (X) | Apoyo social (W moderador) | Rendimiento académico (Y)
+Población: Estudiantes universitarios de psicología, PUCP, Lima
+✅ TEMA: Efecto moderador del apoyo social en la relación entre autoeficacia y rendimiento académico en estudiantes de la PUCP
+✅ PREGUNTA: ¿En qué medida el apoyo social modera la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima?
+✅ OBJETIVO: Analizar el efecto moderador del apoyo social (W) en la relación entre la autoeficacia (X) y el rendimiento académico (Y) en estudiantes de psicología de la PUCP de Lima.
+✅ HIPÓTESIS: El apoyo social modera significativamente la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima (término de interacción X×W significativo, p<.05).
+❌ MALO: "¿Existe relación entre autoeficacia y rendimiento?" → solo correlacional
+❌ MALO: "El apoyo social afecta el rendimiento" → ignora la interacción`;
+
+      if(state.tecnica === 'mediacion-moderada') return `
+EJEMPLO DE CALIDAD ALTA — Mediación Moderada (Hayes PROCESS Modelo 7/14/58):
+Variables: Clima organizacional (X) | Satisfacción laboral (M) | Bienestar (Y) | Liderazgo (W moderador)
+Población: Trabajadores del sector bancario privado, Lima, Perú
+✅ TEMA: Mediación moderada del liderazgo en el efecto del clima organizacional sobre el bienestar a través de la satisfacción laboral en trabajadores bancarios de Lima
+✅ PREGUNTA: ¿En qué medida el liderazgo modera el efecto mediador de la satisfacción laboral en la relación entre el clima organizacional y el bienestar en trabajadores del sector bancario de Lima?
+✅ OBJETIVO: Examinar el modelo de mediación moderada en el que el liderazgo (W) modera el efecto mediador de la satisfacción laboral (M) en la relación entre el clima organizacional (X) y el bienestar (Y) en trabajadores del sector bancario de Lima.
+✅ HIPÓTESIS: El efecto indirecto del clima organizacional sobre el bienestar a través de la satisfacción laboral varía significativamente en función del liderazgo en trabajadores del sector bancario de Lima (índice de mediación moderada significativo, IC bootstrap 95%).
+❌ MALO: "¿Existe relación entre clima y bienestar?" → no menciona mediador ni moderador`;
+
+      if(state.tecnica === 'path-analysis') return `
+EJEMPLO DE CALIDAD ALTA — Path Analysis (AMOS/lavaan):
+Variables: Apoyo familiar (X1) | Motivación académica (X2) | Autoeficacia (mediador) | Rendimiento (Y)
+Población: Estudiantes de secundaria pública, región Cusco, Perú
+✅ TEMA: Estructura causal entre apoyo familiar, motivación, autoeficacia y rendimiento en estudiantes de secundaria de la región Cusco
+✅ PREGUNTA: ¿Cuál es la estructura de relaciones directas e indirectas entre el apoyo familiar, la motivación académica, la autoeficacia y el rendimiento en estudiantes de secundaria pública de la región Cusco?
+✅ OBJETIVO: Analizar la estructura de relaciones directas e indirectas entre el apoyo familiar, la motivación académica, la autoeficacia y el rendimiento en estudiantes de secundaria pública de la región Cusco mediante path analysis.
+✅ HIPÓTESIS: El modelo de rutas propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) y las trayectorias directas e indirectas entre el apoyo familiar, la motivación, la autoeficacia y el rendimiento son estadísticamente significativas en estudiantes de secundaria de la región Cusco.
+❌ MALO: "¿Existe relación entre apoyo y rendimiento?" → no captura rutas causales`;
+
+      if(state.tecnica === 'sem-mediacion') return `
+EJEMPLO DE CALIDAD ALTA — SEM Mediación con Variables Latentes (AMOS/Mplus):
+Variables: Estrés percibido (ξ latente X) | Regulación emocional (η latente M) | Bienestar psicológico (η latente Y)
+Población: Adultos con diagnóstico de diabetes tipo 2, Hospital Loayza, Lima
+✅ TEMA: Efecto mediador de la regulación emocional en la relación entre estrés percibido y bienestar psicológico como constructos latentes en pacientes con diabetes del Hospital Loayza
+✅ PREGUNTA: ¿En qué medida la regulación emocional, como constructo latente, media la relación entre el estrés percibido y el bienestar psicológico en pacientes con diabetes tipo 2 del Hospital Loayza de Lima?
+✅ OBJETIVO: Examinar el efecto mediador de la regulación emocional (η₁ latente) en la relación entre el estrés percibido (ξ latente) y el bienestar psicológico (η₂ latente) en pacientes con diabetes tipo 2 del Hospital Loayza de Lima mediante SEM.
+✅ HIPÓTESIS: El modelo SEM de mediación con variables latentes presenta ajuste adecuado (CFI≥.95, RMSEA≤.06) y el efecto indirecto del estrés percibido sobre el bienestar a través de la regulación emocional es significativo (bootstrapping 95% CI) en pacientes con diabetes del Hospital Loayza.
+❌ MALO: No mencionar "constructos latentes" — SEM se diferencia de mediación simple precisamente en eso`;
+
+      if(state.tecnica === 'sem-moderacion') return `
+EJEMPLO DE CALIDAD ALTA — SEM Moderación con Variables Latentes (Mplus LMS):
+Variables: Identidad organizacional (ξ₁ latente X) | Cultura organizacional (ξ₂ latente W moderador) | Compromiso laboral (η latente Y)
+Población: Personal de salud de EsSalud, Lima Metropolitana
+✅ TEMA: Moderación de la cultura organizacional en la relación entre identidad organizacional y compromiso laboral como constructos latentes en personal de EsSalud
+✅ PREGUNTA: ¿En qué medida la cultura organizacional, como constructo latente, modera la relación entre la identidad organizacional y el compromiso laboral en personal de EsSalud de Lima Metropolitana?
+✅ OBJETIVO: Analizar el efecto moderador de la cultura organizacional (ξ₂ latente) en la relación entre la identidad organizacional (ξ₁ latente) y el compromiso laboral (η latente) en personal de EsSalud de Lima Metropolitana mediante SEM con técnica LMS.
+✅ HIPÓTESIS: La interacción latente entre identidad organizacional y cultura organizacional (ξ₁×ξ₂) predice significativamente el compromiso laboral en personal de EsSalud, con índices de ajuste adecuados (CFI≥.95, RMSEA≤.06).`;
+
+      if(state.tecnica === 'sem-completo') return `
+EJEMPLO DE CALIDAD ALTA — SEM Modelo Estructural Completo (AMOS/Mplus/lavaan):
+Variables: Liderazgo transformacional (ξ₁) | Clima organizacional (ξ₂) | Satisfacción laboral (η₁) | Desempeño (η₂)
+Población: Docentes de instituciones educativas públicas, región La Libertad, Perú
+✅ TEMA: Modelo estructural del liderazgo transformacional, clima organizacional, satisfacción y desempeño docente en La Libertad
+✅ PREGUNTA: ¿Cuál es la estructura de relaciones entre los constructos latentes liderazgo transformacional, clima organizacional, satisfacción laboral y desempeño en docentes de instituciones educativas públicas de La Libertad?
+✅ OBJETIVO: Analizar el modelo estructural completo de relaciones entre los constructos latentes liderazgo transformacional (ξ₁), clima organizacional (ξ₂), satisfacción laboral (η₁) y desempeño (η₂) en docentes de instituciones educativas públicas de La Libertad mediante SEM.
+✅ HIPÓTESIS: El modelo SEM completo presenta índices de ajuste adecuados (CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08) y las trayectorias estructurales entre liderazgo transformacional, clima, satisfacción y desempeño son estadísticamente significativas en docentes de La Libertad.
+❌ MALO: No mencionar que son constructos latentes medidos con indicadores
+❌ MALO: No incluir los índices de ajuste en la hipótesis (CFI, RMSEA, etc.)`;
+
+      // Generic cuantitativo fallback
+      return `
+EJEMPLO ORIENTADOR — Cuantitativo (${state.tecnica||'descriptivo'}):
+Variables del proyecto: ${variablesList.join(' | ')}
+Población del proyecto: ${getPoblacionCompleta()}
+✅ TEMA: [Variables principales] en [Población + Lugar] → máx 15 palabras, sin verbos
+✅ PREGUNTA: Usa el operador correcto para la técnica (¿Existe relación...? / ¿En qué medida predice...? / ¿Modera...? / ¿Media...?)
+✅ OBJETIVO: Empieza con el verbo técnico exacto (Determinar / Examinar / Analizar) + todas las variables + población con lugar
+✅ HIPÓTESIS: Enunciado afirmativo, falseable, con dirección y referencia al estadístico (r, β, a×b, X×W, CFI/RMSEA)
+❌ ERRORES: omitir variables | verbos genéricos (ver, estudiar) | hipótesis sin estadístico`;
+    }
+
+    // Mixto
+    const dM = state.diseno;
+    if(dM === 'secuencial-explicativo') return `
+EJEMPLO DE CALIDAD ALTA — Mixto Secuencial Explicativo (CUAN → cual):
+Variables: Burnout (X) | Satisfacción laboral (Y) | Experiencias subjetivas de agotamiento (componente cual)
+Población: Personal de enfermería de UCI, Hospital Edgardo Rebagliati, Lima
+✅ TEMA: Burnout, satisfacción laboral y experiencias subjetivas de agotamiento en enfermeras de UCI del Hospital Rebagliati
+✅ PREGUNTA: ¿En qué medida el burnout predice la satisfacción laboral en enfermeras de UCI del Hospital Rebagliati (CUAN), y cómo describen las enfermeras con alta puntuación sus experiencias subjetivas de agotamiento (cual)?
+✅ OBJETIVO: Analizar cuantitativamente la capacidad predictiva del burnout sobre la satisfacción laboral en enfermeras de UCI del Hospital Rebagliati, y luego profundizar cualitativamente en las experiencias de agotamiento de quienes puntúan más alto.
+✅ HIPÓTESIS: Se espera que el burnout prediga significativamente la satisfacción laboral (β significativo, p<.05), y que los datos cualitativos proporcionen explicaciones contextuales de los mecanismos de agotamiento no capturados por las escalas cuantitativas.`;
+
+    if(dM === 'secuencial-exploratorio') return `
+EJEMPLO DE CALIDAD ALTA — Mixto Secuencial Exploratorio (CUAL → cuan):
+Variables: Barreras percibidas (cual) | Facilitadores del cambio (cual) | Adherencia al tratamiento (cuan)
+Población: Pacientes con hipertensión del primer nivel de atención, Callao, Perú
+✅ TEMA: Barreras, facilitadores y adherencia al tratamiento en pacientes con hipertensión del primer nivel de atención del Callao
+✅ PREGUNTA: ¿Qué barreras y facilitadores del cambio identifican los pacientes con hipertensión del Callao (CUAL), y en qué medida estas categorías predicen la adherencia al tratamiento en una muestra más amplia (cuan)?
+✅ OBJETIVO: Explorar cualitativamente las barreras percibidas y facilitadores del cambio en pacientes con hipertensión del Callao, para luego cuantificar su capacidad predictiva sobre la adherencia al tratamiento en una muestra representativa.
+✅ HIPÓTESIS: Se espera que el análisis cualitativo revele categorías de barreras y facilitadores no documentadas en la literatura, las cuales, al operacionalizarse en un instrumento cuantitativo, predigan significativamente la adherencia al tratamiento.`;
+
+    if(dM === 'convergente-paralelo') return `
+EJEMPLO DE CALIDAD ALTA — Mixto Convergente Paralelo (CUAN + CUAL simultáneo):
+Variables: Bienestar subjetivo (cuan) | Significados de bienestar (cual) | Apoyo social (cuan+cual)
+Población: Adultos mayores institucionalizados, Lima Metropolitana
+✅ PREGUNTA: ¿Qué revelan los datos cuantitativos sobre bienestar subjetivo y apoyo social, y cómo complementan los datos cualitativos sobre significados de bienestar, de manera convergente, en adultos mayores institucionalizados de Lima?
+✅ OBJETIVO: Integrar datos cuantitativos (bienestar subjetivo, apoyo social medidos con escalas) y cualitativos (significados de bienestar explorados mediante entrevistas) para obtener una comprensión más completa de la experiencia de los adultos mayores institucionalizados de Lima.
+✅ HIPÓTESIS: Se espera que los datos cuantitativos y cualitativos converjan confirmando que el apoyo social es central al bienestar de los adultos mayores institucionalizados, con los datos cualitativos aportando matices sobre significados no capturados por las escalas.`;
+
+    return `
+EJEMPLO ORIENTADOR — Mixto (${dM}):
+✅ PREGUNTA: DOS componentes explícitos — uno cuantitativo ("¿En qué medida...?") y uno cualitativo ("¿Cómo...?")
+✅ OBJETIVO: Menciona explícitamente la integración de métodos y su propósito
+✅ HIPÓTESIS: Anticipa resultados de AMBOS componentes (cuantitativo Y cualitativo)
+Variables: ${variablesList.join(' | ')} | Población: ${getPoblacionCompleta()}
+❌ ERRORES: solo formular la parte cuantitativa | solo formular la parte cualitativa`;
+  };
+
+  const fewShotExamples = getFewShot();
+
+  // ── Chain-of-thought instructions ────────────────────────────────
+  const chainOfThought = `
+PROCESO DE RAZONAMIENTO INTERNO (no lo incluyas en el JSON):
+Antes de escribir el JSON, razona internamente así:
+1. ¿Las ${nv} variables/categorías están TODAS presentes en la pregunta y el objetivo? Si no → corrígelo.
+2. ¿La pregunta es coherente con el diseño "${disenoLabel}" y el enfoque "${state.enfoque}"? Si no → reformúlala.
+3. ¿El verbo del objetivo corresponde al diseño? Si no → cámbialo.
+4. ¿El tema tiene máx 15 palabras y es específico? Si no → acórtalo.
+5. ¿La hipótesis/supuesto es falseable y menciona el método? Si no → enriquécela.
+Solo después de este razonamiento, produce el JSON final.`;
+
+  const prompt = `${systemPrompt}
+
+═══════════════════════════════════════════════
+PERFIL DEL PROYECTO
+═══════════════════════════════════════════════
+• Área de psicología: ${efectiveArea()}
+• Población objetivo: ${getPoblacionCompleta()}
+• Fenómeno/problema: ${efectiveProblema()}
+• ${state.enfoque === "Cualitativo" ? "Categorías de análisis" : "Variables"} (usar TODAS, exactamente ${nv}): ${variablesList.map((v,i)=>`${i+1}) ${v}`).join(' | ')}
+• Enfoque: ${state.enfoque}
+• ${state.enfoque === "Cualitativo" ? "Diseño cualitativo" : "Nivel"}: ${nivelLabel}
+• Diseño: ${disenoLabel}
+• ${tecnicaInfo}
+• Lugar/Contexto: ${state.contexto || "No especificado"}
+• Experiencia del investigador: ${state.experiencia}
+• Acceso a la población: ${state.viabilidad}
+• Motivación: ${state.motivacion || "No especificada"}
+
+═══════════════════════════════════════════════
+EJEMPLOS DE REFERENCIA (calidad esperada)
+═══════════════════════════════════════════════
+${fewShotExamples}
+
+═══════════════════════════════════════════════
+REGLAS ABSOLUTAS
+═══════════════════════════════════════════════
+⛔ NUNCA omitas alguna de las ${nv} categorías/variables en la pregunta o el objetivo
+⛔ NUNCA inventes, sustituyas o agregues variables que no estén en la lista
+⛔ NUNCA omitas la población con su lugar geográfico
+${state.enfoque === "Cualitativo" ? `⛔ NUNCA uses lenguaje cuantitativo: "relación entre", "predice", "correlaciona", "p<.05", "significativamente"
+⛔ La pregunta SIEMPRE inicia con: ¿Cómo...?, ¿Cuál es...?, ¿Qué significa...? o ¿De qué manera...?
+⛔ El objetivo NUNCA puede ser "analizar la relación entre X e Y"
+⛔ Los supuestos son tentativas FLEXIBLES — deben mencionar técnica de recolección, análisis y criterios de rigor` : state.enfoque === "Mixto" ? `⛔ La pregunta DEBE tener dos componentes: uno cuantitativo y uno cualitativo
+⛔ El objetivo DEBE mencionar la integración de métodos
+Lógica del diseño: ${(() => { const l = {'secuencial-explicativo':'CUAN → cual','secuencial-exploratorio':'CUAL → cuan','convergente-paralelo':'CUAN + CUAL simultáneo','transformativo':'Marco crítico guía ambos','anidado':'Método dominante + secundario'}; return l[state.diseno]||'integración de métodos'; })()}` : `⛔ La hipótesis debe ser falseable, con dirección y referencia al estadístico`}
+
+═══════════════════════════════════════════════
+INSTRUCCIONES ESPECÍFICAS
+═══════════════════════════════════════════════
+1. TEMA: Máximo 15 palabras. Delimitado. Incluye fenómeno central + población. Sin términos estadísticos.
 ${preguntaInstruccion}
 ${objetivoInstruccion}
 4. ${hipInstruccion}
 
-IMPORTANTE: Los 4 elementos son OBLIGATORIOS. Cada uno debe ser preciso, coherente con el enfoque ${state.enfoque} y reflejar los estándares de calidad del paradigma seleccionado.
+${chainOfThought}
 
-Responde SOLO en JSON sin texto adicional ni markdown:
+Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicaciones:
 {"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
 
   try{
     const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})
     });
     
     if (!res.ok) {
@@ -2090,7 +2630,7 @@ async function downloadDoc() {
       <w:p><w:pPr><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
           <w:t>Las siguientes referencias sustentan el marco metodológico del proyecto de investigación.</w:t></w:r></w:p>
-      ${REFERENCIAS.map(r => refItem(r.cita, r.nota)).join('')}`;
+      ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}`;
 
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
