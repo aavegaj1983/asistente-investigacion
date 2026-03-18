@@ -149,6 +149,8 @@ textarea{min-height:60px;resize:vertical}
   </div>
   <div class="footer">
     Creado por: <strong>Alan A. Vega Jacome</strong>
+    <span style="margin:0 8px;color:#ddd">·</span>
+    <span style="color:#aaa">Powered by </span><a href="https://claude.ai" target="_blank" style="color:#534AB7;text-decoration:none;font-weight:500">Claude</a>
   </div>
 </div>
 <div class="auto-save" id="auto-save">💾 Progreso guardado</div>
@@ -336,6 +338,12 @@ const DISENOS = {
     {id:"cuasiexperimental", label:"Cuasi-experimental", desc:"Manipulas variables sin asignación aleatoria", hint:"Control moderado, grupos preexistentes"},
     {id:"no-experimental-transversal", label:"No experimental transversal", desc:"Observas en un momento único del tiempo", hint:"⭐ Más común en pregrado, sin manipulación"},
     {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas a través del tiempo (panel, tendencia)", hint:"Requiere seguimiento temporal"},
+    {id:"regresion-multiple", label:"Regresión múltiple", desc:"Predices una variable dependiente con 2 o más predictores", hint:"📊 Se genera diagrama de regresión"},
+    {id:"mediacion", label:"Mediación", desc:"Una variable explica el mecanismo entre X e Y", hint:"📊 Se genera diagrama X → M → Y"},
+    {id:"moderacion", label:"Moderación", desc:"Una variable modifica la relación entre X e Y", hint:"📊 Se genera diagrama de moderación"},
+    {id:"mediacion-moderada", label:"Mediación moderada", desc:"Combina mediación y moderación en un modelo integrado", hint:"📊 Se genera diagrama combinado"},
+    {id:"path-analysis", label:"Path Analysis (Análisis de rutas)", desc:"Red de relaciones causales entre múltiples variables", hint:"📊 Se genera diagrama de rutas"},
+    {id:"sem", label:"SEM (Ecuaciones Estructurales)", desc:"Modelo con variables latentes y observadas", hint:"📊 Se genera diagrama SEM"},
   ],
   cualitativo: [
     {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados", hint:"⭐ Ideal para comprender vivencias profundas"},
@@ -682,6 +690,11 @@ function renderContent(){
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
     h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
     h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
+    // Solo mostrar botón de diagrama si el diseño lo soporta
+    const DISENOS_CON_DIAGRAMA = ['regresion-multiple','mediacion','moderacion','mediacion-moderada','path-analysis','sem'];
+    if(DISENOS_CON_DIAGRAMA.includes(state.diseno)) {
+      h+=`<button class="btn-sm" onclick="showModelDiagram()" style="border-color:#7C3AED;color:#7C3AED">📊 Ver modelo teórico</button>`;
+    }
     h+=`<button class="btn-sm btn-nuevo" onclick="nuevoProyecto()" style="border-color:#dc2626;color:#dc2626">🔄 Nuevo proyecto</button>`;
     h+=`</div></div>`;
     fields.forEach(f=>{
@@ -898,8 +911,8 @@ Responde SOLO en JSON exacto sin texto adicional ni markdown:
   renderContent();
 }
 
-// FUNCIÓN DE DESCARGA EN DOCX
-function downloadDoc() {
+// FUNCIÓN DE DESCARGA EN DOCX REAL
+async function downloadDoc() {
   const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
   const enfoqueKey = state.enfoque.toLowerCase();
   const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
@@ -911,41 +924,314 @@ function downloadDoc() {
     variablesDisplay = variablesDisplay.concat(otrasVars);
   }
 
-  const content = `
-PROPUESTA DE PROYECTO DE INVESTIGACIÓN
+  const hipLabel = state.enfoque === "Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN" : state.enfoque === "Cualitativo" ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS";
 
-TEMA DE INVESTIGACIÓN
-${state.edited.tema}
+  // Cargar docx desde CDN
+  if(!window.docx) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
 
-PREGUNTA DE INVESTIGACIÓN
-${state.edited.pregunta}
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType } = window.docx;
 
-OBJETIVO GENERAL
-${state.edited.objetivo}
+  const titleColor = "534AB7";
+  const accentColor = "0F6E56";
 
-${state.enfoque === "Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN" : state.enfoque === "Cualitativo" ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS"}
-${state.edited.hipotesis}
+  function heading(text, color="534AB7") {
+    return new Paragraph({
+      children: [new TextRun({ text, bold: true, size: 26, color })],
+      spacing: { before: 320, after: 120 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color } }
+    });
+  }
 
-RESUMEN METODOLÓGICO
-Área: ${efectiveArea()}
-Población: ${efectivePoblacion()}
-Problema/Fenómeno: ${efectiveProblema()}
-Variables: ${variablesDisplay.join(", ")}
-Enfoque metodológico: ${state.enfoque}
-Nivel de investigación: ${nivelLabel}
-Diseño de investigación: ${disenoLabel}
+  function field(label, value, color="222222") {
+    return [
+      new Paragraph({
+        children: [new TextRun({ text: label, bold: true, size: 22, color: "534AB7", allCaps: true })],
+        spacing: { before: 240, after: 60 }
+      }),
+      new Paragraph({
+        children: [new TextRun({ text: value, size: 22, color })],
+        spacing: { after: 100 },
+        indent: { left: 200 }
+      })
+    ];
+  }
 
----
-Generado con Asistente de Investigación
-Creado por: Alan A. Vega Jacome
-  `.trim();
+  function metaRow(label, value) {
+    return new TableRow({
+      children: [
+        new TableCell({
+          children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 18, color: "534AB7" })] })],
+          width: { size: 30, type: WidthType.PERCENTAGE },
+          shading: { type: ShadingType.SOLID, color: "EEEDFE" }
+        }),
+        new TableCell({
+          children: [new Paragraph({ children: [new TextRun({ text: value, size: 18 })] })],
+          width: { size: 70, type: WidthType.PERCENTAGE }
+        })
+      ]
+    });
+  }
 
-  const blob = new Blob([content], { type: 'text/plain' });
+  const doc = new Document({
+    styles: { default: { document: { run: { font: "Calibri" } } } },
+    sections: [{
+      properties: { page: { margin: { top: 1200, bottom: 1200, left: 1200, right: 1200 } } },
+      children: [
+        new Paragraph({
+          children: [new TextRun({ text: "PROPUESTA DE PROYECTO DE INVESTIGACIÓN", bold: true, size: 32, color: "534AB7", allCaps: true })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: "Asistente de Investigación en Psicología", size: 20, color: "888888", italics: true })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }),
+        heading("1. ELEMENTOS DE LA INVESTIGACIÓN"),
+        ...field("Tema de Investigación", state.edited.tema),
+        ...field("Pregunta de Investigación", state.edited.pregunta),
+        ...field("Objetivo General", state.edited.objetivo),
+        ...field(hipLabel, state.edited.hipotesis),
+        heading("2. PERFIL METODOLÓGICO", accentColor),
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            metaRow("Área", efectiveArea()),
+            metaRow("Población", efectivePoblacion()),
+            metaRow("Problema / Fenómeno", efectiveProblema()),
+            metaRow("Variables", variablesDisplay.join(", ")),
+            metaRow("Enfoque", state.enfoque),
+            metaRow("Nivel", nivelLabel),
+            metaRow("Diseño", disenoLabel),
+          ]
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: "3. PRÓXIMOS PASOS", bold: true, size: 26, color: accentColor, allCaps: true })],
+          spacing: { before: 400, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: accentColor } }
+        }),
+        ...[
+          "✓  Justificación: Explica la relevancia teórica, práctica y social del tema.",
+          "✓  Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.",
+          "✓  Metodología: Define tu muestra, instrumentos y procedimiento de recolección.",
+          "✓  Cronograma: Establece tiempos realistas para cada fase del proyecto."
+        ].map(t => new Paragraph({ children: [new TextRun({ text: t, size: 20 })], spacing: { before: 120, after: 60 }, indent: { left: 200 } })),
+        new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400 } }),
+        new Paragraph({
+          children: [new TextRun({ text: "Generado con Asistente de Investigación · Creado por Alan A. Vega Jacome", size: 16, color: "aaaaaa", italics: true })],
+          alignment: AlignmentType.CENTER
+        })
+      ]
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'propuesta_investigacion.txt';
+  a.download = 'propuesta_investigacion.docx';
   a.click();
+  URL.revokeObjectURL(url);
+}
+
+// RUTAS EXPLÍCITAS: SOLO ESTOS DISEÑOS GENERAN DIAGRAMA
+// regresion-multiple → Regresión múltiple (predictores → Y)
+// mediacion          → X → M → Y
+// moderacion         → X × Moderador → Y
+// mediacion-moderada → X → M → Y con moderador sobre a o b
+// path-analysis      → Red causal entre variables
+// sem                → Variables latentes + observadas
+
+function getVarsList() {
+  const vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+    state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean).forEach(v => vars.push(v));
+  }
+  return vars;
+}
+
+function showModelDiagram() {
+  const vars = getVarsList();
+  const diseno = state.diseno;
+  const W = 580, H = 280;
+  let svgContent = '';
+  let titulo = '';
+  let nota = '';
+
+  // Colores
+  const C = { x:"#534AB7", xbg:"#EEEDFE", m:"#0F6E56", mbg:"#E1F5EE", y:"#993C1D", ybg:"#FAECE7", mo:"#7C3AED", mobg:"#F3E8FF" };
+
+  function box(x, y, w, h, label, stroke, fill) {
+    const maxLen = 16;
+    const words = label.split(' ');
+    let lines = [], cur = '';
+    words.forEach(w => { if((cur+' '+w).trim().length > maxLen) { if(cur) lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); });
+    if(cur) lines.push(cur);
+    lines = lines.slice(0,2);
+    const fontSize = lines.some(l=>l.length>13) ? 10 : 11;
+    const textY = lines.length === 1 ? y+h/2+4 : y+h/2-5;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+      ${lines.map((l,i)=>`<text x="${x+w/2}" y="${textY+i*16}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="600" fill="${stroke}" font-family="system-ui,sans-serif">${l}</text>`).join('')}`;
+  }
+
+  function arrowDef(id, color) {
+    return `<marker id="${id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="${color}"/></marker>`;
+  }
+
+  function line(x1,y1,x2,y2,color,label='',dashed=false) {
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const id = `a${x1}${y1}${x2}${y2}`;
+    const dash = dashed ? 'stroke-dasharray="5,3"' : '';
+    return `<defs>${arrowDef(id,color)}</defs>
+      <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#${id})"/>
+      ${label ? `<rect x="${mx-28}" y="${my-9}" width="56" height="16" rx="3" fill="white" opacity="0.9"/><text x="${mx}" y="${my+4}" text-anchor="middle" font-size="10" fill="${color}" font-family="system-ui,sans-serif">${label}</text>` : ''}`;
+  }
+
+  // ── REGRESIÓN MÚLTIPLE ──────────────────────────────────────────────
+  if(diseno === 'regresion-multiple') {
+    titulo = 'Modelo de Regresión Múltiple';
+    nota = 'Los predictores (X) se asocian con la variable dependiente (Y)';
+    const predictores = vars.length >= 2 ? vars.slice(0, vars.length-1) : vars.slice(0,2).concat(['Predictor 2']);
+    const Y = vars.length >= 2 ? vars[vars.length-1] : 'Variable Y';
+    const n = Math.min(predictores.length, 4);
+    const step = H / (n+1);
+    for(let i=0;i<n;i++) {
+      const py = step*(i+1) - 25;
+      svgContent += box(20, py, 155, 46, predictores[i], C.x, C.xbg);
+      svgContent += line(175, py+23, 370, 117, C.x, `β${i+1}`);
+    }
+    svgContent += box(370, 97, 155, 46, Y, C.y, C.ybg);
+    if(vars.length > 5) svgContent += `<text x="100" y="${H-10}" text-anchor="middle" font-size="10" fill="#888" font-family="system-ui">+${vars.length-4} predictores más</text>`;
+  }
+
+  // ── MEDIACIÓN ───────────────────────────────────────────────────────
+  else if(diseno === 'mediacion') {
+    titulo = 'Modelo de Mediación';
+    nota = 'El efecto de X sobre Y opera a través del mediador M (efecto indirecto: a×b)';
+    const X = vars[0]||'Variable X', M = vars[1]||'Mediador', Y = vars[2]||'Variable Y';
+    svgContent += box(20, 110, 140, 46, X, C.x, C.xbg);
+    svgContent += box(215, 20, 150, 46, M, C.m, C.mbg);
+    svgContent += box(420, 110, 140, 46, Y, C.y, C.ybg);
+    svgContent += line(160, 133, 420, 133, C.x, "c' (directo)");
+    svgContent += line(160, 120, 215, 52, C.m, 'a');
+    svgContent += line(365, 52, 420, 120, C.m, 'b');
+    svgContent += `<text x="290" y="${H-5}" text-anchor="middle" font-size="10" fill="#888" font-family="system-ui">Efecto indirecto = a × b</text>`;
+  }
+
+  // ── MODERACIÓN ──────────────────────────────────────────────────────
+  else if(diseno === 'moderacion') {
+    titulo = 'Modelo de Moderación';
+    nota = 'El moderador (W) cambia la fuerza o dirección de la relación X → Y';
+    const X = vars[0]||'Variable X', W = vars[1]||'Moderador', Y = vars[2]||'Variable Y';
+    svgContent += box(20, 115, 140, 46, X, C.x, C.xbg);
+    svgContent += box(420, 115, 140, 46, Y, C.y, C.ybg);
+    svgContent += box(205, 25, 150, 46, W, C.mo, C.mobg);
+    const id1 = 'amod1', id2 = 'amod2';
+    svgContent += `<defs>${arrowDef(id1,C.x)}${arrowDef(id2,C.mo)}</defs>`;
+    svgContent += `<line x1="160" y1="138" x2="420" y2="138" stroke="${C.x}" stroke-width="2" marker-end="url(#${id1})"/>`;
+    svgContent += `<line x1="280" y1="71" x2="280" y2="132" stroke="${C.mo}" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#${id2})"/>`;
+    svgContent += `<rect x="236" y="132" width="88" height="18" rx="4" fill="white" stroke="${C.mo}" stroke-width="1"/>`;
+    svgContent += `<text x="280" y="145" text-anchor="middle" font-size="10" fill="${C.mo}" font-weight="600" font-family="system-ui">X × W</text>`;
+  }
+
+  // ── MEDIACIÓN MODERADA ──────────────────────────────────────────────
+  else if(diseno === 'mediacion-moderada') {
+    titulo = 'Modelo de Mediación Moderada';
+    nota = 'El moderador (W) afecta la trayectoria de mediación (ruta a o b)';
+    const X=vars[0]||'X', M=vars[1]||'Mediador', Y=vars[2]||'Y', W=vars[3]||'Moderador';
+    svgContent += box(15, 115, 120, 44, X, C.x, C.xbg);
+    svgContent += box(220, 25, 140, 44, M, C.m, C.mbg);
+    svgContent += box(425, 115, 120, 44, Y, C.y, C.ybg);
+    svgContent += box(220, 190, 140, 44, W, C.mo, C.mobg);
+    svgContent += line(135, 137, 425, 137, C.x, "c'");
+    svgContent += line(135, 122, 220, 52, C.m, 'a');
+    svgContent += line(360, 52, 425, 122, C.m, 'b');
+    const idw = 'awmod';
+    svgContent += `<defs>${arrowDef(idw,C.mo)}</defs>`;
+    svgContent += `<line x1="290" y1="190" x2="290" y2="73" stroke="${C.mo}" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#${idw})"/>`;
+    svgContent += `<text x="305" y="140" font-size="9" fill="${C.mo}" font-family="system-ui">modera a o b</text>`;
+  }
+
+  // ── PATH ANALYSIS ───────────────────────────────────────────────────
+  else if(diseno === 'path-analysis') {
+    titulo = 'Diagrama de Rutas (Path Analysis)';
+    nota = 'Muestra efectos directos e indirectos entre variables. Los coeficientes β indican la magnitud.';
+    const v = [...vars];
+    while(v.length < 4) v.push(`Var ${v.length+1}`);
+    svgContent += box(15, 60, 130, 44, v[0], C.x, C.xbg);
+    svgContent += box(15, 170, 130, 44, v[1], C.x, C.xbg);
+    svgContent += box(225, 110, 130, 44, v[2], C.m, C.mbg);
+    svgContent += box(430, 110, 130, 44, v[3], C.y, C.ybg);
+    svgContent += line(145, 82, 225, 122, C.x, 'β1');
+    svgContent += line(145, 192, 225, 132, C.x, 'β2');
+    svgContent += line(355, 132, 430, 132, C.m, 'β3');
+    svgContent += line(145, 82, 430, 120, C.x, '', true);
+    if(v.length > 4) svgContent += `<text x="290" y="${H-5}" text-anchor="middle" font-size="10" fill="#888">+${v.length-4} variables adicionales</text>`;
+  }
+
+  // ── SEM ─────────────────────────────────────────────────────────────
+  else if(diseno === 'sem') {
+    titulo = 'Modelo de Ecuaciones Estructurales (SEM)';
+    nota = 'Las elipses representan variables latentes; los rectángulos, variables observadas (indicadores).';
+    // Latente exógena (ξ) → Latente endógena (η)
+    const ind1 = vars[0]||'Indicador 1', ind2 = vars[1]||'Indicador 2';
+    const ind3 = vars[2]||'Indicador 3', ind4 = vars[3]||'Indicador 4';
+    // Elipses para latentes
+    svgContent += `<ellipse cx="160" cy="135" rx="75" ry="38" fill="#EEEDFE" stroke="${C.x}" stroke-width="2"/>`;
+    svgContent += `<text x="160" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="${C.x}" font-family="system-ui">ξ (Latente</text>`;
+    svgContent += `<text x="160" y="146" text-anchor="middle" font-size="11" font-weight="700" fill="${C.x}" font-family="system-ui">Exógena)</text>`;
+    svgContent += `<ellipse cx="420" cy="135" rx="75" ry="38" fill="${C.ybg}" stroke="${C.y}" stroke-width="2"/>`;
+    svgContent += `<text x="420" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="${C.y}" font-family="system-ui">η (Latente</text>`;
+    svgContent += `<text x="420" y="146" text-anchor="middle" font-size="11" font-weight="700" fill="${C.y}" font-family="system-ui">Endógena)</text>`;
+    // Indicadores exógena
+    svgContent += box(20, 30, 100, 36, ind1, C.x, 'white');
+    svgContent += box(20, 168, 100, 36, ind2, C.x, 'white');
+    svgContent += line(120, 48, 148, 110, C.x, 'λ1');
+    svgContent += line(120, 186, 148, 155, C.x, 'λ2');
+    // Indicadores endógena
+    svgContent += box(460, 30, 100, 36, ind3, C.y, 'white');
+    svgContent += box(460, 168, 100, 36, ind4, C.y, 'white');
+    svgContent += line(495, 135, 490, 60, C.y, 'λ3');
+    svgContent += line(495, 140, 490, 180, C.y, 'λ4');
+    // Ruta estructural
+    svgContent += line(235, 135, 345, 135, C.m, 'γ');
+  }
+
+  const modalHtml = `
+    <div id="modal-diagram" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)this.remove()">
+      <div style="background:white;border-radius:16px;padding:24px;max-width:660px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <h3 style="font-size:15px;font-weight:700;color:#111;margin:0">${titulo}</h3>
+          <button onclick="document.getElementById('modal-diagram').remove()" style="border:none;background:#f5f5f5;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1">✕</button>
+        </div>
+        <p style="font-size:12px;color:#888;margin:0 0 12px">${nota}</p>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;border:1px solid #eee;border-radius:10px;background:#fafafa" xmlns="http://www.w3.org/2000/svg">
+          ${svgContent}
+        </svg>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+          <p style="font-size:11px;color:#bbb;margin:0">Generado automáticamente según tu diseño metodológico</p>
+          <button onclick="downloadDiagram()" style="padding:7px 14px;border-radius:6px;border:1px solid #534AB7;color:#534AB7;background:transparent;cursor:pointer;font-size:12px;font-family:inherit">📥 Descargar SVG</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  window._lastDiagramSVG = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svgContent}</svg>`;
+  window._lastDiagramTitle = titulo;
+}
+
+function downloadDiagram() {
+  const svg = window._lastDiagramSVG;
+  const blob = new Blob([svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'modelo_teorico.svg'; a.click();
   URL.revokeObjectURL(url);
 }
 
