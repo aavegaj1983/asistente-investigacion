@@ -947,7 +947,30 @@ function renderContent(){
       return;
     }
     if(!state.result){
-      el.innerHTML=`<div class="generate-box"><p>Todo listo! Con tus respuestas generaremos un tema, pregunta de investigacion y objetivo general. Podras ajustarlos a tu criterio.</p><button class="btn-generate" onclick="generate()">Generar propuesta</button></div>`;
+      // Calcular advertencias antes de generar
+      let warnHtml = '';
+      const warns = getWarnings(
+        state.variables.filter(v=>v!=='otro').concat(
+          state.variables.includes('otro')&&state.variablesOtro.trim()
+            ? state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean) : []
+        ),
+        state.tecnica, state.nivel, state.enfoque
+      );
+      if(warns.length > 0){
+        warnHtml = `<div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">` +
+          warns.map(w => `<div class="hint ${w.startsWith('⚠️')?'warning':w.startsWith('📌')?'':'success'}"
+            style="font-size:13px;line-height:1.6">${w}</div>`).join('') +
+        `</div>`;
+      }
+      const tecnicaLabel = state.tecnica
+        ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+        : 'Estadística descriptiva';
+      el.innerHTML=`<div class="generate-box">
+        ${warnHtml}
+        <p>Todo listo. Generaremos una propuesta coherente con tu técnica: <strong>${tecnicaLabel}</strong>.<br>
+        <span style="font-size:13px;color:#9CA3AF">Revisa las advertencias arriba si las hay. Podrás editar el resultado.</span></p>
+        <button class="btn-generate" onclick="generate()">✨ Generar propuesta</button>
+      </div>`;
       return;
     }
     
@@ -1092,6 +1115,116 @@ function nuevoProyecto(){
   }
 }
 
+// ── INSTRUCCIONES ESPECÍFICAS POR TÉCNICA ────────────────────────
+function getTecnicaInstructions(tecnica, vars, poblacion, nivel) {
+  const X  = vars[0]||'Variable X';
+  const M  = vars[1]||'Variable M';
+  const Y  = vars[vars.length-1]||'Variable Y';
+  const W  = vars[1]||'Moderador';
+  const pop = poblacion;
+
+  const instrucciones = {
+    'correlacion': {
+      pregunta: `¿Existe relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Determinar la relación entre',
+      hipotesis:`Existe una relación estadísticamente significativa entre ${X} y ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿Existe relación...?", objetivo con "Determinar la relación", hipótesis con "Existe una relación [positiva/negativa] entre X e Y". NO uses causalidad.'
+    },
+    'regresion-simple': {
+      pregunta: `¿En qué medida ${X} predice ${Y} en ${pop}?`,
+      verbo:    'Determinar la capacidad predictiva de',
+      hipotesis:`${X} predice significativamente ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿En qué medida X predice Y?", objetivo con "Determinar la capacidad predictiva de X sobre Y", hipótesis predictiva (β significativo). NO uses causalidad.'
+    },
+    'regresion-multiple': {
+      pregunta: `¿En qué medida ${vars.slice(0,-1).join(', ')} predicen ${Y} en ${pop}?`,
+      verbo:    'Determinar la capacidad predictiva de',
+      hipotesis:`${vars.slice(0,-1).join(', ')} predicen significativamente ${Y} en ${pop}.`,
+      nota:     'Usa pregunta con "¿En qué medida los predictores explican la varianza de Y?", objetivo con verbos como "Determinar" o "Analizar la capacidad predictiva". Hipótesis con coeficientes β. NO incluyas variables no seleccionadas.'
+    },
+    'mediacion': {
+      pregunta: `¿En qué medida ${M} media la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Examinar el efecto mediador de',
+      hipotesis:`${M} media significativamente la relación entre ${X} y ${Y} en ${pop} (efecto indirecto a×b significativo).`,
+      nota:     `Usa pregunta con "¿En qué medida M media...?", objetivo con "Examinar el efecto mediador de M en la relación X→Y". Hipótesis sobre efecto indirecto (a×b). VARIABLES EXACTAS: X=${X}, M=${M}, Y=${Y}. NO inventes otras variables.`
+    },
+    'moderacion': {
+      pregunta: `¿En qué medida ${W} modera la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Analizar el efecto moderador de',
+      hipotesis:`${W} modera significativamente la relación entre ${X} y ${Y} en ${pop} (interacción X×W significativa).`,
+      nota:     `Usa pregunta con "¿En qué medida W modera...?", objetivo con "Analizar el efecto moderador de W sobre X→Y". Hipótesis sobre interacción X×W. VARIABLES EXACTAS: X=${X}, W=${W}, Y=${Y}. NO inventes otras variables.`
+    },
+    'mediacion-moderada': {
+      pregunta: `¿En qué medida ${vars[3]||W} modera el efecto mediador de ${M} en la relación entre ${X} y ${Y} en ${pop}?`,
+      verbo:    'Examinar el modelo de mediación moderada de',
+      hipotesis:`El efecto indirecto de ${X} sobre ${Y} a través de ${M} varía significativamente en función de ${vars[3]||W} en ${pop}.`,
+      nota:     `Pregunta sobre moderación del efecto mediador. Objetivo: "Examinar el modelo de mediación moderada". Hipótesis sobre índice de mediación moderada. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'path-analysis': {
+      pregunta: `¿Cuál es la estructura de relaciones causales entre ${vars.join(', ')} en ${pop}?`,
+      verbo:    'Analizar la estructura de relaciones causales entre',
+      hipotesis:`El modelo de rutas propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) en ${pop}.`,
+      nota:     `Pregunta sobre estructura causal. Objetivo con "Analizar las trayectorias directas e indirectas". Hipótesis sobre ajuste del modelo. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'sem-mediacion': {
+      pregunta: `¿En qué medida ${M} media la relación entre ${X} y ${Y} como constructos latentes en ${pop}?`,
+      verbo:    'Examinar el efecto mediador de',
+      hipotesis:`El modelo SEM de mediación presenta ajuste adecuado (CFI≥.95, RMSEA≤.06) y el efecto indirecto de ${X} sobre ${Y} a través de ${M} es significativo en ${pop}.`,
+      nota:     `Pregunta sobre mediación con latentes. Objetivo: "Examinar el efecto mediador de M (latente) en la relación X→Y mediante SEM". Hipótesis sobre ajuste del modelo Y efecto indirecto. VARIABLES EXACTAS: X=${X}, M=${M}, Y=${Y}. MENCIONA EXPLÍCITAMENTE que son variables latentes. NO inventes otras variables.`
+    },
+    'sem-moderacion': {
+      pregunta: `¿En qué medida ${W} (latente) modera la relación entre ${X} y ${Y} como constructos latentes en ${pop}?`,
+      verbo:    'Analizar el efecto moderador latente de',
+      hipotesis:`La interacción entre los constructos latentes ${X} y ${W} predice significativamente ${Y} en ${pop} (modelo SEM con ajuste adecuado).`,
+      nota:     `Pregunta sobre moderación entre latentes. Objetivo: "Analizar la interacción latente X×W sobre Y mediante SEM". Hipótesis sobre interacción latente y ajuste. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    },
+    'sem-completo': {
+      pregunta: `¿Cuál es la estructura de relaciones entre los constructos latentes ${vars.join(', ')} en ${pop}?`,
+      verbo:    'Analizar el modelo estructural completo de',
+      hipotesis:`El modelo SEM propuesto presenta índices de ajuste adecuados (CFI≥.95, TLI≥.95, RMSEA≤.06, SRMR≤.08) y las trayectorias estructurales son estadísticamente significativas en ${pop}.`,
+      nota:     `Pregunta sobre modelo estructural completo. Objetivo: "Analizar el modelo SEM con variables latentes". Hipótesis sobre ajuste global. VARIABLES EXACTAS: ${vars.join(', ')}. NO inventes otras variables.`
+    }
+  };
+  return instrucciones[tecnica] || null;
+}
+
+// ── ADVERTENCIAS PREVENTIVAS ──────────────────────────────────────
+function getWarnings(variablesList, tecnica, nivel, enfoque) {
+  const warnings = [];
+  const nv = variablesList.length;
+
+  // Técnicas de mediación necesitan exactamente 3 variables (X, M, Y)
+  if(tecnica === 'mediacion' || tecnica === 'sem-mediacion') {
+    if(nv < 3) warnings.push(`⚠️ La mediación requiere exactamente 3 variables: X (predictor), M (mediador) e Y (criterio). Actualmente tienes ${nv}. Regresa al paso 3 y agrega las variables necesarias.`);
+    if(nv > 3) warnings.push(`⚠️ Tienes ${nv} variables pero la mediación simple usa solo 3 (X, M, Y). Las variables extra no serán usadas en el modelo. Considera mediación múltiple o SEM completo.`);
+  }
+  // Moderación necesita exactamente 3 variables (X, W, Y)
+  if(tecnica === 'moderacion' || tecnica === 'sem-moderacion') {
+    if(nv < 3) warnings.push(`⚠️ La moderación requiere 3 variables: X (predictor), W (moderador) e Y (criterio). Actualmente tienes ${nv}.`);
+  }
+  // Mediación moderada necesita 4 variables
+  if(tecnica === 'mediacion-moderada') {
+    if(nv < 4) warnings.push(`⚠️ La mediación moderada requiere 4 variables: X, M (mediador), Y y W (moderador). Actualmente tienes ${nv}. Regresa al paso 3 y agrega la variable faltante.`);
+  }
+  // Regresión múltiple necesita al menos 3 variables (2 predictores + Y)
+  if(tecnica === 'regresion-multiple') {
+    if(nv < 3) warnings.push(`⚠️ La regresión múltiple requiere al menos 2 predictores y 1 variable dependiente (mínimo 3 variables). Actualmente tienes ${nv}.`);
+  }
+  // SEM con latentes: cada variable necesita ≥3 indicadores (advertencia conceptual)
+  if(['sem-mediacion','sem-moderacion','sem-completo','path-analysis'].includes(tecnica)) {
+    warnings.push(`📌 Recuerda: Para SEM con variables latentes, cada constructo debe medirse con al menos 3 indicadores observables (ítems de escala). Las variables que seleccionaste serán los constructos latentes del modelo.`);
+  }
+  // Correlación con más de 2 variables
+  if(tecnica === 'correlacion' && nv > 2) {
+    warnings.push(`💡 Tienes ${nv} variables. La correlación de Pearson/Spearman mide pares de variables. Para múltiples correlaciones simultáneas considera una matriz de correlaciones o regresión múltiple.`);
+  }
+  // Nivel descriptivo con técnica avanzada (no debería pasar, pero por si acaso)
+  if((nivel === 'descriptivo' || nivel === 'exploratorio') && tecnica && tecnica !== '') {
+    warnings.push(`⚠️ El nivel ${nivel} no es compatible con técnicas de análisis inferencial. Considera cambiar el nivel a correlacional o explicativo.`);
+  }
+  return warnings;
+}
+
 async function generate(){
   state.loading=true;state.result=null;renderContent();
   
@@ -1102,39 +1235,73 @@ async function generate(){
   }
   
   const nv = variablesList.length;
-  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
-  const enfoqueKey = state.enfoque.toLowerCase();
-  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const nivelLabel  = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+  const enfoqueKey  = state.enfoque.toLowerCase();
+  const disenoObj   = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
   const disenoLabel = disenoObj?.label || state.diseno;
-  
-  const prompt=`Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018).
-Un estudiante de 9no ciclo de Psicologia respondio:
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+    : 'Estadística descriptiva';
+
+  // Obtener instrucciones específicas para la técnica
+  const tecInstr = getTecnicaInstructions(
+    state.tecnica, variablesList, efectivePoblacion(), state.nivel
+  );
+
+  // Construir instrucción específica de hipótesis según enfoque y técnica
+  let hipInstruccion;
+  if(state.enfoque === "Cualitativo") {
+    hipInstruccion = "HIPOTESIS DE TRABAJO: Supuesto tentativo y flexible sobre el fenómeno. Usa 'Se espera comprender...' o 'Las experiencias de X están relacionadas con...'. NO uses hipótesis cuantitativas.";
+  } else if(state.enfoque === "Mixto") {
+    hipInstruccion = "HIPOTESIS: Formula una hipótesis mixta coherente con el diseño mixto seleccionado.";
+  } else if(tecInstr) {
+    hipInstruccion = `HIPOTESIS DE INVESTIGACION específica para ${tecnicaLabel}: ${tecInstr.nota} Ejemplo de hipótesis correcta: "${tecInstr.hipotesis}"`;
+  } else {
+    hipInstruccion = "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico coherente con el nivel y las variables seleccionadas.";
+  }
+
+  // Construir instrucción de pregunta según técnica
+  let preguntaInstruccion = "2. PREGUNTA DE INVESTIGACION principal:";
+  if(tecInstr) {
+    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION específica para ${tecnicaLabel}. Ejemplo correcto: "${tecInstr.pregunta}". REGLA: Usa exactamente las variables seleccionadas (${variablesList.join(', ')}), no inventes ni cambies variables.`;
+  }
+
+  // Construir instrucción de objetivo según técnica
+  let objetivoInstruccion = "3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y técnica; medible y alcanzable).";
+  if(tecInstr) {
+    objetivoInstruccion = `3. OBJETIVO GENERAL: Empieza con "${tecInstr.verbo}" y usa EXACTAMENTE las variables seleccionadas (${variablesList.join(', ')}). NO uses verbos genéricos como "Determinar la relación" si la técnica es mediación o SEM.`;
+  }
+
+  const prompt = `Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018; Hayes, 2018 para mediacion/moderacion; Kline, 2016 para SEM).
+
+DATOS DEL ESTUDIANTE:
 - Area: ${efectiveArea()}
 - Poblacion: ${efectivePoblacion()}
 - Problema/fenomeno: ${efectiveProblema()}
-- Variables seleccionadas (${nv}): ${variablesList.join(", ")}
+- Variables seleccionadas (${nv} exactas, NO uses otras): ${variablesList.join(", ")}
 - Enfoque metodologico: ${state.enfoque}
 - Nivel de investigacion: ${nivelLabel}
 - Diseño de investigacion: ${disenoLabel}
-- Técnica de análisis: ${state.tecnica ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica) : 'No especificada'}
+- Técnica de análisis estadístico: ${tecnicaLabel}
 - Experiencia previa: ${state.experiencia}
 - Viabilidad de acceso: ${state.viabilidad}
 - Contexto: ${state.contexto||"No especificado"}
 - Motivacion: ${state.motivacion||"No especificada"}
 
-Genera:
-1. TEMA DE INVESTIGACION delimitado (max 15 palabras), claro, coherente con el nivel y diseño, viable para pregrado.
-2. PREGUNTA DE INVESTIGACION principal (interrogativa, coherente con enfoque, nivel, diseño y variables).
-3. OBJETIVO GENERAL (verbo en infinitivo coherente con la pregunta, nivel y diseño; medible y alcanzable).
-4. ${state.enfoque === "Cuantitativo" ? "HIPOTESIS DE INVESTIGACION: Enunciado afirmativo y específico que predice la relación entre las variables (ej: 'Existe una relación positiva entre X e Y en...')" : state.enfoque === "Cualitativo" ? "HIPOTESIS DE TRABAJO: Supuesto tentativo y flexible sobre el fenómeno (ej: 'Las experiencias de X influyen en...'). Si el nivel es exploratorio puro, usa: 'Se busca comprender...'" : "HIPOTESIS: Según tu diseño mixto, formula una hipótesis predictiva o tentativa"}
+REGLA CRÍTICA: SOLO puedes usar las ${nv} variables listadas arriba. NUNCA agregues, inventes ni sustituyas variables. Si la técnica requiere roles específicos (X, M, Y, W), asígnalos en el orden en que fueron seleccionadas.
 
-IMPORTANTE: Debes generar las 4 elementos. La hipótesis es OBLIGATORIA.
+Genera los siguientes 4 elementos:
+1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con la técnica "${tecnicaLabel}" y las variables exactas. NO uses variables no seleccionadas.
+${preguntaInstruccion}
+${objetivoInstruccion}
+4. ${hipInstruccion}
 
-Responde SOLO en JSON exacto sin texto adicional ni markdown:
+IMPORTANTE: Los 4 elementos son OBLIGATORIOS. Sé preciso con la técnica estadística indicada.
+
+Responde SOLO en JSON sin texto adicional ni markdown:
 {"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
 
   try{
-    // Llamar a la API de Claude (requiere backend configurado)
     const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -1142,51 +1309,90 @@ Responde SOLO en JSON exacto sin texto adicional ni markdown:
     });
     
     if (!res.ok) {
-      throw new Error(`Error ${res.status}: La API no está disponible. Verifica que el servidor backend esté corriendo.`);
+      throw new Error(`Error ${res.status}: La API no está disponible.`);
     }
     
     const data=await res.json();
     const text=data.content?.map(b=>b.text||"").join("")||"";
     const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
     
-    // Asegurar que hipótesis existe
     if(!parsed.hipotesis) {
-      if(state.enfoque === "Cuantitativo") {
-        parsed.hipotesis = "Existe una relación significativa entre las variables seleccionadas.";
-      } else if(state.enfoque === "Cualitativo") {
-        parsed.hipotesis = "Se espera identificar patrones emergentes relacionados con el fenómeno de estudio.";
-      } else {
-        parsed.hipotesis = "Se plantean supuestos iniciales que guiarán la investigación mixta.";
-      }
+      parsed.hipotesis = tecInstr ? tecInstr.hipotesis
+        : state.enfoque==="Cualitativo" ? `Se espera comprender el fenómeno de ${efectiveProblema()} en ${efectivePoblacion()}.`
+        : `Existe una relación significativa entre ${variablesList.slice(0,2).join(' y ')} en ${efectivePoblacion()}.`;
     }
     
     state.result=parsed;
     state.edited={...parsed};
     saveState();
   }catch(e){
-    console.error("Error completo:", e);
-    
-    // Generar propuesta de ejemplo si falla la API
-    const ejemploTema = `${efectiveProblema()} en ${efectivePoblacion()} - ${efectiveArea()}`;
-    const ejemploPregunta = state.enfoque === "Cuantitativo" 
-      ? `¿Cuál es la relación entre ${variablesList[0] || 'las variables'} y ${variablesList[1] || 'el fenómeno'} en ${efectivePoblacion()}?`
-      : `¿Cómo se manifiesta ${efectiveProblema()} en las experiencias de ${efectivePoblacion()}?`;
-    const ejemploObjetivo = state.enfoque === "Cuantitativo"
-      ? `Determinar la relación entre ${variablesList.slice(0,2).join(' y ')} en ${efectivePoblacion()}.`
-      : `Comprender el fenómeno de ${efectiveProblema()} en ${efectivePoblacion()}.`;
-    const ejemploHipotesis = state.enfoque === "Cuantitativo"
-      ? `Existe una relación positiva entre ${variablesList[0] || 'las variables seleccionadas'} y ${variablesList[1] || 'el fenómeno de estudio'} en ${efectivePoblacion()}.`
-      : `Las experiencias de ${efectivePoblacion()} en relación a ${efectiveProblema()} están influenciadas por factores contextuales y personales.`;
-    
-    state.result={
-      tema: ejemploTema.substring(0, 100),
-      pregunta: ejemploPregunta,
-      objetivo: ejemploObjetivo,
-      hipotesis: ejemploHipotesis,
-      error: `⚠️ API no disponible. Se generó un ejemplo basado en tus selecciones. IMPORTANTE: Debes configurar el backend (/api/chat) para usar la generación con IA. Mientras tanto, edita manualmente este ejemplo.`
+    console.error("Error:", e);
+
+    // Fallbacks coherentes con la técnica
+    const X = variablesList[0]||'Variable X';
+    const M = variablesList[1]||'Variable M';
+    const Y = variablesList[variablesList.length-1]||'Variable Y';
+    const W = variablesList[1]||'Moderador';
+    const pop = efectivePoblacion();
+    const prob = efectiveProblema();
+
+    let fb = { tema:'', pregunta:'', objetivo:'', hipotesis:'' };
+
+    if(state.enfoque === "Cualitativo") {
+      fb.tema      = `${prob} en ${pop}`;
+      fb.pregunta  = `¿Cómo se experimenta ${prob} en ${pop}?`;
+      fb.objetivo  = `Comprender las experiencias de ${prob} en ${pop}.`;
+      fb.hipotesis = `Se espera que ${pop} experimente ${prob} de forma diversa según su contexto.`;
+    } else if(state.tecnica === 'correlacion') {
+      fb.tema      = `Relación entre ${X} y ${Y} en ${pop}`;
+      fb.pregunta  = `¿Existe relación entre ${X} y ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la relación entre ${X} e ${Y} en ${pop}.`;
+      fb.hipotesis = `Existe una relación estadísticamente significativa entre ${X} e ${Y} en ${pop}.`;
+    } else if(state.tecnica === 'regresion-simple') {
+      fb.tema      = `Capacidad predictiva de ${X} sobre ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${X} predice ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la capacidad predictiva de ${X} sobre ${Y} en ${pop}.`;
+      fb.hipotesis = `${X} predice significativamente ${Y} en ${pop} (β significativo).`;
+    } else if(state.tecnica === 'regresion-multiple') {
+      const preds = variablesList.slice(0,-1).join(', ');
+      fb.tema      = `Predictores de ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${preds} predicen ${Y} en ${pop}?`;
+      fb.objetivo  = `Determinar la capacidad predictiva de ${preds} sobre ${Y} en ${pop}.`;
+      fb.hipotesis = `${preds} predicen significativamente ${Y} en ${pop}.`;
+    } else if(state.tecnica === 'mediacion' || state.tecnica === 'sem-mediacion') {
+      const latente = state.tecnica === 'sem-mediacion' ? ' (constructos latentes)' : '';
+      fb.tema      = `Efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${M} media la relación entre ${X} e ${Y}${latente} en ${pop}?`;
+      fb.objetivo  = `Examinar el efecto mediador de ${M} en la relación entre ${X} e ${Y}${latente} en ${pop}.`;
+      fb.hipotesis = `${M} media significativamente la relación entre ${X} e ${Y} en ${pop} (efecto indirecto a×b significativo).`;
+    } else if(state.tecnica === 'moderacion' || state.tecnica === 'sem-moderacion') {
+      fb.tema      = `Efecto moderador de ${W} en la relación entre ${X} e ${Y} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${W} modera la relación entre ${X} e ${Y} en ${pop}?`;
+      fb.objetivo  = `Analizar el efecto moderador de ${W} en la relación entre ${X} e ${Y} en ${pop}.`;
+      fb.hipotesis = `${W} modera significativamente la relación entre ${X} e ${Y} en ${pop} (interacción X×W significativa).`;
+    } else if(state.tecnica === 'mediacion-moderada') {
+      const W4 = variablesList[3]||'Moderador';
+      fb.tema      = `Modelo de mediación moderada: ${X}, ${M}, ${Y} y ${W4} en ${pop}`;
+      fb.pregunta  = `¿En qué medida ${W4} modera el efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}?`;
+      fb.objetivo  = `Examinar el modelo de mediación moderada con ${X}, ${M}, ${Y} y ${W4} en ${pop}.`;
+      fb.hipotesis = `El efecto indirecto de ${X} sobre ${Y} a través de ${M} varía significativamente en función de ${W4} en ${pop}.`;
+    } else if(['path-analysis','sem-completo'].includes(state.tecnica)) {
+      fb.tema      = `Modelo estructural entre ${variablesList.slice(0,3).join(', ')} en ${pop}`;
+      fb.pregunta  = `¿Cuál es la estructura de relaciones entre ${variablesList.join(', ')} en ${pop}?`;
+      fb.objetivo  = `Analizar el modelo de rutas entre ${variablesList.join(', ')} en ${pop}.`;
+      fb.hipotesis = `El modelo propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) en ${pop}.`;
+    } else {
+      fb.tema      = `${prob} en ${pop}`;
+      fb.pregunta  = `¿Cómo se relaciona ${prob} con ${variablesList.join(' y ')} en ${pop}?`;
+      fb.objetivo  = `Analizar ${prob} y su relación con las variables seleccionadas en ${pop}.`;
+      fb.hipotesis = `Existe una relación significativa entre las variables seleccionadas en ${pop}.`;
+    }
+    fb.tema = fb.tema.substring(0, 120);
+
+    state.result={ ...fb,
+      error:`⚠️ API no disponible. Se generó un ejemplo coherente con tu técnica (${tecnicaLabel}). Edítalo según tu criterio.`
     };
-    state.edited={...state.result};
-    delete state.edited.error;
+    state.edited={ tema:fb.tema, pregunta:fb.pregunta, objetivo:fb.objetivo, hipotesis:fb.hipotesis };
     saveState();
   }
   state.loading=false;
