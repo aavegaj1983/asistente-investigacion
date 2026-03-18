@@ -1193,235 +1193,350 @@ Responde SOLO en JSON exacto sin texto adicional ni markdown:
   renderContent();
 }
 
-// ── HELPER: SVG → PNG ArrayBuffer via Canvas ─────────────────────
-async function svgToPngBuffer(svgString, width=600, height=300) {
+// ── DOCX GENERATOR — sin librerías externas ─────────────────────
+// Genera un .docx real usando ZIP + Open XML directamente en el browser
+
+async function downloadDoc() {
+  const btn = document.querySelector('.btn-download');
+  if(btn){ btn.classList.add('loading'); btn.innerHTML='⏳ Generando...'; }
+
+  try {
+    // ── Datos ─────────────────────────────────────────────────────
+    const nivelLabel  = NIVELES.find(n=>n.id===state.nivel)?.label || state.nivel;
+    const enfoqueKey  = state.enfoque.toLowerCase();
+    const disenoObj   = DISENOS[enfoqueKey]?.find(d=>d.id===state.diseno);
+    const disenoLabel = disenoObj?.label || state.diseno;
+    const tecnicaLabel = state.tecnica
+      ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+      : 'Estadística descriptiva';
+    let vars = state.variables.filter(v=>v!=='otro');
+    if(state.variables.includes('otro')&&state.variablesOtro.trim())
+      state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>vars.push(v));
+    const hipLabel = state.enfoque==="Cuantitativo"?"HIPÓTESIS DE INVESTIGACIÓN"
+                   : state.enfoque==="Cualitativo" ?"HIPÓTESIS DE TRABAJO":"HIPÓTESIS";
+
+    // ── Escapar XML ───────────────────────────────────────────────
+    const xe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    // ── Helpers Open XML ─────────────────────────────────────────
+    const heading = (text, color='4F46E5') =>
+      `<w:p><w:pPr><w:spacing w:before="320" w:after="120"/>
+        <w:pBdr><w:bottom w:val="single" w:sz="8" w:space="1" w:color="${color}"/></w:pBdr></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="26"/><w:color w:val="${color}"/><w:caps/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const fieldLabel = (text) =>
+      `<w:p><w:pPr><w:spacing w:before="240" w:after="60"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/><w:caps/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const fieldValue = (text) =>
+      `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
+          <w:t xml:space="preserve">${xe(text||'—')}</w:t></w:r></w:p>`;
+
+    const tableRow = (label, value, shade=true) =>
+      `<w:tr>
+        <w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/>
+          ${shade?'<w:shd w:val="clear" w:color="auto" w:fill="EEF2FF"/>':''}
+        </w:tcPr>
+          <w:p><w:r><w:rPr><w:b/><w:sz w:val="18"/><w:color w:val="4F46E5"/></w:rPr>
+            <w:t>${xe(label)}</w:t></w:r></w:p></w:tc>
+        <w:tc><w:tcPr><w:tcW w:w="5000" w:type="dxa"/></w:tcPr>
+          <w:p><w:r><w:rPr><w:sz w:val="18"/><w:color w:val="111827"/></w:rPr>
+            <w:t xml:space="preserve">${xe(value||'—')}</w:t></w:r></w:p></w:tc>
+      </w:tr>`;
+
+    const stepItem = (num, text) =>
+      `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:before="120" w:after="60"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="D97706"/></w:rPr>
+          <w:t xml:space="preserve">${num}.  </w:t></w:r>
+        <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="111827"/></w:rPr>
+          <w:t>${xe(text)}</w:t></w:r></w:p>`;
+
+    const emptyPara = (before=200) =>
+      `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0"/></w:pPr></w:p>`;
+
+    // ── Imagen del diagrama ───────────────────────────────────────
+    const tecnicasConDiagrama = ['regresion-multiple','mediacion','moderacion',
+      'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
+    let imageRels = '';
+    let imageXml  = '';
+    let imageBytes = null;
+
+    if(tecnicasConDiagrama.includes(state.tecnica)){
+      try {
+        // Obtener/generar SVG
+        if(!window._lastDiagramSVG){ showModelDiagram(); document.getElementById('modal-diagram')?.remove(); }
+        const svgStr = window._lastDiagramSVG;
+        if(svgStr){
+          imageBytes = await svgToBase64Png(svgStr, 600, 300);
+          imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
+          imageXml  = `
+            ${heading('4. MODELO TEÓRICO PROPUESTO','059669')}
+            <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
+              <w:r><w:rPr></w:rPr>
+                <w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+                  distT="0" distB="0" distL="0" distR="0">
+                  <wp:extent cx="5486400" cy="2743200"/>
+                  <wp:docPr id="1" name="Diagrama"/>
+                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:nvPicPr><pic:cNvPr id="1" name="Diagrama"/><pic:cNvPicPr/></pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip r:embed="rId10" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+                          <a:stretch><a:fillRect/></a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5486400" cy="2743200"/></a:xfrm>
+                          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:inline></w:drawing>
+              </w:r></w:p>
+            <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
+              <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+                <w:t>Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
+        }
+      } catch(e){ console.warn('Diagram image skipped:', e.message); }
+    }
+
+    const nextN = imageXml ? 5 : 4;
+
+    // ── document.xml ─────────────────────────────────────────────
+    const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<w:body>
+  <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="100"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:sz w:val="34"/><w:color w:val="4F46E5"/><w:caps/></w:rPr>
+      <w:t>PROPUESTA DE PROYECTO DE INVESTIGACIÓN</w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="480"/></w:pPr>
+    <w:r><w:rPr><w:i/><w:sz w:val="20"/><w:color w:val="9CA3AF"/></w:rPr>
+      <w:t>Asistente de Investigación en Psicología</w:t></w:r></w:p>
+
+  ${heading('1. ELEMENTOS DE LA INVESTIGACIÓN')}
+  ${fieldLabel('Tema de Investigación')}${fieldValue(state.edited.tema)}
+  ${fieldLabel('Pregunta de Investigación')}${fieldValue(state.edited.pregunta)}
+  ${fieldLabel('Objetivo General')}${fieldValue(state.edited.objetivo)}
+  ${fieldLabel(hipLabel)}${fieldValue(state.edited.hipotesis)}
+
+  ${heading('2. PERFIL METODOLÓGICO','059669')}
+  <w:tbl>
+    <w:tblPr><w:tblW w:w="7000" w:type="dxa"/>
+      <w:tblBorders>
+        <w:top w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:left w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:bottom w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:right w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:insideH w:val="single" w:sz="4" w:color="E5E7EB"/>
+        <w:insideV w:val="single" w:sz="4" w:color="E5E7EB"/>
+      </w:tblBorders>
+    </w:tblPr>
+    ${tableRow('Área', efectiveArea())}
+    ${tableRow('Población', efectivePoblacion())}
+    ${tableRow('Problema / Fenómeno', efectiveProblema())}
+    ${tableRow('Variables', vars.join(', '))}
+    ${tableRow('Enfoque', state.enfoque)}
+    ${tableRow('Nivel', nivelLabel)}
+    ${tableRow('Diseño', disenoLabel)}
+    ${tableRow('Técnica de análisis', tecnicaLabel)}
+  </w:tbl>
+
+  ${imageXml}
+
+  ${emptyPara(200)}
+  ${heading(`${nextN}. PRÓXIMOS PASOS`,'D97706')}
+  ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del tema.')}
+  ${stepItem(2,'Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.')}
+  ${stepItem(3,'Metodología: Define tu muestra, instrumentos y procedimiento de recolección.')}
+  ${stepItem(4,'Cronograma: Establece tiempos realistas para cada fase del proyecto.')}
+
+  ${emptyPara(480)}
+  <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
+      <w:t>Generado con Asistente de Investigación · Alan A. Vega Jacome · Powered by Claude</w:t></w:r></w:p>
+
+  <w:sectPr><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
+</w:body></w:document>`;
+
+    // ── Styles ────────────────────────────────────────────────────
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr>
+    <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+    <w:sz w:val="22"/><w:szCs w:val="22"/>
+  </w:rPr></w:rPrDefault></w:docDefaults>
+</w:styles>`;
+
+    // ── Construir ZIP ─────────────────────────────────────────────
+    const files = {
+      '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml"  ContentType="application/xml"/>
+  <Default Extension="png"  ContentType="image/png"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`,
+      '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`,
+      'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${imageRels}
+</Relationships>`,
+      'word/styles.xml': stylesXml,
+      'word/document.xml': docXml,
+    };
+
+    // Añadir imagen PNG si existe
+    const zip = await buildZip(files, imageBytes);
+    const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href=url; a.download='propuesta_investigacion.docx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+
+  } catch(err){
+    console.error('downloadDoc error:', err);
+    alert('Error al generar el documento: ' + err.message);
+  } finally {
+    if(btn){ btn.classList.remove('loading'); btn.innerHTML='📥 Descargar DOCX'; }
+  }
+}
+
+// ── ZIP builder (sin librerías) ───────────────────────────────────
+async function buildZip(files, pngBytes) {
+  // Use fflate if available, otherwise simple store-only ZIP
+  const entries = [];
+  const enc = new TextEncoder();
+
+  const crc32 = (buf) => {
+    let c=0xFFFFFFFF;
+    const t=new Uint8Array(256).map((_,i)=>{let n=i;for(let k=0;k<8;k++)n=n&1?(0xEDB88320^(n>>>1)):(n>>>1);return n;});
+    for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8);
+    return (c^0xFFFFFFFF)>>>0;
+  };
+
+  const u32le=(n)=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
+  const u16le=(n)=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+
+  // Add text files
+  for(const [name, content] of Object.entries(files)){
+    const nameBytes = enc.encode(name);
+    const data = enc.encode(content);
+    const crc  = crc32(data);
+    entries.push({name:nameBytes, data, crc, size:data.length});
+  }
+
+  // Add PNG image if provided
+  if(pngBytes){
+    const nameBytes = enc.encode('word/media/diagram.png');
+    const data = new Uint8Array(pngBytes);
+    const crc  = crc32(data);
+    entries.push({name:nameBytes, data, crc, size:data.length});
+  }
+
+  // Build ZIP
+  const localHeaders = [];
+  let offset = 0;
+  const parts = [];
+
+  for(const e of entries){
+    const lh = new Uint8Array([
+      0x50,0x4B,0x03,0x04, // signature
+      20,0,                 // version needed
+      0,0,                  // flags
+      0,0,                  // compression (stored)
+      0,0,0,0,              // mod time/date
+      ...u32le(e.crc),
+      ...u32le(e.size),
+      ...u32le(e.size),
+      ...u16le(e.name.length),
+      0,0,                  // extra len
+    ]);
+    localHeaders.push({offset, nameLen:e.name.length, crc:e.crc, size:e.size, name:e.name});
+    parts.push(lh, e.name, e.data);
+    offset += lh.length + e.name.length + e.size;
+  }
+
+  // Central directory
+  const cdParts = [];
+  let cdSize = 0;
+  for(let i=0;i<entries.length;i++){
+    const e=entries[i], lh=localHeaders[i];
+    const cd = new Uint8Array([
+      0x50,0x4B,0x01,0x02, // signature
+      20,0,20,0,            // version made/needed
+      0,0,0,0,              // flags, compression
+      0,0,0,0,              // mod time/date
+      ...u32le(e.crc),
+      ...u32le(e.size),
+      ...u32le(e.size),
+      ...u16le(e.name.length),
+      0,0,0,0,0,0,          // extra, comment, disk
+      0,0,                  // internal attr
+      0,0,0,0,              // external attr
+      ...u32le(lh.offset),
+    ]);
+    cdParts.push(cd, e.name);
+    cdSize += cd.length + e.name.length;
+  }
+
+  // End of central directory
+  const eocd = new Uint8Array([
+    0x50,0x4B,0x05,0x06, // signature
+    0,0,0,0,              // disk numbers
+    ...u16le(entries.length),
+    ...u16le(entries.length),
+    ...u32le(cdSize),
+    ...u32le(offset),
+    0,0,                  // comment len
+  ]);
+
+  // Concatenate all parts
+  const allParts = [...parts, ...cdParts, eocd];
+  const totalSize = allParts.reduce((s,p)=>s+p.length, 0);
+  const result = new Uint8Array(totalSize);
+  let pos = 0;
+  for(const p of allParts){ result.set(p, pos); pos += p.length; }
+  return result.buffer;
+}
+
+// ── SVG → PNG via Canvas ──────────────────────────────────────────
+async function svgToBase64Png(svgStr, w=600, h=300) {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
-    canvas.width = width * 2; // retina
-    canvas.height = height * 2;
+    canvas.width = w*2; canvas.height = h*2;
     const ctx = canvas.getContext('2d');
-    ctx.scale(2, 2);
-    ctx.fillStyle = '#fafafa';
-    ctx.fillRect(0, 0, width, height);
+    ctx.scale(2,2);
+    ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,w,h);
     const img = new Image();
-    const blob = new Blob([svgString], {type:'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
     img.onload = () => {
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img,0,0,w,h);
       URL.revokeObjectURL(url);
-      canvas.toBlob(b => {
-        b.arrayBuffer().then(resolve).catch(reject);
-      }, 'image/png');
+      canvas.toBlob(b=>b.arrayBuffer().then(resolve).catch(reject),'image/png');
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG load failed')); };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
     img.src = url;
   });
 }
 
-// ── BUILD DIAGRAM SVG STRING (reutiliza lógica de showModelDiagram) ──
+// ── Build diagram SVG without showing modal ───────────────────────
 function buildDiagramSVG() {
   if(!DISENOS_CON_DIAGRAMA.includes(state.tecnica)) return null;
-  // Ejecuta showModelDiagram en modo "silencioso" para obtener el SVG
-  // Primero guardamos el último SVG generado
   if(window._lastDiagramSVG) return window._lastDiagramSVG;
-  // Si no existe, generamos uno nuevo sin mostrar el modal
   showModelDiagram();
-  const modal = document.getElementById('modal-diagram');
-  if(modal) modal.remove(); // cerramos inmediatamente
+  document.getElementById('modal-diagram')?.remove();
   return window._lastDiagramSVG || null;
 }
 
-// FUNCIÓN DE DESCARGA EN DOCX REAL
-async function downloadDoc() {
-  const btn = document.querySelector('.btn-download');
-  if(btn) { btn.classList.add('loading'); btn.innerHTML = '⏳ Generando...'; }
-
-  try {
-    // ── 1. Cargar docx.js ─────────────────────────────────────────
-    if(!window.docx) {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js';
-        s.onload = resolve; s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
-    const D = window.docx;
-    const { Document, Packer, Paragraph, TextRun, AlignmentType,
-            Table, TableRow, TableCell, WidthType, ShadingType,
-            ImageRun, UnderlineType } = D;
-
-    // ── 2. Datos ──────────────────────────────────────────────────
-    const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
-    const enfoqueKey = state.enfoque.toLowerCase();
-    const disenoObj  = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
-    const disenoLabel = disenoObj?.label || state.diseno;
-    let variablesDisplay = state.variables.filter(v => v !== 'otro');
-    if(state.variables.includes('otro') && state.variablesOtro.trim()) {
-      state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>variablesDisplay.push(v));
-    }
-    const hipLabel = state.enfoque==="Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN"
-                   : state.enfoque==="Cualitativo"  ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS";
-
-    // ── 3. Helpers ────────────────────────────────────────────────
-    const C = { brand:"4F46E5", green:"059669", gray:"6B7280", dark:"111827", light:"9CA3AF" };
-
-    const secHeading = (text, color=C.brand) => new Paragraph({
-      children:[new TextRun({text, bold:true, size:24, color, allCaps:true})],
-      spacing:{before:360, after:140},
-      border:{bottom:{style:"single", size:8, color}}
-    });
-
-    const fieldBlock = (label, value) => [
-      new Paragraph({
-        children:[new TextRun({text:label, bold:true, size:20, color:C.brand, allCaps:true})],
-        spacing:{before:280, after:60}
-      }),
-      new Paragraph({
-        children:[new TextRun({text: value || '—', size:22, color:C.dark})],
-        spacing:{after:120}, indent:{left:240}
-      })
-    ];
-
-    const metaRow = (label, value) => new TableRow({
-      children:[
-        new TableCell({
-          children:[new Paragraph({children:[new TextRun({text:label, bold:true, size:18, color:C.brand})]})],
-          width:{size:32, type:WidthType.PERCENTAGE},
-          shading:{type:ShadingType.SOLID, color:"EEF2FF"}
-        }),
-        new TableCell({
-          children:[new Paragraph({children:[new TextRun({text: value||'—', size:18, color:C.dark})]})],
-          width:{size:68, type:WidthType.PERCENTAGE}
-        })
-      ]
-    });
-
-    // ── 4. Imagen del diagrama (si corresponde) ───────────────────
-    let imageChildren = [];
-    const hasDiagram = DISENOS_CON_DIAGRAMA.includes(state.tecnica);
-    if(hasDiagram) {
-      try {
-        const svgStr = buildDiagramSVG();
-        if(svgStr) {
-          const pngBuf = await svgToPngBuffer(svgStr, 600, 300);
-          imageChildren = [
-            secHeading("4. MODELO TEÓRICO PROPUESTO", C.green),
-            new Paragraph({
-              children:[new ImageRun({
-                data: pngBuf,
-                transformation:{ width:500, height:250 },
-                type:'png'
-              })],
-              spacing:{after:120}, alignment:AlignmentType.CENTER
-            }),
-            new Paragraph({
-              children:[new TextRun({
-                text:`Diagrama generado para diseño: ${disenoLabel}`,
-                size:16, color:C.light, italics:true
-              })],
-              alignment:AlignmentType.CENTER,
-              spacing:{after:200}
-            })
-          ];
-        }
-      } catch(imgErr) {
-        console.warn('Imagen no incluida:', imgErr.message);
-        imageChildren = [
-          secHeading("4. MODELO TEÓRICO PROPUESTO", C.green),
-          new Paragraph({
-            children:[new TextRun({text:`Ver diagrama en la aplicación web (diseño: ${disenoLabel})`, size:20, color:C.gray, italics:true})],
-            spacing:{before:120, after:200}, indent:{left:240}
-          })
-        ];
-      }
-    }
-
-    // ── 5. Construir documento ────────────────────────────────────
-    const nextStepsNum = imageChildren.length > 0 ? 5 : 4;
-    const doc = new Document({
-      styles:{ default:{ document:{ run:{ font:"Calibri" } } } },
-      sections:[{
-        properties:{ page:{ margin:{ top:1134, bottom:1134, left:1134, right:1134 } } },
-        children:[
-          // Portada
-          new Paragraph({
-            children:[new TextRun({text:"PROPUESTA DE PROYECTO DE INVESTIGACIÓN", bold:true, size:34, color:C.brand, allCaps:true})],
-            alignment:AlignmentType.CENTER, spacing:{after:120}
-          }),
-          new Paragraph({
-            children:[new TextRun({text:"Asistente de Investigación en Psicología", size:20, color:C.light, italics:true})],
-            alignment:AlignmentType.CENTER, spacing:{after:480}
-          }),
-
-          // Sección 1
-          secHeading("1. ELEMENTOS DE LA INVESTIGACIÓN"),
-          ...fieldBlock("Tema de Investigación", state.edited.tema),
-          ...fieldBlock("Pregunta de Investigación", state.edited.pregunta),
-          ...fieldBlock("Objetivo General", state.edited.objetivo),
-          ...fieldBlock(hipLabel, state.edited.hipotesis),
-
-          // Sección 2
-          secHeading("2. PERFIL METODOLÓGICO", C.green),
-          new Table({
-            width:{size:100, type:WidthType.PERCENTAGE},
-            rows:[
-              metaRow("Área", efectiveArea()),
-              metaRow("Población", efectivePoblacion()),
-              metaRow("Problema / Fenómeno", efectiveProblema()),
-              metaRow("Variables", variablesDisplay.join(", ")),
-              metaRow("Enfoque metodológico", state.enfoque),
-              metaRow("Nivel de investigación", nivelLabel),
-              metaRow("Diseño de investigación", disenoLabel),
-            ]
-          }),
-
-          // Sección 3 — imagen si hay
-          ...imageChildren,
-
-          // Próximos pasos
-          secHeading(`${nextStepsNum}. PRÓXIMOS PASOS`, "D97706"),
-          ...[
-            "Justificación: Explica la relevancia teórica, práctica y social del tema.",
-            "Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.",
-            "Metodología: Define tu muestra, instrumentos y procedimiento de recolección.",
-            "Cronograma: Establece tiempos realistas para cada fase del proyecto."
-          ].map((t,i) => new Paragraph({
-            children:[
-              new TextRun({text:`${i+1}.  `, bold:true, size:20, color:"D97706"}),
-              new TextRun({text:t, size:20, color:C.dark})
-            ],
-            spacing:{before:140, after:60}, indent:{left:240}
-          })),
-
-          // Pie
-          new Paragraph({children:[new TextRun({text:""})], spacing:{before:480}}),
-          new Paragraph({
-            children:[new TextRun({text:"Generado con Asistente de Investigación · Alan A. Vega Jacome · Powered by Claude", size:16, color:C.light, italics:true})],
-            alignment:AlignmentType.CENTER
-          })
-        ]
-      }]
-    });
-
-    // ── 6. Descargar ──────────────────────────────────────────────
-    const blob = await Packer.toBlob(doc);
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = 'propuesta_investigacion.docx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-  } catch(err) {
-    console.error('downloadDoc error:', err);
-    alert('Error al generar el documento: ' + err.message);
-  } finally {
-    if(btn) { btn.classList.remove('loading'); btn.innerHTML = '📥 Descargar DOCX'; }
-  }
-}
 
 // ══════════════════════════════════════════════════════════════════
 // DIAGRAMAS — SOLO PARA DISEÑOS QUE LO REQUIEREN
@@ -1498,6 +1613,38 @@ function showModelDiagram() {
   const d = state.tecnica; // Diagrama basado en técnica, no en diseño
   const W=600, H=300;
   let svg='', titulo='', nota='', nivel='';
+
+  // ── REGRESIÓN SIMPLE ────────────────────────────────────────────────
+  if(d === 'regresion-simple') {
+    titulo = 'Modelo de Regresión Simple';
+    nivel  = 'Pregrado · OLS — Un predictor, una variable dependiente';
+    nota   = 'X predice linealmente a Y. La recta de regresión minimiza los errores al cuadrado (OLS). Se reporta R², β y su significancia.';
+    const X = vars[0]||'Variable X (predictor)', Y = vars[1]||'Variable Y (criterio)';
+    // Eje X e Y con recta de regresión visual
+    const pad=50, gW=W-pad*2, gH=H-pad*2;
+    // Ejes
+    svg += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#E5E7EB" stroke-width="2"/>`;
+    svg += `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#E5E7EB" stroke-width="2"/>`;
+    // Etiquetas ejes
+    svg += `<text x="${pad-8}" y="${H-pad}" text-anchor="end" font-size="11" fill="${DC.y.s}" font-weight="600" font-family="system-ui">${Y.substring(0,14)}</text>`;
+    svg += `<text x="${W-pad}" y="${H-pad+18}" text-anchor="middle" font-size="11" fill="${DC.x.s}" font-weight="600" font-family="system-ui">${X.substring(0,14)}</text>`;
+    // Puntos dispersos simulados
+    const pts = [[80,200],[110,175],[140,195],[170,155],[200,165],[230,140],[260,130],[280,145],[310,115],[340,100],[370,120],[400,90],[430,80],[460,95],[490,70]];
+    pts.forEach(([px,py])=>{
+      svg += `<circle cx="${px}" cy="${py}" r="5" fill="${DC.x.s}" opacity="0.55"/>`;
+    });
+    // Recta de regresión
+    svg += `<line x1="70" y1="215" x2="510" y2="55" stroke="${DC.y.s}" stroke-width="2.5" stroke-linecap="round"/>`;
+    // Fórmula
+    svg += `<rect x="${W/2-80}" y="${H-40}" width="160" height="22" rx="5" fill="${DC.y.f}" stroke="${DC.y.s}" stroke-width="1"/>`;
+    svg += `<text x="${W/2}" y="${H-25}" text-anchor="middle" font-size="11" fill="${DC.y.s}" font-weight="700" font-family="system-ui">Ŷ = β₀ + β₁X + ε</text>`;
+    // Flecha β
+    svg += `<text x="355" y="100" font-size="11" fill="${DC.y.s}" font-weight="600" font-family="system-ui">β₁</text>`;
+    // R²
+    svg += `<rect x="${W-120}" y="${pad}" width="68" height="32" rx="6" fill="${DC.m.f}" stroke="${DC.m.s}" stroke-width="1.5"/>`;
+    svg += `<text x="${W-86}" y="${pad+14}" text-anchor="middle" font-size="10" fill="${DC.m.s}" font-weight="600" font-family="system-ui">R² = var.</text>`;
+    svg += `<text x="${W-86}" y="${pad+27}" text-anchor="middle" font-size="10" fill="${DC.m.s}" font-family="system-ui">explicada</text>`;
+  }
 
   // ── REGRESIÓN MÚLTIPLE ──────────────────────────────────────────────
   if(d === 'regresion-multiple') {
