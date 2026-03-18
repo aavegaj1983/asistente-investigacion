@@ -38,6 +38,7 @@ body{
   padding:28px 24px;width:100%;max-width:640px;
   box-shadow:var(--shadow-lg);
   height:fit-content;
+  overflow:hidden;
 }
 
 /* ── HEADER ──────────────────────────────────────────────────────── */
@@ -118,6 +119,7 @@ h2{
   background:var(--gray-50);font-size:14px;font-weight:500;
   width:100%;transition:all .18s;position:relative;
   color:var(--gray-700);box-shadow:var(--shadow-sm);
+  word-break:break-word;overflow-wrap:break-word;box-sizing:border-box;
 }
 .badge:hover{border-color:var(--brand-mid);background:var(--brand-light);color:var(--brand-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .badge.active{
@@ -152,8 +154,11 @@ h2{
   background:var(--brand-light);border-radius:var(--radius-sm);
   padding:10px 14px;font-size:13px;color:var(--brand-dark);
   margin-top:6px;border:1px solid var(--brand-mid);
-  display:flex;align-items:flex-start;gap:6px;line-height:1.5;
+  display:block;line-height:1.6;
+  word-break:break-word;overflow-wrap:break-word;
+  width:100%;box-sizing:border-box;
 }
+.hint strong{font-weight:700;color:inherit}
 .hint.warning{background:var(--amber-light);color:var(--amber);border-color:#FDE68A}
 .hint.success{background:var(--green-light);color:var(--green);border-color:var(--green-mid)}
 
@@ -549,23 +554,13 @@ const NIVELES = [
   {id:"explicativo", label:"Explicativo / Causal", desc:"Explicar causas y efectos del fenómeno", hint:"Recomendado con 3+ variables y relaciones de causa"},
 ];
 
+// DISEÑOS: solo estrategias de recolección de datos
 const DISENOS = {
   cuantitativo: [
-    // ── SIN DIAGRAMA ─────────────────────────────────────
-    {id:"experimental", label:"Experimental", desc:"Manipulas variables con grupo control", hint:"⭐ Máximo control, establece causalidad"},
-    {id:"cuasiexperimental", label:"Cuasi-experimental", desc:"Manipulas variables sin asignación aleatoria", hint:"Control moderado, grupos preexistentes"},
-    {id:"no-experimental-transversal", label:"No experimental transversal", desc:"Observas en un momento único del tiempo", hint:"⭐ Más común en pregrado, sin manipulación"},
-    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas a través del tiempo (panel, tendencia)", hint:"Requiere seguimiento temporal"},
-    // ── PREGRADO: REGRESIÓN / HAYES ──────────────────────
-    {id:"regresion-multiple", label:"Regresión múltiple", desc:"Predices Y a partir de 2 o más variables predictoras (pregrado)", hint:"📊 Diagrama: X1, X2... → Y · Vía: OLS / Hayes"},
-    {id:"mediacion", label:"Mediación simple", desc:"Una variable M explica el mecanismo entre X e Y (pregrado)", hint:"📊 Diagrama: X → M → Y · Vía: Hayes PROCESS Modelo 4"},
-    {id:"moderacion", label:"Moderación simple", desc:"Una variable W cambia la relación entre X e Y (pregrado)", hint:"📊 Diagrama: X × W → Y · Vía: Hayes PROCESS Modelo 1"},
-    {id:"mediacion-moderada", label:"Mediación moderada", desc:"W modera la trayectoria de mediación X → M → Y (pregrado avanzado)", hint:"📊 Diagrama combinado · Vía: Hayes PROCESS Modelo 7, 14 o 58"},
-    // ── POSGRADO: SEM ────────────────────────────────────
-    {id:"path-analysis", label:"Path Analysis — SEM observado", desc:"Red causal con variables observadas, sin latentes (posgrado)", hint:"📊 Diagrama de rutas · Software: AMOS, lavaan, Mplus"},
-    {id:"sem-mediacion", label:"SEM — Mediación con latentes", desc:"X, M e Y son variables latentes medidas con indicadores (posgrado)", hint:"📊 Diagrama CFA + mediación · Software: AMOS, Mplus"},
-    {id:"sem-moderacion", label:"SEM — Moderación con latentes", desc:"Interacción entre variables latentes (posgrado)", hint:"📊 Diagrama con producto de latentes · Software: Mplus"},
-    {id:"sem-completo", label:"SEM — Modelo completo", desc:"CFA + modelo estructural complejo con múltiples trayectorias (posgrado)", hint:"📊 Diagrama SEM completo · Software: AMOS, Mplus, lavaan"},
+    {id:"experimental",            label:"Experimental",               desc:"Manipulas variables con grupo control y asignación aleatoria", hint:"⭐ Máximo control causal · Requiere laboratorio o intervención"},
+    {id:"cuasiexperimental",       label:"Cuasi-experimental",         desc:"Manipulas variables sin asignación aleatoria", hint:"Grupos preexistentes · Control moderado"},
+    {id:"no-experimental-transversal",  label:"No experimental transversal",  desc:"Observas variables en un único momento del tiempo", hint:"⭐ Más común en pregrado · Sin manipulación"},
+    {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas las mismas variables en distintos momentos", hint:"Seguimiento temporal · Panel o tendencia"},
   ],
   cualitativo: [
     {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados", hint:"⭐ Ideal para comprender vivencias profundas"},
@@ -581,6 +576,29 @@ const DISENOS = {
     {id:"convergente-paralelo", label:"Convergente Paralelo (CUAN + CUAL)", desc:"Recolectas ambos tipos de datos simultáneamente", hint:"Comparas y triangulas resultados"},
     {id:"transformativo", label:"Transformativo", desc:"Enfoque en justicia social y cambio", hint:"Perspectiva crítica, emancipadora"},
     {id:"anidado", label:"Anidado o Incrustado", desc:"Un enfoque dentro de otro (secundario)", hint:"Un método apoya al otro (ej: entrevistas en experimento)"},
+  ]
+};
+
+// TÉCNICAS DE ANÁLISIS (solo cuantitativo, por nivel)
+// correlacional: correlación simple, regresión simple
+// explicativo:   regresión múltiple, mediación, moderación, mediación moderada
+// explicativo+posgrado: path analysis, SEM variantes
+const TECNICAS = {
+  correlacional: [
+    {id:"correlacion",        label:"Correlación (Pearson / Spearman)", desc:"Mide la fuerza y dirección de la relación entre dos variables", hint:"Nivel pregrado · r o ρ"},
+    {id:"regresion-simple",   label:"Regresión simple",                 desc:"Predice Y a partir de un único predictor X", hint:"Nivel pregrado · OLS"},
+  ],
+  explicativo: [
+    // Pregrado
+    {id:"regresion-multiple",  label:"Regresión múltiple",    desc:"Predice Y con 2 o más predictores simultaneamente", hint:"📊 Diagrama disponible · Pregrado · OLS / Hayes"},
+    {id:"mediacion",           label:"Mediación simple",      desc:"M explica el mecanismo por el que X afecta a Y", hint:"📊 Diagrama disponible · Pregrado · Hayes PROCESS Modelo 4"},
+    {id:"moderacion",          label:"Moderación simple",     desc:"W cambia la fuerza o dirección del efecto X → Y", hint:"📊 Diagrama disponible · Pregrado · Hayes PROCESS Modelo 1"},
+    {id:"mediacion-moderada",  label:"Mediación moderada",    desc:"W modera la trayectoria de mediación X → M → Y", hint:"📊 Diagrama disponible · Pregrado avanzado · Hayes PROCESS Modelo 7/14/58"},
+    // Posgrado
+    {id:"path-analysis",   label:"Path Analysis (SEM observado)", desc:"Red de relaciones causales entre variables observadas", hint:"📊 Diagrama disponible · Posgrado · AMOS, lavaan, Mplus"},
+    {id:"sem-mediacion",   label:"SEM — Mediación con latentes",  desc:"X, M e Y son constructos latentes medidos con indicadores", hint:"📊 Diagrama disponible · Posgrado · AMOS, Mplus"},
+    {id:"sem-moderacion",  label:"SEM — Moderación con latentes", desc:"Interacción entre variables latentes (producto de latentes)", hint:"📊 Diagrama disponible · Posgrado · Mplus (LMS)"},
+    {id:"sem-completo",    label:"SEM — Modelo completo",         desc:"CFA + modelo estructural con múltiples trayectorias", hint:"📊 Diagrama disponible · Posgrado · AMOS, Mplus, lavaan"},
   ]
 };
 
@@ -613,6 +631,7 @@ let state = savedState || {
   enfoque:"",
   nivel:"",
   diseno:"",
+  tecnica:"",
   experiencia:"",
   viabilidad:"",
   contexto:"",
@@ -663,7 +682,14 @@ function canNext(){
     // Caso normal: problema seleccionado y al menos una variable
     return state.problema!=="" && state.variables.length>0;
   }
-  if(s===3) return state.enfoque!=="" && state.nivel!=="" && state.diseno!=="";
+  if(s===3){
+    if(!state.enfoque || !state.nivel || !state.diseno) return false;
+    // Si cuantitativo + correlacional o explicativo → técnica requerida
+    if(state.enfoque==="Cuantitativo" && (state.nivel==="correlacional" || state.nivel==="explicativo")){
+      return state.tecnica !== "";
+    }
+    return true;
+  }
   if(s===4) return state.experiencia!=="" && state.viabilidad!=="";
   return true;
 }
@@ -718,13 +744,13 @@ function getAutoSuggestion() {
   
   // Sugerencia automática según variables
   if(nv === 1) {
-    return `<div class="hint success">💡 Sugerencia: Con 1 variable, nivel <strong>descriptivo</strong> es ideal. Diseño recomendado: <strong>${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso'}</strong>.</div>`;
+    return `<div class="hint success">💡 Con 1 variable → nivel descriptivo. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso'}.</div>`;
   }
   if(nv === 2) {
-    return `<div class="hint success">💡 Sugerencia: Con 2 variables, nivel <strong>correlacional</strong> es apropiado. Diseño recomendado: <strong>${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso múltiple'}</strong>.</div>`;
+    return `<div class="hint success">💡 Con 2 variables → nivel correlacional. Diseño recomendado: ${enfoque === 'cuantitativo' ? 'no experimental transversal' : 'estudio de caso múltiple'}.</div>`;
   }
   if(nv >= 3 && enfoque === 'cuantitativo') {
-    return `<div class="hint success">💡 Sugerencia: Con ${nv} variables, nivel <strong>correlacional o explicativo</strong>. Diseño recomendado: <strong>no experimental transversal</strong> (o experimental si puedes manipular).</div>`;
+    return `<div class="hint success">💡 Con ${nv} variables → nivel correlacional o explicativo. Diseño recomendado: no experimental transversal (o experimental si puedes manipular).</div>`;
   }
   
   return "";
@@ -820,47 +846,77 @@ function renderContent(){
 
   else if(s===3){
     let h=`<div class="gap20">`;
-    
+
+    // ── Enfoque ───────────────────────────────────────────────────
     h+=sectionLabel("¿Que enfoque metodologico prefieres?");
     h+=`<div class="options">`;
     ENFOQUES.forEach(e=>{
       let desc="";
-      if(e==="Cuantitativo") desc="Numeros, estadisticas, medicion";
-      if(e==="Cualitativo") desc="Experiencias, significados, profundidad";
-      if(e==="Mixto") desc="Combina ambos enfoques";
+      if(e==="Cuantitativo") desc="Números, estadísticas, medición objetiva";
+      if(e==="Cualitativo")  desc="Experiencias, significados, profundidad";
+      if(e==="Mixto")        desc="Combina métodos cuantitativos y cualitativos";
       h+=badgeWithDesc(e, desc, null, state.enfoque===e, `selectEnfoque('${e}')`);
     });
     h+=`</div>`;
 
+    // ── Nivel ─────────────────────────────────────────────────────
     if(state.enfoque){
       h+=sectionLabel("¿Que nivel de investigacion buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
-        const esc=n.id.replace(/'/g,"\\'");
+        const esc=n.id.replace(/'/g,"\'");
         h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
       });
       h+=`</div>`;
     }
 
-    if(state.enfoque){
-      h+=sectionLabel("¿Que diseño de investigacion utilizarás?", "El diseño es la estrategia concreta que usarás para recolectar datos: experimental (manipulas), no experimental (solo observas), etnográfico, estudio de caso, etc.");
+    // ── Diseño (estrategia de recolección) ────────────────────────
+    if(state.enfoque && state.nivel){
+      h+=sectionLabel("¿Que diseño de investigacion utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos (experimental, observacional, longitudinal, etc.)");
       const enfoqueKey = state.enfoque.toLowerCase();
       const disenosDisponibles = DISENOS[enfoqueKey] || [];
       h+=`<div class="options">`;
       disenosDisponibles.forEach(d=>{
-        const esc=d.id.replace(/'/g,"\\'");
+        const esc=d.id.replace(/'/g,"\'");
         h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
       });
       h+=`</div>`;
     }
 
-    // SUGERENCIA AUTOMÁTICA
-    h+=getAutoSuggestion();
+    // ── Técnica de análisis ───────────────────────────────────────
+    // Solo aparece: cuantitativo + (correlacional o explicativo) + diseño seleccionado
+    const mostrarTecnica = state.enfoque==="Cuantitativo" &&
+                           (state.nivel==="correlacional" || state.nivel==="explicativo") &&
+                           state.diseno !== "";
 
+    if(mostrarTecnica){
+      const tecnicasDisponibles = TECNICAS[state.nivel] || [];
+      h+=sectionLabel("¿Qué técnica de análisis estadístico planeas usar?",
+        "La técnica define cómo analizarás los datos. Solo aparecen opciones coherentes con tu nivel de investigación.");
+      if(state.nivel==="correlacional"){
+        h+=`<div class="hint">📌 Nivel correlacional: estas técnicas miden asociaciones entre variables, no establecen causalidad.</div>`;
+      } else {
+        h+=`<div class="hint">📌 Nivel explicativo: puedes modelar relaciones causales. Las opciones SEM son de uso avanzado (posgrado).</div>`;
+      }
+      h+=`<div class="options">`;
+      tecnicasDisponibles.forEach(t=>{
+        const esc=t.id.replace(/'/g,"\'");
+        h+=badgeWithDesc(t.label, t.desc, t.hint, state.tecnica===t.id, `selectTecnica('${esc}')`);
+      });
+      h+=`</div>`;
+    }
+
+    // ── Nota para niveles sin técnica avanzada ────────────────────
+    if(state.enfoque==="Cuantitativo" &&
+       (state.nivel==="exploratorio" || state.nivel==="descriptivo") &&
+       state.diseno){
+      h+=`<div class="hint success">✅ Para nivel ${state.nivel} se usan estadísticos descriptivos (frecuencias, medias, dispersión). No se requieren técnicas avanzadas.</div>`;
+    }
+
+    h+=getAutoSuggestion();
     h+=`</div>`;
     el.innerHTML=h;
   }
-
   else if(s===4){
     let h=`<div class="gap20">`;
     h+=sectionLabel("¿Cuanta experiencia tienes con este tema o poblacion?");
@@ -912,8 +968,10 @@ function renderContent(){
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
     h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
     h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
-    // Solo mostrar botón si el diseño tiene diagrama definido
-    if(DISENOS_CON_DIAGRAMA.includes(state.diseno)) {
+    // Mostrar diagrama según técnica seleccionada (no el diseño)
+    const tecnicaParaDiagrama = ['regresion-multiple','mediacion','moderacion',
+      'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
+    if(tecnicaParaDiagrama.includes(state.tecnica)) {
       h+=`<button class="btn-sm" onclick="showModelDiagram()" style="border-color:#7C3AED;color:#7C3AED">📊 Ver modelo teórico</button>`;
     }
     h+=`<button class="btn-sm btn-nuevo" onclick="nuevoProyecto()" style="border-color:#dc2626;color:#dc2626">🔄 Nuevo proyecto</button>`;
@@ -942,7 +1000,7 @@ function renderContent(){
     }
     
     [["Area",efectiveArea()],["Poblacion",efectivePoblacion()],["Problema",efectiveProblema()],
-     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],["Nivel",nivelLabel],["Diseño",disenoLabel]].forEach(([k,v])=>{
+     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],["Nivel",nivelLabel],["Diseño",disenoLabel],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
       h+=`<p><span>${k}:</span> ${v}</p>`;
     });
     h+=`</div></div>`;
@@ -982,8 +1040,9 @@ function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.p
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";updateNav();renderContent();saveState();}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";updateNav();renderContent();saveState();}
-function selectNivel(v){state.nivel=v;updateNav();renderContent();saveState();}
-function selectDiseno(v){state.diseno=v;updateNav();renderContent();saveState();}
+function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
+function selectDiseno(v){state.diseno=v;state.tecnica="";updateNav();renderContent();saveState();}
+function selectTecnica(v){state.tecnica=v;updateNav();renderContent();saveState();}
 
 function toggleVar(v){
   const i=state.variables.indexOf(v);
@@ -1017,6 +1076,7 @@ function nuevoProyecto(){
       enfoque:"",
       nivel:"",
       diseno:"",
+      tecnica:"",
       experiencia:"",
       viabilidad:"",
       contexto:"",
@@ -1056,6 +1116,7 @@ Un estudiante de 9no ciclo de Psicologia respondio:
 - Enfoque metodologico: ${state.enfoque}
 - Nivel de investigacion: ${nivelLabel}
 - Diseño de investigacion: ${disenoLabel}
+- Técnica de análisis: ${state.tecnica ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica) : 'No especificada'}
 - Experiencia previa: ${state.experiencia}
 - Viabilidad de acceso: ${state.viabilidad}
 - Contexto: ${state.contexto||"No especificado"}
@@ -1132,139 +1193,234 @@ Responde SOLO en JSON exacto sin texto adicional ni markdown:
   renderContent();
 }
 
+// ── HELPER: SVG → PNG ArrayBuffer via Canvas ─────────────────────
+async function svgToPngBuffer(svgString, width=600, height=300) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width * 2; // retina
+    canvas.height = height * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(0, 0, width, height);
+    const img = new Image();
+    const blob = new Blob([svgString], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b => {
+        b.arrayBuffer().then(resolve).catch(reject);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG load failed')); };
+    img.src = url;
+  });
+}
+
+// ── BUILD DIAGRAM SVG STRING (reutiliza lógica de showModelDiagram) ──
+function buildDiagramSVG() {
+  if(!DISENOS_CON_DIAGRAMA.includes(state.tecnica)) return null;
+  // Ejecuta showModelDiagram en modo "silencioso" para obtener el SVG
+  // Primero guardamos el último SVG generado
+  if(window._lastDiagramSVG) return window._lastDiagramSVG;
+  // Si no existe, generamos uno nuevo sin mostrar el modal
+  showModelDiagram();
+  const modal = document.getElementById('modal-diagram');
+  if(modal) modal.remove(); // cerramos inmediatamente
+  return window._lastDiagramSVG || null;
+}
+
 // FUNCIÓN DE DESCARGA EN DOCX REAL
 async function downloadDoc() {
-  // Visual feedback mientras carga la librería
   const btn = document.querySelector('.btn-download');
-  if(btn) { btn.classList.add('loading'); btn.textContent = '⏳ Generando...'; }
-  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
-  const enfoqueKey = state.enfoque.toLowerCase();
-  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
-  const disenoLabel = disenoObj?.label || state.diseno;
-  
-  let variablesDisplay = state.variables.filter(v => v !== 'otro');
-  if(state.variables.includes('otro') && state.variablesOtro.trim()) {
-    const otrasVars = state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean);
-    variablesDisplay = variablesDisplay.concat(otrasVars);
-  }
+  if(btn) { btn.classList.add('loading'); btn.innerHTML = '⏳ Generando...'; }
 
-  const hipLabel = state.enfoque === "Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN" : state.enfoque === "Cualitativo" ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS";
+  try {
+    // ── 1. Cargar docx.js ─────────────────────────────────────────
+    if(!window.docx) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    const D = window.docx;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType,
+            Table, TableRow, TableCell, WidthType, ShadingType,
+            ImageRun, UnderlineType } = D;
 
-  // Cargar docx desde CDN
-  if(!window.docx) {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js';
-      s.onload = resolve; s.onerror = reject;
-      document.head.appendChild(s);
+    // ── 2. Datos ──────────────────────────────────────────────────
+    const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+    const enfoqueKey = state.enfoque.toLowerCase();
+    const disenoObj  = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+    const disenoLabel = disenoObj?.label || state.diseno;
+    let variablesDisplay = state.variables.filter(v => v !== 'otro');
+    if(state.variables.includes('otro') && state.variablesOtro.trim()) {
+      state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>variablesDisplay.push(v));
+    }
+    const hipLabel = state.enfoque==="Cuantitativo" ? "HIPÓTESIS DE INVESTIGACIÓN"
+                   : state.enfoque==="Cualitativo"  ? "HIPÓTESIS DE TRABAJO" : "HIPÓTESIS";
+
+    // ── 3. Helpers ────────────────────────────────────────────────
+    const C = { brand:"4F46E5", green:"059669", gray:"6B7280", dark:"111827", light:"9CA3AF" };
+
+    const secHeading = (text, color=C.brand) => new Paragraph({
+      children:[new TextRun({text, bold:true, size:24, color, allCaps:true})],
+      spacing:{before:360, after:140},
+      border:{bottom:{style:"single", size:8, color}}
     });
-  }
 
-  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType } = window.docx;
-
-  const titleColor = "534AB7";
-  const accentColor = "0F6E56";
-
-  function heading(text, color="534AB7") {
-    return new Paragraph({
-      children: [new TextRun({ text, bold: true, size: 26, color })],
-      spacing: { before: 320, after: 120 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color } }
-    });
-  }
-
-  function field(label, value, color="222222") {
-    return [
+    const fieldBlock = (label, value) => [
       new Paragraph({
-        children: [new TextRun({ text: label, bold: true, size: 22, color: "534AB7", allCaps: true })],
-        spacing: { before: 240, after: 60 }
+        children:[new TextRun({text:label, bold:true, size:20, color:C.brand, allCaps:true})],
+        spacing:{before:280, after:60}
       }),
       new Paragraph({
-        children: [new TextRun({ text: value, size: 22, color })],
-        spacing: { after: 100 },
-        indent: { left: 200 }
+        children:[new TextRun({text: value || '—', size:22, color:C.dark})],
+        spacing:{after:120}, indent:{left:240}
       })
     ];
-  }
 
-  function metaRow(label, value) {
-    return new TableRow({
-      children: [
+    const metaRow = (label, value) => new TableRow({
+      children:[
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 18, color: "534AB7" })] })],
-          width: { size: 30, type: WidthType.PERCENTAGE },
-          shading: { type: ShadingType.solid, color: "EEEDFE" }
+          children:[new Paragraph({children:[new TextRun({text:label, bold:true, size:18, color:C.brand})]})],
+          width:{size:32, type:WidthType.PERCENTAGE},
+          shading:{type:ShadingType.SOLID, color:"EEF2FF"}
         }),
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: value, size: 18 })] })],
-          width: { size: 70, type: WidthType.PERCENTAGE }
+          children:[new Paragraph({children:[new TextRun({text: value||'—', size:18, color:C.dark})]})],
+          width:{size:68, type:WidthType.PERCENTAGE}
         })
       ]
     });
+
+    // ── 4. Imagen del diagrama (si corresponde) ───────────────────
+    let imageChildren = [];
+    const hasDiagram = DISENOS_CON_DIAGRAMA.includes(state.tecnica);
+    if(hasDiagram) {
+      try {
+        const svgStr = buildDiagramSVG();
+        if(svgStr) {
+          const pngBuf = await svgToPngBuffer(svgStr, 600, 300);
+          imageChildren = [
+            secHeading("4. MODELO TEÓRICO PROPUESTO", C.green),
+            new Paragraph({
+              children:[new ImageRun({
+                data: pngBuf,
+                transformation:{ width:500, height:250 },
+                type:'png'
+              })],
+              spacing:{after:120}, alignment:AlignmentType.CENTER
+            }),
+            new Paragraph({
+              children:[new TextRun({
+                text:`Diagrama generado para diseño: ${disenoLabel}`,
+                size:16, color:C.light, italics:true
+              })],
+              alignment:AlignmentType.CENTER,
+              spacing:{after:200}
+            })
+          ];
+        }
+      } catch(imgErr) {
+        console.warn('Imagen no incluida:', imgErr.message);
+        imageChildren = [
+          secHeading("4. MODELO TEÓRICO PROPUESTO", C.green),
+          new Paragraph({
+            children:[new TextRun({text:`Ver diagrama en la aplicación web (diseño: ${disenoLabel})`, size:20, color:C.gray, italics:true})],
+            spacing:{before:120, after:200}, indent:{left:240}
+          })
+        ];
+      }
+    }
+
+    // ── 5. Construir documento ────────────────────────────────────
+    const nextStepsNum = imageChildren.length > 0 ? 5 : 4;
+    const doc = new Document({
+      styles:{ default:{ document:{ run:{ font:"Calibri" } } } },
+      sections:[{
+        properties:{ page:{ margin:{ top:1134, bottom:1134, left:1134, right:1134 } } },
+        children:[
+          // Portada
+          new Paragraph({
+            children:[new TextRun({text:"PROPUESTA DE PROYECTO DE INVESTIGACIÓN", bold:true, size:34, color:C.brand, allCaps:true})],
+            alignment:AlignmentType.CENTER, spacing:{after:120}
+          }),
+          new Paragraph({
+            children:[new TextRun({text:"Asistente de Investigación en Psicología", size:20, color:C.light, italics:true})],
+            alignment:AlignmentType.CENTER, spacing:{after:480}
+          }),
+
+          // Sección 1
+          secHeading("1. ELEMENTOS DE LA INVESTIGACIÓN"),
+          ...fieldBlock("Tema de Investigación", state.edited.tema),
+          ...fieldBlock("Pregunta de Investigación", state.edited.pregunta),
+          ...fieldBlock("Objetivo General", state.edited.objetivo),
+          ...fieldBlock(hipLabel, state.edited.hipotesis),
+
+          // Sección 2
+          secHeading("2. PERFIL METODOLÓGICO", C.green),
+          new Table({
+            width:{size:100, type:WidthType.PERCENTAGE},
+            rows:[
+              metaRow("Área", efectiveArea()),
+              metaRow("Población", efectivePoblacion()),
+              metaRow("Problema / Fenómeno", efectiveProblema()),
+              metaRow("Variables", variablesDisplay.join(", ")),
+              metaRow("Enfoque metodológico", state.enfoque),
+              metaRow("Nivel de investigación", nivelLabel),
+              metaRow("Diseño de investigación", disenoLabel),
+            ]
+          }),
+
+          // Sección 3 — imagen si hay
+          ...imageChildren,
+
+          // Próximos pasos
+          secHeading(`${nextStepsNum}. PRÓXIMOS PASOS`, "D97706"),
+          ...[
+            "Justificación: Explica la relevancia teórica, práctica y social del tema.",
+            "Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.",
+            "Metodología: Define tu muestra, instrumentos y procedimiento de recolección.",
+            "Cronograma: Establece tiempos realistas para cada fase del proyecto."
+          ].map((t,i) => new Paragraph({
+            children:[
+              new TextRun({text:`${i+1}.  `, bold:true, size:20, color:"D97706"}),
+              new TextRun({text:t, size:20, color:C.dark})
+            ],
+            spacing:{before:140, after:60}, indent:{left:240}
+          })),
+
+          // Pie
+          new Paragraph({children:[new TextRun({text:""})], spacing:{before:480}}),
+          new Paragraph({
+            children:[new TextRun({text:"Generado con Asistente de Investigación · Alan A. Vega Jacome · Powered by Claude", size:16, color:C.light, italics:true})],
+            alignment:AlignmentType.CENTER
+          })
+        ]
+      }]
+    });
+
+    // ── 6. Descargar ──────────────────────────────────────────────
+    const blob = await Packer.toBlob(doc);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'propuesta_investigacion.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+  } catch(err) {
+    console.error('downloadDoc error:', err);
+    alert('Error al generar el documento: ' + err.message);
+  } finally {
+    if(btn) { btn.classList.remove('loading'); btn.innerHTML = '📥 Descargar DOCX'; }
   }
-
-  const doc = new Document({
-    styles: { default: { document: { run: { font: "Calibri" } } } },
-    sections: [{
-      properties: { page: { margin: { top: 1200, bottom: 1200, left: 1200, right: 1200 } } },
-      children: [
-        new Paragraph({
-          children: [new TextRun({ text: "PROPUESTA DE PROYECTO DE INVESTIGACIÓN", bold: true, size: 32, color: "534AB7", allCaps: true })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          children: [new TextRun({ text: "Asistente de Investigación en Psicología", size: 20, color: "888888", italics: true })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        }),
-        heading("1. ELEMENTOS DE LA INVESTIGACIÓN"),
-        ...field("Tema de Investigación", state.edited.tema),
-        ...field("Pregunta de Investigación", state.edited.pregunta),
-        ...field("Objetivo General", state.edited.objetivo),
-        ...field(hipLabel, state.edited.hipotesis),
-        heading("2. PERFIL METODOLÓGICO", accentColor),
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [
-            metaRow("Área", efectiveArea()),
-            metaRow("Población", efectivePoblacion()),
-            metaRow("Problema / Fenómeno", efectiveProblema()),
-            metaRow("Variables", variablesDisplay.join(", ")),
-            metaRow("Enfoque", state.enfoque),
-            metaRow("Nivel", nivelLabel),
-            metaRow("Diseño", disenoLabel),
-          ]
-        }),
-        new Paragraph({
-          children: [new TextRun({ text: "3. PRÓXIMOS PASOS", bold: true, size: 26, color: accentColor, allCaps: true })],
-          spacing: { before: 400, after: 120 },
-          border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: accentColor } }
-        }),
-        ...[
-          "✓  Justificación: Explica la relevancia teórica, práctica y social del tema.",
-          "✓  Marco teórico: Busca 5-10 artículos recientes en Google Académico, Redalyc o SciELO.",
-          "✓  Metodología: Define tu muestra, instrumentos y procedimiento de recolección.",
-          "✓  Cronograma: Establece tiempos realistas para cada fase del proyecto."
-        ].map(t => new Paragraph({ children: [new TextRun({ text: t, size: 20 })], spacing: { before: 120, after: 60 }, indent: { left: 200 } })),
-        new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400 } }),
-        new Paragraph({
-          children: [new TextRun({ text: "Generado con Asistente de Investigación · Creado por Alan A. Vega Jacome", size: 16, color: "aaaaaa", italics: true })],
-          alignment: AlignmentType.CENTER
-        })
-      ]
-    }]
-  });
-
-  let blob;
-  try { blob = await Packer.toBlob(doc); } catch(e) { if(btn){btn.classList.remove('loading');btn.textContent='📥 Descargar DOCX';} alert('Error al generar el documento: '+e.message); return; }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'propuesta_investigacion.docx';
-  a.click();
-  URL.revokeObjectURL(url);
-  if(btn) { btn.classList.remove('loading'); btn.textContent = '📥 Descargar DOCX'; }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1273,9 +1429,11 @@ async function downloadDoc() {
 // Posgrado:  path-analysis | sem-mediacion | sem-moderacion | sem-completo
 // ══════════════════════════════════════════════════════════════════
 
+// Los diagramas se generan según la TÉCNICA seleccionada (no el diseño)
 const DISENOS_CON_DIAGRAMA = [
   'regresion-multiple','mediacion','moderacion','mediacion-moderada',
-  'path-analysis','sem-mediacion','sem-moderacion','sem-completo'
+  'path-analysis','sem-mediacion','sem-moderacion','sem-completo',
+  'correlacion','regresion-simple'
 ];
 
 function getVarsList() {
@@ -1337,7 +1495,7 @@ const DC = {
 // ════════════════════════════════════════════════════════════════════════
 function showModelDiagram() {
   const vars = getVarsList();
-  const d = state.diseno;
+  const d = state.tecnica; // Diagrama basado en técnica, no en diseño
   const W=600, H=300;
   let svg='', titulo='', nota='', nivel='';
 
