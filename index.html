@@ -395,7 +395,24 @@ textarea{min-height:70px;resize:vertical}
 const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
 
 const AREAS = [
-  {id:"clinica", label:"Psicología clínica y salud mental", icon:"🧠"},
+  {id:"clinica", label:"Psicología clínica y salud mental", icon:`<svg width="28" height="28" viewBox="0 0 40 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Vara de Esculapio">
+    <!-- Bastón vertical -->
+    <rect x="18.5" y="2" width="3" height="52" rx="1.5" fill="#4F46E5"/>
+    <!-- Bola superior -->
+    <circle cx="20" cy="3" r="3.5" fill="#4F46E5"/>
+    <!-- Serpiente — curvas suaves alrededor del bastón -->
+    <path d="M20 10 C27 10, 27 16, 20 16 C13 16, 13 22, 20 22 C27 22, 27 28, 20 28 C13 28, 13 34, 20 34 C27 34, 27 40, 20 40 C13 40, 13 46, 20 46"
+          stroke="#059669" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <!-- Cabeza de la serpiente -->
+    <ellipse cx="20" cy="8.5" rx="3.2" ry="2.2" fill="#059669"/>
+    <!-- Ojos -->
+    <circle cx="18.8" cy="8" r="0.7" fill="white"/>
+    <circle cx="21.2" cy="8" r="0.7" fill="white"/>
+    <circle cx="18.8" cy="8" r="0.32" fill="#111"/>
+    <circle cx="21.2" cy="8" r="0.32" fill="#111"/>
+    <!-- Lengua bífida -->
+    <path d="M19 7 L17.4 5.5 M21 7 L22.6 5.5" stroke="#DC2626" stroke-width="0.9" stroke-linecap="round"/>
+  </svg>`},
   {id:"educativa", label:"Psicología educativa", icon:"📚"},
   {id:"organizacional", label:"Psicología organizacional", icon:"🏢"},
   {id:"social", label:"Psicología social y comunitaria", icon:"🤝"},
@@ -577,12 +594,13 @@ const DISENOS = {
     {id:"no-experimental-longitudinal", label:"No experimental longitudinal", desc:"Observas las mismas variables en distintos momentos temporales", hint:"Seguimiento temporal · Panel o tendencia · DLEP / DPL (Ato et al., 2013)"},
   ],
   cualitativo: [
-    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados subjetivos de los participantes", hint:"⭐ Ideal para comprender vivencias profundas · IPA o descriptivo (Creswell, 2013)"},
-    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en su contexto natural", hint:"Requiere inmersión prolongada · Descripción densa (Geertz)"},
-    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos · Strauss & Corbin (1998)"},
-    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos en su contexto", hint:"⭐ Muy común en pregrado · Yin (2018) · Flexible y riguroso"},
-    {id:"narrativo", label:"Narrativo", desc:"Historias de vida y relatos biográficos de los participantes", hint:"Ideal para trayectorias individuales · Creswell (2013)"},
-    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para generar cambio", hint:"Combina investigación con intervención participativa"},
+    {id:"fenomenologico", label:"Fenomenológico", desc:"Experiencias vividas y significados subjetivos de los participantes", hint:"⭐ Ideal para comprender vivencias profundas · IPA (Smith et al., 2009) o descriptivo (Giorgi) · Pregunta: ¿Cuál es la experiencia de...?"},
+    {id:"analisis-tematico", label:"Análisis temático", desc:"Identificación de patrones o temas comunes en los datos cualitativos", hint:"⭐ Recomendado para pregrado (CHIP-PUCP, 2017) · Flexible: deductivo, inductivo o dirigido (Braun & Clarke, 2006; Hsieh & Shannon, 2005) · Compatible con epistemologías realista y fenomenológica"},
+    {id:"etnografico", label:"Etnográfico", desc:"Culturas, grupos o comunidades en su contexto natural", hint:"Requiere inmersión prolongada · Descripción densa (Geertz) · Observación participante"},
+    {id:"teoria-fundamentada", label:"Teoría Fundamentada", desc:"Generas teoría emergente desde los datos", hint:"⭐ Ideal para crear modelos explicativos · Strauss & Corbin (1998) · Codificación abierta, axial y selectiva"},
+    {id:"estudio-caso", label:"Estudio de Caso", desc:"Análisis profundo de uno o pocos casos en su contexto", hint:"⭐ Muy común en pregrado · Yin (2018) · Triangulación de fuentes"},
+    {id:"narrativo", label:"Narrativo / Historia de vida", desc:"Historias de vida y relatos biográficos de los participantes", hint:"Ideal para trayectorias individuales · Análisis narrativo (Creswell, 2013; Murray, 2003)"},
+    {id:"investigacion-accion", label:"Investigación-Acción", desc:"Investigas mientras intervienes para generar cambio", hint:"Combina investigación con intervención participativa · Ciclos observar-pensar-actuar"},
   ],
   mixto: [
     {id:"secuencial-explicativo", label:"Secuencial Explicativo (CUAN → cual)", desc:"Primero cuantitativo, luego cualitativo para profundizar los resultados", hint:"⭐ Los datos cualitativos explican los resultados cuantitativos (Creswell & Plano Clark, 2017)"},
@@ -647,6 +665,10 @@ const TECNICAS = {
 // ── REFERENCIAS BIBLIOGRÁFICAS ────────────────────────────────────
 const REFERENCIAS = [
   {
+    cita: "Nóblega, M., Vera, Á., Gutiérrez, G., y Otiniano, F. (2017). <em>Criterios Homologados de Investigación en Psicología (CHIP) — Investigaciones Cualitativas</em> (Versión 1.0). Departamento de Psicología, PUCP.",
+    nota: "Marco de referencia para investigaciones cualitativas de pregrado: criterios de integridad, rigor metodológico, supuestos de investigación, diseño de análisis temático y consideraciones éticas."
+  },
+  {
     cita: "Ato, M., López, J. J., y Benavente, A. (2013). Un sistema de clasificación de los diseños de investigación en psicología. <em>Anales de Psicología, 29</em>(3), 1038-1059. https://doi.org/10.6018/analesps.29.3.178511",
     nota: "Sistema de clasificación de diseños: estrategia manipulativa, asociativa y descriptiva. Marco de referencia para la nomenclatura de diseños (DCS, DPT, DVO, DVL, DLEP, etc.)."
   },
@@ -675,6 +697,29 @@ const REFERENCIAS = [
     nota: "Referencia para diseño de estudio de caso cualitativo: triangulación de fuentes y análisis en profundidad."
   },
 ];
+
+// EPISTEMOLOGÍAS para investigación cualitativa (Willig, 2013; CHIP-PUCP, 2017)
+const EPISTEMOLOGIAS_CUAL = [
+  {
+    id: "realista",
+    label: "Realista",
+    desc: "Identificar patrones y estructuras que existen en la experiencia de los participantes",
+    hint: "Rol del investigador: detective — busca regularidades observables. Compatible con análisis temático convencional o dirigido (Hsieh & Shannon, 2005). Pregunta: ¿Cómo se presentan los eventos en el mundo del participante?",
+  },
+  {
+    id: "fenomenologica",
+    label: "Fenomenológica",
+    desc: "Comprender la experiencia subjetiva, vivencias y significados particulares",
+    hint: "⭐ Más frecuente en pregrado. Rol del investigador: consejero empático. Compatible con fenomenológico, análisis temático inductivo (Braun & Clarke, 2006) o estudio de caso. Pregunta: ¿Cómo es el mundo para este participante?",
+  },
+  {
+    id: "socioconstruccionista",
+    label: "Socioconstruccionista",
+    desc: "Analizar cómo se construyen los significados en la interacción social y el lenguaje",
+    hint: "Rol del investigador: arquitecto — examina cómo se construye la realidad. Compatible con análisis discursivo, narrativo, etnográfico o investigación-acción. Pregunta: ¿Cómo construyen los participantes sus versiones del mundo?",
+  },
+];
+
 
 const ENFOQUES = ["Cuantitativo","Cualitativo","Mixto"];
 const EXPERIENCIAS = ["Ninguna, es un tema nuevo para mí","Algo (he leído sobre el tema)","Bastante (me interesa mucho)"];
@@ -786,6 +831,7 @@ let state = savedState || {
   variablesOtro:"",
   enfoque:"",
   nivel:"",
+  epistemologia:"",
   diseno:"",
   tecnica:"",
   experiencia:"",
@@ -847,6 +893,10 @@ function canNext(){
     return state.problema!=="" && state.variables.length>0;
   }
   if(s===3){
+    // Cualitativo: solo necesita diseño (no nivel)
+    if(state.enfoque === "Cualitativo") {
+      return state.diseno !== "";
+    }
     if(!state.enfoque || !state.nivel || !state.diseno) return false;
     if(state.enfoque==="Cuantitativo"){
       // Experimental/cuasi: no requieren técnica del menú
@@ -935,7 +985,10 @@ function renderContent(){
     let h=sectionLabel("¿Qué área de la psicología te interesa?");
     h+=`<div class="grid3">`;
     AREAS.forEach(a=>{
-      h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')"><span class="area-icon">${a.icon}</span><span>${a.label}</span></button>`;
+      const iconHtml = a.icon && a.icon.trim().startsWith('<svg') 
+        ? `<span class="area-icon" style="display:flex;align-items:center;justify-content:center">${a.icon}</span>`
+        : `<span class="area-icon">${a.icon}</span>`;
+      h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')">${iconHtml}<span>${a.label}</span></button>`;
     });
     h+=`</div>`;
     if(state.area==="otro"){
@@ -1040,38 +1093,44 @@ function renderContent(){
     });
     h+=`</div>`;
 
-    // ── Nivel ─────────────────────────────────────────────────────
-    if(state.enfoque){
+
+    // ── Nivel (cuantitativo/mixto) | directo al diseño (cualitativo) ──
+    if(state.enfoque === "Cualitativo") {
+      // Cualitativo: va directo al diseño, sin pasar por nivel
+      h+=sectionLabel("¿Qué diseño de investigación utilizarás?",
+        "El diseño define el método de recolección y análisis, y determina el tipo de pregunta cualitativa apropiada (Pistrang & Barker, 2012; CHIP-PUCP, 2017).");
+      h+=`<div class="options">`;
+      DISENOS.cualitativo.forEach(d=>{
+        const esc=d.id.replace(/'/g,"\\'");
+        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+      });
+      h+=`</div>`;
+
+    } else {
+      // ── BLOQUE CUANTITATIVO / MIXTO: nivel → diseño ───────────────
       h+=sectionLabel("¿Qué nivel de investigación buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
         const esc=n.id.replace(/'/g,"\\'");
-        let nivelHint = n.hint;
-        if(state.enfoque === 'Cualitativo' && (n.id === 'correlacional' || n.id === 'explicativo')) {
-          nivelHint = '⚠️ No recomendado en investigación cualitativa';
-        }
-        h+=badgeWithDesc(n.label, n.desc, nivelHint, state.nivel===n.id, `selectNivel('${esc}')`);
+        h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
       });
       h+=`</div>`;
-      if(state.enfoque === 'Cualitativo' && (state.nivel === 'correlacional' || state.nivel === 'explicativo')) {
-        h+=`<div class="hint warning">⚠️ El nivel <strong>${state.nivel}</strong> no es apropiado para investigación cualitativa. Se recomienda nivel <strong>exploratorio</strong> o <strong>descriptivo</strong> (Hernández et al., 2014).</div>`;
-      }
       if(state.diseno === 'cuasiexperimental' && state.nivel !== 'explicativo') {
         h+=`<div class="hint warning">⚠️ El diseño cuasi-experimental busca establecer relaciones causales (sin aleatorización), por lo que es coherente principalmente con nivel <strong>explicativo</strong>. Se recomienda ajustar el nivel de investigación.</div>`;
       }
-    }
 
-    // ── Diseño (estrategia de recolección) ────────────────────────
-    if(state.enfoque && state.nivel){
-      h+=sectionLabel("¿Qué diseño de investigación utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos (experimental, observacional, longitudinal, etc.). Según Ato, López y Benavente (2013), los diseños se agrupan en tres estrategias: manipulativa (experimental/cuasiexperimental), asociativa (predictivo/explicativo) y descriptiva.");
-      const enfoqueKey = state.enfoque.toLowerCase();
-      const disenosDisponibles = DISENOS[enfoqueKey] || [];
-      h+=`<div class="options">`;
-      disenosDisponibles.forEach(d=>{
-        const esc=d.id.replace(/'/g,"\'");
-        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
-      });
-      h+=`</div>`;
+      // ── Diseño cuantitativo/mixto ──────────────────────────────────
+      if(state.nivel){
+        h+=sectionLabel("¿Qué diseño de investigación utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos. Según Ato, López y Benavente (2013), los diseños se agrupan en tres estrategias: manipulativa, asociativa y descriptiva.");
+        const enfoqueKey = state.enfoque.toLowerCase();
+        const disenosDisponibles = DISENOS[enfoqueKey] || [];
+        h+=`<div class="options">`;
+        disenosDisponibles.forEach(d=>{
+          const esc=d.id.replace(/'/g,"\'");
+          h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+        });
+        h+=`</div>`;
+      }
     }
 
     // ── Técnica de análisis ───────────────────────────────────────
@@ -1209,6 +1268,7 @@ function renderContent(){
     });
     h+=`<div class="summary"><p class="title">Resumen de tu perfil metodologico</p><div class="summary-grid">`;
     const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+    const nivelKey = "Nivel";
     const enfoqueKey = state.enfoque.toLowerCase();
     const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
     const disenoLabel = disenoObj?.label || state.diseno;
@@ -1220,7 +1280,7 @@ function renderContent(){
     }
     
     [["Area",efectiveArea()],["Poblacion",efectivePoblacion()],["Problema",efectiveProblema()],
-     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],["Nivel",nivelLabel],["Diseño",disenoLabel],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
+     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],[nivelKey,nivelLabel],["Diseño",disenoLabel],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
       h+=`<p><span>${k}:</span> ${v}</p>`;
     });
     h+=`</div></div>`;
@@ -1268,6 +1328,7 @@ function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav()
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";updateNav();renderContent();saveState();}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";updateNav();renderContent();saveState();}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
+function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
 function selectDiseno(v){state.diseno=v;state.tecnica="";updateNav();renderContent();saveState();}
 function selectTecnica(v){state.tecnica=v;updateNav();renderContent();saveState();}
 
@@ -1302,6 +1363,7 @@ function nuevoProyecto(){
       variablesOtro:"",
       enfoque:"",
       nivel:"",
+      epistemologia:"",
       diseno:"",
       tecnica:"",
       experiencia:"",
@@ -1447,7 +1509,7 @@ async function generate(){
   }
   
   const nv = variablesList.length;
-  const nivelLabel  = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel;
+  const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || (state.enfoque === "Cualitativo" ? "No aplica" : state.nivel);
   const enfoqueKey  = state.enfoque.toLowerCase();
   const disenoObj   = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
   const disenoLabel = disenoObj?.label || state.diseno;
@@ -1470,9 +1532,46 @@ async function generate(){
     const dQ = state.diseno;
     const cats = variablesList.join(', ');
 
+    // Epistemología según diseño (Willig, 2013; CHIP-PUCP, 2017)
+    const epistemologias = {
+      'fenomenologico':       'fenomenológica (comprensión de la experiencia subjetiva)',
+      'analisis-tematico':    'realista o fenomenológica (identificación de patrones temáticos)',
+      'etnografico':          'socioconstruccionista (construcción cultural del significado)',
+      'teoria-fundamentada':  'realista o constructivista (generación inductiva de teoría)',
+      'estudio-caso':         'realista o fenomenológica (profundidad contextual del caso)',
+      'narrativo':            'fenomenológica o narrativa (significados a través del relato)',
+      'investigacion-accion': 'socioconstruccionista y transformativa (participación y cambio)',
+    };
+    const epistemologia = epistemologias[dQ] || 'cualitativa';
+
+    // Instrumentos de recolección según diseño (CHIP-PUCP, 2017)
+    const instrumentos = {
+      'fenomenologico':       'entrevistas semi-estructuradas en profundidad',
+      'analisis-tematico':    'entrevistas semi-estructuradas o grupos focales',
+      'etnografico':          'observación participante, entrevistas y análisis documental',
+      'teoria-fundamentada':  'entrevistas en profundidad con muestreo teórico progresivo',
+      'estudio-caso':         'entrevistas, observación, análisis de documentos y artefactos (triangulación)',
+      'narrativo':            'entrevistas narrativas en profundidad, diarios o documentos biográficos',
+      'investigacion-accion': 'grupos focales, observación participante y técnicas participativas',
+    };
+    const instrRecol = instrumentos[dQ] || 'entrevistas semi-estructuradas';
+
+    // Criterios de rigor según diseño (Pistrang & Barker, 2012; Noreña et al., 2012)
+    const rigor = {
+      'fenomenologico':       'credibilidad (reducción fenomenológica), transferibilidad y reflexividad del investigador',
+      'analisis-tematico':    'integridad del proceso (Pistrang & Barker, 2012): fundamentación empírica, transparencia, coherencia y credibilidad mediante revisión de pares o devolución a participantes',
+      'etnografico':          'credibilidad (prolongada permanencia en campo), triangulación de fuentes y reflexividad',
+      'teoria-fundamentada':  'saturación teórica, muestreo intencional y auditoría del proceso analítico',
+      'estudio-caso':         'triangulación de fuentes, cadena de evidencia y revisión de informantes clave (Yin, 2018)',
+      'narrativo':            'resonancia, coherencia narrativa y revisión con los participantes',
+      'investigacion-accion': 'participación auténtica, ciclos reflexivos y validación colaborativa',
+    };
+    const criteriosRigor = rigor[dQ] || 'criterios de integridad: fundamentación, transparencia, coherencia y credibilidad';
+
     // Pregunta según diseño cualitativo
     const preguntasQual = {
       'fenomenologico':       `¿Cuál es la experiencia vivida de ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
+      'analisis-tematico':    `¿Cómo comprenden y significan ${efectiveProblema()} los ${getPoblacionCompleta()}?`,
       'etnografico':          `¿Cómo se construye y organiza culturalmente ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
       'teoria-fundamentada':  `¿Cómo se desarrolla y construye el proceso de ${efectiveProblema()} en ${getPoblacionCompleta()}?`,
       'estudio-caso':         `¿Cómo se manifiesta ${efectiveProblema()} en el caso de ${getPoblacionCompleta()}?`,
@@ -1484,6 +1583,7 @@ async function generate(){
     // Objetivo según diseño cualitativo
     const verbosQual = {
       'fenomenologico':       'Comprender la experiencia vivida de',
+      'analisis-tematico':    'Explorar y describir los significados y patrones temáticos sobre',
       'etnografico':          'Describir y analizar los patrones culturales de',
       'teoria-fundamentada':  'Generar una teoría sustantiva sobre',
       'estudio-caso':         'Analizar en profundidad',
@@ -1492,22 +1592,23 @@ async function generate(){
     };
     const verboQual = verbosQual[dQ] || 'Explorar y comprender';
 
-    // Supuestos según diseño cualitativo
+    // Supuestos según diseño cualitativo (CHIP-PUCP, 2017: supuestos son tentativas flexibles)
     const supuestosQual = {
-      'fenomenologico':       `Se espera que ${getPoblacionCompleta()} describa experiencias diversas y significativas respecto a ${efectiveProblema()}, marcadas por su contexto subjetivo y vivencial.`,
-      'etnografico':          `Se espera encontrar patrones culturales y prácticas compartidas que dan sentido a ${efectiveProblema()} dentro de la comunidad de ${getPoblacionCompleta()}.`,
-      'teoria-fundamentada':  `Se espera generar categorías emergentes que expliquen el proceso de ${efectiveProblema()} tal como lo vive ${getPoblacionCompleta()}, pudiendo construir una teoría sustantiva.`,
-      'estudio-caso':         `Se espera que el análisis profundo del caso permita comprender la complejidad de ${efectiveProblema()} en ${getPoblacionCompleta()} en su contexto específico.`,
-      'narrativo':            `Se espera que las narrativas de ${getPoblacionCompleta()} revelen trayectorias vitales y significados personales sobre ${efectiveProblema()}.`,
-      'investigacion-accion': `Se espera que la participación activa de ${getPoblacionCompleta()} permita identificar estrategias de cambio y transformación frente a ${efectiveProblema()}.`,
+      'fenomenologico':       `Se espera que ${getPoblacionCompleta()} describa experiencias diversas y significativas respecto a ${efectiveProblema()}, marcadas por su contexto subjetivo y vivencial, que revelarán estructuras comunes de significado.`,
+      'analisis-tematico':    `Se espera identificar patrones temáticos recurrentes y significativos en los relatos de ${getPoblacionCompleta()} sobre ${efectiveProblema()}, que permitan una comprensión contextualizada del fenómeno (Braun & Clarke, 2006).`,
+      'etnografico':          `Se espera encontrar patrones culturales y prácticas compartidas que dan sentido a ${efectiveProblema()} dentro de la comunidad de ${getPoblacionCompleta()}, así como tensiones entre discursos y prácticas.`,
+      'teoria-fundamentada':  `Se espera generar categorías emergentes que expliquen el proceso de ${efectiveProblema()} tal como lo vive ${getPoblacionCompleta()}, pudiendo construir una teoría sustantiva con potencial de transferibilidad.`,
+      'estudio-caso':         `Se espera que el análisis profundo del caso permita comprender la complejidad de ${efectiveProblema()} en ${getPoblacionCompleta()} en su contexto específico, revelando aspectos no visibles en estudios de mayor alcance.`,
+      'narrativo':            `Se espera que las narrativas de ${getPoblacionCompleta()} revelen trayectorias vitales y significados personales sobre ${efectiveProblema()}, mostrando cómo la experiencia se organiza y comunica a través del relato.`,
+      'investigacion-accion': `Se espera que la participación activa de ${getPoblacionCompleta()} permita identificar estrategias de cambio y transformación frente a ${efectiveProblema()}, fortaleciendo su agencia colectiva.`,
     };
     const ejemploSupuesto = supuestosQual[dQ] || `Se espera comprender cómo ${getPoblacionCompleta()} experimenta y da sentido a ${efectiveProblema()} en su contexto particular.`;
 
-    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION cualitativa (diseño: ${disenoLabel}). REGLA ESTRICTA: usa "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?". NUNCA uses "¿Existe relación...?", "¿En qué medida...?" ni lenguaje cuantitativo. Ejemplo correcto para este diseño: "${ejemploPregunta}". Las categorías de análisis son: ${cats}.`;
+    preguntaInstruccion = `2. PREGUNTA DE INVESTIGACION cualitativa (diseño: ${disenoLabel}, epistemología: ${epistemologia}). REGLA ESTRICTA: usa "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?". NUNCA uses "¿Existe relación...?", "¿En qué medida...?" ni lenguaje cuantitativo. Ejemplo correcto para este diseño: "${ejemploPregunta}". Las categorías de análisis son: ${cats}. La pregunta debe ser clara, delimitada y no superar 15 palabras (CHIP-PUCP, 2017).`;
 
-    objetivoInstruccion = `3. OBJETIVO GENERAL: comienza con el verbo "${verboQual}" (coherente con diseño ${disenoLabel}). PROHIBIDO usar "analizar la relación", "determinar la relación", "correlacionar" o cualquier verbo cuantitativo. El objetivo debe enfocarse en COMPRENDER, EXPLORAR, DESCRIBIR o GENERAR teoría. Usa las categorías: ${cats}.`;
+    objetivoInstruccion = `3. OBJETIVO GENERAL: comienza con el verbo "${verboQual}" (coherente con diseño ${disenoLabel}). PROHIBIDO usar "analizar la relación", "determinar la relación", "correlacionar" o cualquier verbo cuantitativo. El objetivo debe enfocarse en COMPRENDER, EXPLORAR, DESCRIBIR o GENERAR teoría. Usa las categorías: ${cats}. Incluye la población y el contexto geográfico específico.`;
 
-    hipInstruccion = `SUPUESTOS DE INVESTIGACION (campo "hipotesis" en el JSON): en investigación cualitativa los supuestos son tentativas flexibles, NO hipótesis estadísticas. REGLA: NO uses "existe una relación", "predice", "correlaciona" ni términos estadísticos. Ejemplo correcto: "${ejemploSupuesto}". Adapta al diseño ${disenoLabel}.`;
+    hipInstruccion = `SUPUESTOS DE INVESTIGACION (campo "hipotesis" en el JSON): en investigación cualitativa los supuestos son tentativas FLEXIBLES que anticipan posibles hallazgos sin predeterminar resultados (CHIP-PUCP, 2017; Pistrang & Barker, 2012). REGLA: NO uses "existe una relación", "predice", "correlaciona" ni términos estadísticos. El supuesto debe mencionar: (a) la técnica de recolección (${instrRecol}), (b) la técnica de análisis (según diseño ${disenoLabel}) y (c) los criterios de rigor: ${criteriosRigor}. Ejemplo correcto: "${ejemploSupuesto}".`;
 
   } else if(state.enfoque === "Mixto") {
     const dM = state.diseno;
@@ -1589,17 +1690,18 @@ async function generate(){
   // ── Ajustar label de técnica para cualitativo ─────────────────
   const tecnicaInfo = state.enfoque === "Cualitativo"
     ? `Técnica de análisis: ${
-        state.diseno === 'fenomenologico'   ? 'Análisis fenomenológico interpretativo (IPA) o descriptivo' :
-        state.diseno === 'etnografico'      ? 'Análisis etnográfico (descripción densa, Geertz)' :
-        state.diseno === 'teoria-fundamentada' ? 'Codificación abierta, axial y selectiva (Strauss & Corbin)' :
-        state.diseno === 'estudio-caso'     ? 'Análisis de caso (Yin, 2018) — triangulación de fuentes' :
-        state.diseno === 'narrativo'        ? 'Análisis narrativo (Creswell) — estructura de relato' :
-        state.diseno === 'investigacion-accion' ? 'Análisis participativo — ciclos de reflexión-acción' :
-        'Análisis temático inductivo (Braun & Clarke)'
+        state.diseno === 'fenomenologico'      ? 'Análisis fenomenológico interpretativo (IPA — Smith et al., 2009) o descriptivo (Giorgi)' :
+        state.diseno === 'analisis-tematico'   ? 'Análisis temático (Braun & Clarke, 2006) — deductivo, inductivo o dirigido (Hsieh & Shannon, 2005)' :
+        state.diseno === 'etnografico'         ? 'Análisis etnográfico (descripción densa, Geertz) — observación participante y notas de campo' :
+        state.diseno === 'teoria-fundamentada' ? 'Codificación abierta, axial y selectiva (Strauss & Corbin, 1998) — muestreo teórico' :
+        state.diseno === 'estudio-caso'        ? 'Análisis de caso (Yin, 2018) — triangulación de fuentes y análisis en profundidad' :
+        state.diseno === 'narrativo'           ? 'Análisis narrativo (Murray, 2003; Creswell, 2013) — estructura de relato y cronología' :
+        state.diseno === 'investigacion-accion'? 'Análisis participativo — ciclos de reflexión-acción (observar, pensar, actuar)' :
+        'Análisis temático inductivo (Braun & Clarke, 2006)'
       }`
     : `Técnica de análisis estadístico: ${tecnicaLabel}`;
 
-  const prompt = `Eres un experto en metodologia de la investigacion en psicologia (Hernandez, Fernandez y Baptista, 2014; Hernandez y Mendoza, 2018; Creswell, 2013 para cualitativo; Yin, 2018 para estudio de caso).
+  const prompt = `Eres un experto en metodologia de la investigacion en psicologia. Dominas los siguientes marcos de referencia: Hernandez, Fernandez y Baptista (2014); Hernandez y Mendoza (2018); Creswell (2013) para diseños cualitativos; Yin (2018) para estudio de caso; Braun y Clarke (2006) para análisis temático; Hsieh y Shannon (2005) para análisis de contenido cualitativo; Pistrang y Barker (2012) para criterios de rigor en investigación cualitativa; los Criterios Homologados de Investigación en Psicología — CHIP (Nóblega, Vera, Gutiérrez y Otiniano, 2017) de la PUCP; y Ato, Lopez y Benavente (2013) para diseños cuantitativos.
 
 DATOS DEL ESTUDIANTE:
 - Area: ${efectiveArea()}
@@ -1607,7 +1709,7 @@ DATOS DEL ESTUDIANTE:
 - Problema/fenomeno: ${efectiveProblema()}
 - Categorias/Variables (${nv}, NO uses otras): ${variablesList.join(", ")}
 - Enfoque metodologico: ${state.enfoque}
-- Nivel de investigacion: ${nivelLabel}
+- Nivel/Paradigma: ${nivelLabel}
 - Diseño de investigacion: ${disenoLabel}
 - ${tecnicaInfo}
 - Experiencia previa: ${state.experiencia}
@@ -1618,12 +1720,15 @@ DATOS DEL ESTUDIANTE:
 REGLA CRÍTICA: SOLO puedes usar las ${nv} categorías/variables listadas. NUNCA agregues, inventes ni sustituyas.
 REGLA DE POBLACIÓN: La población debe aparecer siempre especificada con su lugar geográfico tal como se indica en "Poblacion" arriba. No generalices ni omitas la ubicación.
 ${state.enfoque === "Cualitativo" ? `
-REGLAS ABSOLUTAS PARA INVESTIGACIÓN CUALITATIVA:
+REGLAS ABSOLUTAS PARA INVESTIGACIÓN CUALITATIVA (basadas en CHIP-PUCP, 2017 y Braun & Clarke, 2006):
 - NUNCA uses "relación entre", "predice", "correlaciona", "significativamente", "p<.05" ni ningún término estadístico
 - El objetivo NUNCA puede ser "analizar la relación entre X e Y" — eso es cuantitativo
 - La pregunta SIEMPRE debe iniciar con "¿Cómo...?", "¿Cuál es...?", "¿Qué significa...?" o "¿De qué manera...?"
-- Los supuestos son tentativas flexibles, no hipótesis estadísticas
-- El verbo del objetivo debe ser: Comprender, Explorar, Describir, Interpretar, Generar, Analizar la experiencia de` : state.enfoque === "Mixto" ? `
+- Los supuestos son tentativas FLEXIBLES que anticipan posibles hallazgos sin predeterminar resultados (CHIP-PUCP, 2017)
+- Los supuestos deben incluir: la técnica de recolección, la técnica de análisis y los criterios de rigor del estudio
+- El verbo del objetivo debe ser: Comprender, Explorar, Describir, Interpretar, Generar, Analizar la experiencia de
+- Las "categorías de análisis" en cualitativo NO son variables estadísticas sino ejes temáticos de exploración
+- El tema debe ser delimitado, en 15 palabras máximo (CHIP-PUCP, 2017), sin términos estadísticos` : state.enfoque === "Mixto" ? `
 REGLAS PARA INVESTIGACIÓN MIXTA (diseño: ${disenoLabel}):
 - La PREGUNTA debe tener DOS componentes explícitos: uno cuantitativo y uno cualitativo
 - El OBJETIVO debe mencionar la integración de métodos y su propósito
@@ -1635,12 +1740,12 @@ REGLAS PARA INVESTIGACIÓN MIXTA (diseño: ${disenoLabel}):
   })()}` : ''}
 
 Genera los siguientes 4 elementos:
-1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con el diseño "${disenoLabel}". Sin términos estadísticos si es cualitativo.
+1. TEMA DE INVESTIGACION: Máximo 15 palabras, delimitado, coherente con el diseño "${disenoLabel}". Sin términos estadísticos si es cualitativo. Debe incluir el constructo o fenómeno central y la población.
 ${preguntaInstruccion}
 ${objetivoInstruccion}
 4. ${hipInstruccion}
 
-IMPORTANTE: Los 4 elementos son OBLIGATORIOS.
+IMPORTANTE: Los 4 elementos son OBLIGATORIOS. Cada uno debe ser preciso, coherente con el enfoque ${state.enfoque} y reflejar los estándares de calidad del paradigma seleccionado.
 
 Responde SOLO en JSON sin texto adicional ni markdown:
 {"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
@@ -1688,23 +1793,32 @@ Responde SOLO en JSON sin texto adicional ni markdown:
       if(dQ === 'fenomenologico') {
         fb.pregunta  = `¿Cuál es la experiencia vivida de ${prob} en ${pop}?`;
         fb.objetivo  = `Comprender la experiencia vivida de ${prob} en ${pop} desde sus significados subjetivos.`;
+        fb.hipotesis = `Se espera que ${pop} describa experiencias diversas sobre ${prob}, exploradas mediante entrevistas semi-estructuradas y analizadas con análisis fenomenológico interpretativo (IPA), garantizando credibilidad mediante triangulación y reflexividad del investigador.`;
+      } else if(dQ === 'analisis-tematico') {
+        fb.pregunta  = `¿Cómo comprenden y significan ${prob} los ${pop}?`;
+        fb.objetivo  = `Explorar y describir los significados y patrones temáticos sobre ${prob} en ${pop}.`;
+        fb.hipotesis = `Se espera identificar patrones temáticos significativos mediante entrevistas semi-estructuradas o grupos focales, analizados con análisis temático (Braun & Clarke, 2006), asegurando integridad del proceso mediante fundamentación empírica, transparencia y revisión de pares (Pistrang & Barker, 2012).`;
       } else if(dQ === 'etnografico') {
         fb.pregunta  = `¿Cómo se organiza y construye culturalmente ${prob} en ${pop}?`;
         fb.objetivo  = `Describir y analizar los patrones culturales asociados a ${prob} en ${pop}.`;
+        fb.hipotesis = `Se espera encontrar patrones culturales compartidos mediante observación participante y entrevistas, analizados con descripción densa (Geertz), garantizando credibilidad mediante prolongada permanencia en campo y triangulación de fuentes.`;
       } else if(dQ === 'teoria-fundamentada') {
         fb.pregunta  = `¿Cómo se genera y construye la teoría sobre ${prob} en ${pop}?`;
         fb.objetivo  = `Generar una teoría sustantiva sobre ${prob} a partir de los datos de ${pop}.`;
+        fb.hipotesis = `Se espera generar categorías emergentes mediante entrevistas con muestreo teórico progresivo, analizadas con codificación abierta, axial y selectiva (Strauss & Corbin, 1998), alcanzando saturación teórica como criterio de rigor.`;
       } else if(dQ === 'narrativo') {
         fb.pregunta  = `¿Cuáles son las narrativas y experiencias de vida de ${pop} respecto a ${prob}?`;
         fb.objetivo  = `Explorar y analizar las narrativas de ${pop} sobre ${prob} en su contexto.`;
+        fb.hipotesis = `Se espera que las narrativas de ${pop} revelen trayectorias vitales sobre ${prob}, recogidas mediante entrevistas narrativas y analizadas con análisis narrativo (Murray, 2003), verificando coherencia y resonancia como criterios de calidad.`;
       } else if(dQ === 'investigacion-accion') {
         fb.pregunta  = `¿Cómo puede transformarse ${prob} en ${pop} mediante participación colectiva?`;
         fb.objetivo  = `Identificar estrategias participativas para comprender y transformar ${prob} en ${pop}.`;
+        fb.hipotesis = `Se espera que los ciclos participativos de reflexión-acción con ${pop} permitan comprender ${prob} y generar estrategias de cambio, usando grupos focales y observación, con validación colaborativa como criterio de rigor.`;
       } else {
         fb.pregunta  = `¿Cómo se comprende ${prob} en ${pop}?`;
         fb.objetivo  = `Explorar y comprender el fenómeno de ${prob} en ${pop}.`;
+        fb.hipotesis = `Se espera comprender cómo ${pop} experimenta y da sentido a ${prob} en su contexto particular, mediante entrevistas semi-estructuradas y análisis temático (Braun & Clarke, 2006).`;
       }
-      fb.hipotesis = `Se espera comprender cómo ${pop} experimenta y da sentido a ${prob} en su contexto particular.`;
     } else if(state.tecnica === 'correlacion') {
       fb.tema      = `Relación entre ${X} y ${Y} en ${pop}`;
       fb.pregunta  = `¿Existe relación entre ${X} y ${Y} en ${pop}?`;
