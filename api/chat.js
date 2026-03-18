@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "No se proporcionó ningún mensaje" });
     }
     
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     const response = await fetch(apiUrl, {
       method: "POST",
