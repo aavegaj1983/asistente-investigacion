@@ -1705,8 +1705,15 @@ function renderContent(){
       if(vars.length>0 && !state.aiVarsLoading){
         h+=`<div class="chips">`;
         vars.forEach(v=>{
-          const esc=v.replace(/'/g,"\\'");
-          h+=`<button class="chip ${state.variables.includes(v)?'active':''}" onclick="toggleVar('${esc}')">${v}</button>`;
+          const nombre = typeof v === 'object' ? (v.nombre||'') : String(v);
+          const esc=nombre.replace(/'/g,"\\'");
+          const isActive = state.variables.includes(nombre);
+          let chipHtml = `<button class="chip ${isActive?'active':''} ${typeof v==='object'?'ai-chip':''}" onclick="toggleVar('${esc}')">${nombre}`;
+          if(typeof v === 'object' && v.referencia){
+            chipHtml += `<span class="chip-tooltip">${v.referencia}${v.antecedente ? '<br><em>'+v.antecedente+'</em>' : ''}</span>`;
+          }
+          chipHtml += `</button>`;
+          h += chipHtml;
         });
         h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
         h+=`</div>`;
