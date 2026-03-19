@@ -51,12 +51,13 @@ body{
   display:flex;align-items:center;gap:10px;margin-bottom:4px;
 }
 .product-logo{
-  width:32px;height:32px;border-radius:8px;
+  width:34px;height:38px;border-radius:9px;
   background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.3);
+  overflow:hidden;
 }
-.product-logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.product-logo svg{width:22px;height:28px;display:block}
 h2{
   font-size:20px;font-weight:800;color:var(--gray-900);
   letter-spacing:-0.5px;line-height:1.2;
@@ -183,14 +184,14 @@ h2 span{color:var(--brand)}
 .chip.ai-chip{border-style:dashed;border-color:var(--green-mid)}
 .chip.ai-chip::after{content:"ⓘ";font-size:10px;margin-left:4px;opacity:.6}
 .chip-tooltip{
-  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;
-  transform:translateX(-50%);width:240px;background:var(--gray-900);
+  display:none;position:fixed;
+  width:220px;background:var(--gray-900);
   color:#fff;font-size:11px;line-height:1.5;padding:8px 10px;
-  border-radius:8px;z-index:100;text-align:left;font-weight:400;
-  box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;
+  border-radius:8px;z-index:9999;text-align:left;font-weight:400;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;
 }
-.chip-tooltip::after{content:"";position:absolute;top:100%;left:50%;
-  transform:translateX(-50%);border:5px solid transparent;
+.chip-tooltip::after{content:"";position:absolute;top:100%;left:20px;
+  border:5px solid transparent;
   border-top-color:var(--gray-900)}
 .chip:hover .chip-tooltip{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
@@ -507,10 +508,27 @@ textarea{min-height:70px;resize:vertical}
   <div class="product-header">
     <div class="product-name">
       <div class="product-logo">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
+        <svg viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg">
+          <!-- Hemisferio izquierdo -->
+          <path d="M16 3 C11 3,5 6,3 12 C1 17,2 22,5 26 C7 28,8 30,8 33 L16 36 Z" fill="white"/>
+          <!-- Hemisferio derecho -->
+          <path d="M16 3 C21 3,27 6,29 12 C31 17,30 22,27 26 C25 28,24 30,24 33 L16 36 Z" fill="white"/>
+          <!-- Sulci izquierdo -->
+          <path d="M6 13 Q5 17,7 20" stroke="#4F46E5" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7"/>
+          <path d="M9 8 Q8 12,9 15" stroke="#4F46E5" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+          <!-- Sulci derecho -->
+          <path d="M26 13 Q27 17,25 20" stroke="#4F46E5" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7"/>
+          <path d="M23 8 Q24 12,23 15" stroke="#4F46E5" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+          <!-- Fisura + slit -->
+          <line x1="16" y1="4" x2="16" y2="34" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/>
+          <!-- Breather hole -->
+          <circle cx="16" cy="22" r="2.8" fill="#4F46E5"/>
+          <!-- Tines -->
+          <path d="M15 34 Q12 37,11 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M17 34 Q20 37,21 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Gota IA -->
+          <ellipse cx="16" cy="43" rx="3.5" ry="4.5" fill="white"/>
+          <circle cx="16" cy="42" r="1.4" fill="#4F46E5"/>
         </svg>
       </div>
       <h2>Tesis<span>Pro</span>Lab</h2>
@@ -1882,7 +1900,11 @@ function renderContent(){
       }
       const tecnicaLabel = state.tecnica
         ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
-        : 'Estadística descriptiva';
+        : state.enfoque === 'Cualitativo'
+          ? `Análisis temático / ${disenoLabel}`
+          : state.enfoque === 'Mixto'
+            ? `Análisis mixto (${disenoLabel})`
+            : 'Estadística descriptiva';
 
       // ── Validation panel ──────────────────────────────────────────
       let validationHtml = '';
@@ -2522,7 +2544,14 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
         messages: [{role: 'user', content: stepsPrompt}]
       })
     });
-    if(!res.ok) throw new Error('API error');
+    if(!res.ok) {
+      if(res.status === 429) {
+        console.warn('Rate limit (429) en próximos pasos — reintentando en 10s');
+        setTimeout(() => { state.aiNextSteps = null; generateNextSteps(); }, 10000);
+        return;
+      }
+      throw new Error('API error ' + res.status);
+    }
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
@@ -2632,7 +2661,11 @@ async function validateCoherence() {
   const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label || state.nivel || 'No aplica';
   const tecnicaLabel = state.tecnica
     ? (TECNICAS[state.nivel]?.find(t => t.id === state.tecnica)?.label || state.tecnica)
-    : 'Estadística descriptiva / Sin técnica avanzada';
+    : state.enfoque === 'Cualitativo'
+      ? `Análisis ${disenoLabel}`
+      : state.enfoque === 'Mixto'
+        ? `Análisis mixto (${disenoLabel})`
+        : 'Estadística descriptiva / Sin técnica avanzada';
 
   const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa la coherencia metodológica del siguiente perfil de tesis de pregrado:
 
@@ -2710,7 +2743,11 @@ async function generate(){
   const disenoLabel = disenoObj?.label || state.diseno;
   const tecnicaLabel = state.tecnica
     ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
-    : 'Estadística descriptiva';
+    : state.enfoque === 'Cualitativo'
+      ? `Análisis ${disenoLabel}`
+      : state.enfoque === 'Mixto'
+        ? `Análisis mixto (${disenoLabel})`
+        : 'Estadística descriptiva';
 
   // Obtener instrucciones específicas para la técnica
   const tecInstr = getTecnicaInstructions(
@@ -3339,8 +3376,18 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     state.aiInstruments = null; state.aiInstrumentsLoading = false;
     state.aiReferencias = null; state.aiReferenciasLoading = false;
     saveState();
-    generateNextSteps(); // fire async — no await, runs in background
-    generateAIReferencias(); // fire async — personalized references
+    // Stagger AI calls to avoid 429 Too Many Requests on Groq's rate limit
+    // Call 1: Next steps immediately (most important for UX)
+    generateNextSteps();
+    // Call 2: AI References after 3 seconds
+    setTimeout(() => generateAIReferencias(), 3000);
+    // Note: generateAIInstruments is triggered lazily by renderContent after 6s delay
+    // to ensure it doesn't collide with the above calls
+    setTimeout(() => {
+      state.aiInstruments = null;
+      state.aiInstrumentsLoading = false;
+      if(state.step === 5 && state.result) renderContent();
+    }, 6000);
   }catch(e){
     console.error("Error:", e);
 
@@ -3479,7 +3526,11 @@ async function downloadDoc() {
     const disenoLabel = disenoObj?.label || state.diseno;
     const tecnicaLabel = state.tecnica
       ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
-      : 'Estadística descriptiva';
+      : state.enfoque === 'Cualitativo'
+        ? `Análisis ${disenoLabel}`
+        : state.enfoque === 'Mixto'
+          ? `Análisis mixto (${disenoLabel})`
+          : 'Estadística descriptiva';
     let vars = state.variables.filter(v=>v!=='otro');
     if(state.variables.includes('otro')&&state.variablesOtro.trim())
       state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>vars.push(v));
@@ -4427,6 +4478,25 @@ function regenLabel() {
   const left = REGEN_MAX - used;
   return left > 0 ? `(${left} restante${left===1?'':'s'})` : '';
 }
+
+// ── SMART TOOLTIP POSITIONING ─────────────────────────────────────
+document.addEventListener('mouseover', function(e) {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  const tooltip = chip.querySelector('.chip-tooltip');
+  if (!tooltip) return;
+  const rect = chip.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const tw = 220;
+  const th = tooltip.offsetHeight || 80;
+  let top = rect.top - th - 10;
+  if (top < 8) top = rect.bottom + 8;
+  let left = rect.left;
+  if (left + tw > vw - 8) left = vw - tw - 8;
+  if (left < 8) left = 8;
+  tooltip.style.top = top + 'px';
+  tooltip.style.left = left + 'px';
+});
 
 render();
 </script>
