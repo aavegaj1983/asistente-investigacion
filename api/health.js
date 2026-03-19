@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   const TEST_MSG = "Responde solo con la palabra: OK";
   const results = {};
 
-  // Groq
+  // ── Groq ──────────────────────────────────────────────────────────
   if (!process.env.GROQ_API_KEY) {
     results.groq = { status: "error", message: "GROQ_API_KEY no configurada" };
   } else {
@@ -16,15 +16,8 @@ module.exports = async function handler(req, res) {
       const start = Date.now();
       const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + process.env.GROQ_API_KEY
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: TEST_MSG }],
-          max_tokens: 10
-        })
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.GROQ_API_KEY },
+        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: TEST_MSG }], max_tokens: 10 })
       });
       const ms = Date.now() - start;
       if (r.ok) {
@@ -32,73 +25,65 @@ module.exports = async function handler(req, res) {
         results.groq = { status: "ok", latency_ms: ms, response: d.choices?.[0]?.message?.content?.trim() || "" };
       } else {
         const e = await r.json().catch(() => ({}));
-        results.groq = {
-          status: r.status === 429 ? "rate_limited" : "error",
-          http_status: r.status,
-          message: e?.error?.message || "Sin detalle"
-        };
+        results.groq = { status: r.status === 429 ? "rate_limited" : "error", http_status: r.status, message: e?.error?.message || "Sin detalle" };
       }
-    } catch (err) {
-      results.groq = { status: "error", message: err.message };
-    }
+    } catch (err) { results.groq = { status: "error", message: err.message }; }
   }
 
-  // Gemini - prueba modelos en orden
-  if (!process.env.GEMINI_API_KEY) {
-    results.gemini = { status: "error", message: "GEMINI_API_KEY no configurada" };
+  // ── Together AI ───────────────────────────────────────────────────
+  if (!process.env.TOGETHER_API_KEY) {
+    results.together = { status: "error", message: "TOGETHER_API_KEY no configurada" };
   } else {
-    const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
-    results.gemini = { status: "error", message: "Ningun modelo disponible" };
-
-    for (const model of GEMINI_MODELS) {
-      try {
-        const start = Date.now();
-        const r = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + process.env.GEMINI_API_KEY,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: TEST_MSG }] }],
-              generationConfig: { maxOutputTokens: 10 }
-            })
-          }
-        );
-        const ms = Date.now() - start;
-        if (r.ok) {
-          const d = await r.json();
-          const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-          results.gemini = { status: "ok", model, latency_ms: ms, response: text };
-          break;
-        } else {
-          const e = await r.json().catch(() => ({}));
-          results.gemini = {
-            status: r.status === 429 ? "rate_limited" : "error",
-            model,
-            http_status: r.status,
-            message: e?.error?.message || "Sin detalle"
-          };
-        }
-      } catch (err) {
-        results.gemini = { status: "error", model, message: err.message };
+    try {
+      const start = Date.now();
+      const r = await fetch("https://api.together.xyz/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.TOGETHER_API_KEY },
+        body: JSON.stringify({ model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", messages: [{ role: "user", content: TEST_MSG }], max_tokens: 10 })
+      });
+      const ms = Date.now() - start;
+      if (r.ok) {
+        const d = await r.json();
+        results.together = { status: "ok", latency_ms: ms, response: d.choices?.[0]?.message?.content?.trim() || "" };
+      } else {
+        const e = await r.json().catch(() => ({}));
+        results.together = { status: r.status === 429 ? "rate_limited" : "error", http_status: r.status, message: e?.error?.message || "Sin detalle" };
       }
-    }
+    } catch (err) { results.together = { status: "error", message: err.message }; }
   }
 
-  const allOk = results.groq.status === "ok" && results.gemini.status === "ok";
-  const anyOk = results.groq.status === "ok" || results.gemini.status === "ok";
-  const httpCode = allOk ? 200 : anyOk ? 206 : 503;
+  // ── Cohere ────────────────────────────────────────────────────────
+  if (!process.env.COHERE_API_KEY) {
+    results.cohere = { status: "error", message: "COHERE_API_KEY no configurada" };
+  } else {
+    try {
+      const start = Date.now();
+      const r = await fetch("https://api.cohere.com/v2/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.COHERE_API_KEY, "X-Client-Name": "TesisProLab" },
+        body: JSON.stringify({ model: "command-r-plus", messages: [{ role: "user", content: TEST_MSG }], max_tokens: 10, temperature: 0.7 })
+      });
+      const ms = Date.now() - start;
+      if (r.ok) {
+        const d = await r.json();
+        const text = d.message?.content?.[0]?.text?.trim() || "";
+        results.cohere = { status: "ok", latency_ms: ms, response: text };
+      } else {
+        const e = await r.json().catch(() => ({}));
+        results.cohere = { status: r.status === 429 ? "rate_limited" : "error", http_status: r.status, message: e?.message || "Sin detalle" };
+      }
+    } catch (err) { results.cohere = { status: "error", message: err.message }; }
+  }
 
-  const summary =
-    allOk  ? "Groq y Gemini operativos - sistema al 100%" :
-    anyOk  ? (results.groq.status === "ok"
-               ? "Groq OK - Gemini con problemas - fallback activo"
-               : "Gemini OK - Groq con rate limit - fallback activo")
-           : "Ambas APIs no disponibles - los borradores seran locales";
+  // ── Resumen ───────────────────────────────────────────────────────
+  const statuses = [results.groq.status, results.together.status, results.cohere.status];
+  const okCount = statuses.filter(s => s === "ok").length;
+  const httpCode = okCount === 3 ? 200 : okCount > 0 ? 206 : 503;
 
-  return res.status(httpCode).json({
-    summary,
-    timestamp: new Date().toISOString(),
-    apis: results
-  });
+  const primary = results.groq.status === "ok" ? "Groq" : results.together.status === "ok" ? "Together AI" : results.cohere.status === "ok" ? "Cohere" : null;
+  const summary = okCount === 3 ? "Groq + Together AI + Cohere operativos - sistema al 100%"
+    : okCount > 0 ? (primary + " activo como primario - fallback disponible (" + okCount + "/3 APIs ok)")
+    : "Las 3 APIs no disponibles - los borradores seran locales";
+
+  return res.status(httpCode).json({ summary, timestamp: new Date().toISOString(), apis: results });
 };
