@@ -1898,10 +1898,13 @@ function renderContent(){
             style="font-size:13px;line-height:1.6">${w}</div>`).join('') +
         `</div>`;
       }
+      const _enfoqueKey5 = state.enfoque.toLowerCase();
+      const _disenoObj5  = DISENOS[_enfoqueKey5]?.find(d => d.id === state.diseno);
+      const disenoLabel  = _disenoObj5?.label || state.diseno || '';
       const tecnicaLabel = state.tecnica
         ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
         : state.enfoque === 'Cualitativo'
-          ? `Análisis temático / ${disenoLabel}`
+          ? `Análisis ${disenoLabel}`
           : state.enfoque === 'Mixto'
             ? `Análisis mixto (${disenoLabel})`
             : 'Estadística descriptiva';
@@ -2158,17 +2161,19 @@ function nextStep(){
     state.step++;
     render();
     saveState();
-    // Auto-validate when reaching step 5 (pre-generate)
-    if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
-      validateCoherence();
-    }
-    // Pre-trigger coherence validation silently when leaving step 3 → step 4
+    // Pre-trigger coherence validation when leaving step 3 → step 4 (with delay to avoid 429)
     if(state.step===4 && !state.aiValidation && !state.aiValidationLoading){
+      setTimeout(() => {
+        if(!state.aiValidation && !state.aiValidationLoading) validateCoherence();
+      }, 2000);
+    }
+    // Step 5: only validate if not already done at step 4
+    if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
       validateCoherence();
     }
     // If user arrives at step 4 with context filled → refresh AI poblaciones if not done yet
     if(state.step===4 && state.contexto?.trim() && !state.aiPoblaciones?.length && !state.aiPoblacionesLoading){
-      prefetchAIPoblaciones();
+      setTimeout(() => prefetchAIPoblaciones(), 1000);
     }
   }
 }
