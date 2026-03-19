@@ -818,29 +818,140 @@ function findInstrumento(varName) {
   return entry ? entry[1] : null;
 }
 
+async function generateAIInstruments(varsList) {
+  if(!varsList || varsList.length === 0 || state.aiInstrumentsLoading) return;
+  // Only run for qualitative (no standard scales) or vars not in static bank
+  const sinInstrumento = varsList.filter(v => !findInstrumento(v));
+  const isQual = state.enfoque === 'Cualitativo';
+
+  // Skip if all vars found in static bank and not qualitative
+  if(!isQual && sinInstrumento.length === 0) return;
+
+  state.aiInstrumentsLoading = true;
+  state.aiInstruments = null;
+  if(state.step === 5 && state.result) renderContent();
+
+  const targetVars = isQual ? varsList : sinInstrumento;
+  const instrPrompt = `Eres un experto en psicometría y evaluación psicológica en el contexto peruano y latinoamericano.
+
+Para el siguiente proyecto de investigación:
+- Enfoque: ${state.enfoque}
+- Diseño: ${DISENOS[state.enfoque.toLowerCase()]?.find(d=>d.id===state.diseno)?.label || state.diseno}
+- Población: ${getPoblacionCompleta()}
+- ${state.enfoque === 'Cualitativo' ? 'Categorías de análisis' : 'Variables sin instrumento identificado'}: ${targetVars.join(', ')}
+
+${isQual ? `Para INVESTIGACIÓN CUALITATIVA no se usan escalas psicométricas. En cambio, sugiere:
+- El tipo de instrumento de recolección adecuado para cada categoría (guía de entrevista semi-estructurada, grupo focal, etc.)
+- Los ejes temáticos o preguntas orientadoras específicas para cada categoría
+- Si aplica, algún referente teórico o metodológico para construir el instrumento` :
+`Para cada variable, sugiere el instrumento de medición más apropiado con:
+- Nombre completo del instrumento y autor(es) original(es)
+- Versión en español o adaptación latinoamericana/peruana si existe
+- Número de ítems y tipo de escala
+- Propiedad psicométrica clave (alpha de Cronbach ≥ .70 o similar)
+- Una nota sobre disponibilidad o acceso en Perú`}
+
+Responde SOLO con JSON sin texto adicional:
+[
+  {
+    "variable": "nombre exacto de la variable/categoría",
+    "instrumento": "nombre completo del instrumento",
+    "autores": "Autor(es), año",
+    "descripcion": "ítems, escala, alpha o equivalente",
+    "nota_peru": "disponibilidad o adaptación peruana/latinoamericana",
+    "tipo": "${isQual ? 'cualitativo' : 'cuantitativo'}"
+  }
+]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 900,
+        messages: [{role: 'user', content: instrPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(Array.isArray(parsed) && parsed.length > 0) {
+      state.aiInstruments = parsed;
+    }
+  } catch(e) {
+    console.error('generateAIInstruments error:', e);
+    state.aiInstruments = [];
+  } finally {
+    state.aiInstrumentsLoading = false;
+    if(state.step === 5 && state.result) renderContent();
+    saveState();
+  }
+}
+
 function renderInstrumentosHtml(varsList) {
-  const encontrados = varsList.map(v => ({v, instr: findInstrumento(v)})).filter(x => x.instr);
-  if(encontrados.length === 0) return '';
+  if(!varsList || varsList.length === 0) return '';
+
+  const isQual = state.enfoque === 'Cualitativo';
+  const staticFound = varsList.map(v => ({v, instr: findInstrumento(v)})).filter(x => x.instr);
+  const sinStatic = varsList.filter(v => !findInstrumento(v));
+  const needsAI = isQual || sinStatic.length > 0;
+
+  // Trigger AI generation if needed and not yet done
+  if(needsAI && !state.aiInstruments && !state.aiInstrumentsLoading) {
+    generateAIInstruments(varsList);
+  }
 
   let h = `<div style="margin-top:20px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
-  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">🧪 Instrumentos de medición sugeridos</div>`;
-  h += `<p style="font-size:12px;color:#6B7280;margin-bottom:14px">Validados en población hispanohablante. Verifica la adaptación para tu contexto específico.</p>`;
+  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">🧪 Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</div>`;
 
-  encontrados.forEach(({v, instr}) => {
-    h += `<div style="background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid #EDE9FE">`;
-    h += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">`;
-    h += `<span style="font-size:12px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.4px">${v}</span>`;
-    h += `<span style="font-size:11px;color:#9CA3AF;background:#F3F4F6;padding:2px 8px;border-radius:10px">${instr.items}</span>`;
-    h += `</div>`;
-    h += `<p style="font-size:13px;font-weight:600;color:#111827;margin:6px 0 4px">${instr.nombre}</p>`;
-    h += `<p style="font-size:12px;color:#6B7280;font-style:italic;line-height:1.5">${instr.ejemplo}</p>`;
-    h += `</div>`;
-  });
-
-  if(encontrados.length < varsList.length) {
-    const sinInstr = varsList.filter(v => !findInstrumento(v));
-    h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ Sin instrumento registrado para: ${sinInstr.join(', ')}. Busca en SCOPUS o PsycINFO.</p>`;
+  // Loading state
+  if(state.aiInstrumentsLoading) {
+    h += `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;color:#7C3AED;font-size:13px">
+      <span style="animation:pulse 1s infinite">🤖</span>
+      <span>Buscando instrumentos para tu proyecto específico...</span>
+    </div>`;
   }
+
+  // Show static instruments found
+  if(staticFound.length > 0 && !isQual) {
+    h += `<p style="font-size:12px;color:#6B7280;margin-bottom:10px">Validados en población hispanohablante.</p>`;
+    staticFound.forEach(({v, instr}) => {
+      h += `<div style="background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid #EDE9FE">`;
+      h += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">`;
+      h += `<span style="font-size:12px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.4px">${v}</span>`;
+      h += `<span style="font-size:11px;color:#9CA3AF;background:#F3F4F6;padding:2px 8px;border-radius:10px">${instr.items}</span>`;
+      h += `</div>`;
+      h += `<p style="font-size:13px;font-weight:600;color:#111827;margin:6px 0 4px">${instr.nombre}</p>`;
+      h += `<p style="font-size:12px;color:#6B7280;font-style:italic;line-height:1.5">${instr.ejemplo}</p>`;
+      h += `</div>`;
+    });
+  }
+
+  // Show AI instruments
+  if(state.aiInstruments && state.aiInstruments.length > 0) {
+    if(staticFound.length > 0 && !isQual) {
+      h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">✨ Sugeridos por IA para tu proyecto</div>`;
+    } else {
+      h += `<p style="font-size:12px;color:#6B7280;margin-bottom:10px">✨ Generados por IA según tu población y variables específicas.</p>`;
+    }
+    state.aiInstruments.forEach(item => {
+      const isQualItem = item.tipo === 'cualitativo';
+      h += `<div style="background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid ${isQualItem ? '#BBF7D0' : '#EDE9FE'}">`;
+      h += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:4px">`;
+      h += `<span style="font-size:12px;font-weight:700;color:${isQualItem ? '#059669' : '#7C3AED'};text-transform:uppercase;letter-spacing:.4px">${item.variable}</span>`;
+      if(item.descripcion) h += `<span style="font-size:11px;color:#9CA3AF;background:#F3F4F6;padding:2px 8px;border-radius:10px">${item.descripcion}</span>`;
+      h += `</div>`;
+      h += `<p style="font-size:13px;font-weight:600;color:#111827;margin:4px 0 2px">${item.instrumento}</p>`;
+      if(item.autores) h += `<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px">${item.autores}</p>`;
+      if(item.nota_peru) h += `<p style="font-size:12px;color:#059669;font-style:italic;line-height:1.4">🇵🇪 ${item.nota_peru}</p>`;
+      h += `</div>`;
+    });
+  } else if(!state.aiInstrumentsLoading && needsAI && (!state.aiInstruments || state.aiInstruments.length === 0)) {
+    h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ No se encontraron instrumentos estándar para: ${(isQual ? varsList : sinStatic).join(', ')}. Busca en SCOPUS, PsycINFO o consulta el <em>Mental Measurements Yearbook</em>.</p>`;
+  }
+
   h += `</div>`;
   return h;
 }
@@ -871,6 +982,26 @@ try {
   savedState = JSON.parse(localStorage.getItem('investigacion_state'));
 } catch(e) {}
 
+// Merge savedState with defaults so new fields are always present
+const stateDefaults = {
+  step:0, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
+  problema:"", problemaOtro:"", variables:[], variablesOtro:"",
+  enfoque:"", nivel:"", epistemologia:"", diseno:"", tecnica:"",
+  experiencia:"", viabilidad:"", contexto:"", motivacion:"",
+  result:null, loading:false, editMode:false,
+  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""},
+  aiVars:[], aiVarsLoading:false, aiVarsError:false,
+  aiValidation:null, aiValidationLoading:false,
+  aiNextSteps:null, editValidation:null, editValidating:false,
+  aiInstruments:null, aiInstrumentsLoading:false
+};
+if(savedState) {
+  // Ensure edited has all new fields
+  savedState.edited = Object.assign({}, stateDefaults.edited, savedState.edited || {});
+  // Ensure all top-level new fields exist
+  savedState = Object.assign({}, stateDefaults, savedState);
+}
+
 let state = savedState || {
   step:0,
   area:"",
@@ -893,7 +1024,15 @@ let state = savedState || {
   result:null,
   loading:false,
   editMode:false,
-  edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""},
+  aiVars:[],
+  aiVarsLoading:false,
+  aiVarsError:false,
+  aiValidation:null,
+  aiValidationLoading:false,
+  aiNextSteps:null,
+  editValidation:null,
+  editValidating:false
 };
 
 // GUARDAR ESTADO AUTOMÁTICAMENTE
@@ -1357,13 +1496,59 @@ function renderContent(){
       </div>`;
     }
     
+    const hipLabel = state.enfoque === "Cuantitativo" ? "Hipótesis de investigación" : state.enfoque === "Cualitativo" ? "Supuestos de investigación" : "Hipótesis";
     const fields=[
-      {key:"tema", label:"Tema de investigacion", color:"#534AB7", bg:"#EEEDFE"},
-      {key:"pregunta", label:"Pregunta de investigacion", color:"#0F6E56", bg:"#E1F5EE"},
-      {key:"objetivo", label:"Objetivo general", color:"#993C1D", bg:"#FAECE7"},
-      {key:"hipotesis", label: state.enfoque === "Cuantitativo" ? "Hipotesis de investigacion" : state.enfoque === "Cualitativo" ? "Supuestos de investigacion" : "Hipotesis", color:"#7C3AED", bg:"#F3E8FF"},
+      {key:"tema",         label:"Tema de investigación",    color:"#534AB7", bg:"#EEEDFE"},
+      {key:"pregunta",     label:"Pregunta de investigación",color:"#0F6E56", bg:"#E1F5EE"},
+      {key:"objetivo",     label:"Objetivo general",          color:"#993C1D", bg:"#FAECE7"},
+      {key:"obj_esp1",     label:"Objetivo específico 1",     color:"#B45309", bg:"#FFFBEB"},
+      {key:"obj_esp2",     label:"Objetivo específico 2",     color:"#B45309", bg:"#FFFBEB"},
+      {key:"obj_esp3",     label:"Objetivo específico 3",     color:"#B45309", bg:"#FFFBEB"},
+      {key:"hipotesis",    label:hipLabel,                    color:"#7C3AED", bg:"#F3E8FF"},
+      {key:"justificacion",label:"Justificación del estudio", color:"#0369A1", bg:"#F0F9FF"},
     ];
-    let h= errorMsg + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
+    // ── Edit validation banner ────────────────────────────────────
+    let editValHtml = '';
+    if(state.editValidating) {
+      editValHtml = `<div style="margin-bottom:14px;padding:12px 16px;background:#F8FAFF;border:1px solid #C7D2FE;border-radius:10px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px;animation:pulse 1s infinite">🔍</span>
+        <div style="font-size:13px;color:#3730A3;font-weight:500">Verificando coherencia de tus ediciones...</div>
+      </div>`;
+    } else if(state.editValidation && !state.editMode) {
+      const ev = state.editValidation;
+      const hasProblem = ev.problemas && ev.problemas.length > 0;
+      const bg = ev.coherencia_global==='alta' ? '#ECFDF5' : ev.coherencia_global==='media' ? '#FFFBEB' : '#FEF2F2';
+      const border = ev.coherencia_global==='alta' ? '#A7F3D0' : ev.coherencia_global==='media' ? '#FDE68A' : '#FECACA';
+      const tc = ev.coherencia_global==='alta' ? '#065F46' : ev.coherencia_global==='media' ? '#92400E' : '#991B1B';
+
+      editValHtml = `<div style="margin-bottom:14px;padding:14px 16px;background:${bg};border:1px solid ${border};border-radius:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${hasProblem||ev.aciertos?.length?'10px':'0'}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">${ev.emoji}</span>
+            <span style="font-weight:700;font-size:13px;color:${tc}">${ev.resumen}</span>
+          </div>
+          <button onclick="state.editValidation=null;renderContent()" style="font-size:11px;background:none;border:none;cursor:pointer;color:#9CA3AF;padding:2px 6px">✕</button>
+        </div>`;
+
+      if(ev.aciertos && ev.aciertos.length > 0) {
+        editValHtml += ev.aciertos.map(a =>
+          `<div style="font-size:12px;color:${tc};display:flex;gap:6px;padding:2px 0"><span>✓</span><span>${a}</span></div>`
+        ).join('');
+      }
+      if(hasProblem) {
+        editValHtml += `<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">`;
+        ev.problemas.forEach(p => {
+          editValHtml += `<div style="background:rgba(255,255,255,.7);border-radius:6px;padding:8px 10px;border-left:3px solid #F59E0B">
+            <div style="font-size:11px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">${p.campo}</div>
+            <div style="font-size:12px;color:#374151">${p.descripcion}</div>
+          </div>`;
+        });
+        editValHtml += `</div>`;
+      }
+      editValHtml += `</div>`;
+    }
+
+    let h= errorMsg + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
     h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
     h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
@@ -1405,17 +1590,27 @@ function renderContent(){
     });
     h+=`</div></div>`;
 
-    // PRÓXIMOS PASOS
-    h+=`<div class="next-steps">
-      <div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div>
-      <ul>
-        <li><strong>Justificación:</strong> Explica por qué es importante investigar este tema (relevancia teórica, práctica y social del problema)</li>
-        <li><strong>Marco teórico:</strong> Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa también los diseños usados en estudios similares siguiendo la clasificación de Ato et al. (2013)</li>
-        <li><strong>Metodología detallada:</strong> Define tu muestra (tipo y tamaño), instrumentos de medición validados y procedimiento de recolección de datos. Consulta Hernández & Mendoza (2018) para guiar tu decisión de diseño</li>
-        <li><strong>Análisis estadístico o cualitativo:</strong> Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos conforme a la técnica elegida</li>
-        <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase del proyecto de investigación</li>
-      </ul>
-    </div>`;
+    // PRÓXIMOS PASOS — dinámicos con IA
+    if(state.aiNextSteps && Array.isArray(state.aiNextSteps) && state.aiNextSteps.length > 0){
+      h+=`<div class="next-steps"><div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div><ul>`;
+      state.aiNextSteps.forEach(step => {
+        h+=`<li>${step}</li>`;
+      });
+      h+=`</ul></div>`;
+    } else {
+      h+=`<div class="next-steps">
+        <div class="next-steps-title">🎯 Próximos pasos para tu proyecto <span style="font-size:10px;font-weight:400;opacity:.6">(generando versión personalizada...)</span></div>
+        <ul>
+          <li><strong>Justificación:</strong> Explica la relevancia teórica, práctica y social de tu tema en el contexto peruano</li>
+          <li><strong>Marco teórico:</strong> Busca 5-10 artículos de los últimos 5 años en SCOPUS, Redalyc o SciELO sobre tu problema y población</li>
+          <li><strong>Metodología detallada:</strong> Define muestra, instrumentos validados y procedimiento de recolección</li>
+          <li><strong>Análisis:</strong> Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus) según tu técnica</li>
+          <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase del proyecto</li>
+        </ul>
+      </div>`;
+      // Trigger async next steps generation
+      if(!state.aiNextSteps) generateNextSteps();
+    }
 
     // INSTRUMENTOS SUGERIDOS EN UI
     h += renderInstrumentosHtml(variablesDisplay);
@@ -1463,7 +1658,90 @@ function setVarsFromText(val){
   state.variablesOtro = val;
   updateNav();
 }
-function toggleEdit(){state.editMode=!state.editMode;renderContent();}
+function toggleEdit(){
+  const wasEditing = state.editMode;
+  state.editMode = !state.editMode;
+  if(wasEditing) {
+    // User just exited edit mode — auto-validate
+    state.editValidation = null;
+    state.editValidating = true;
+    renderContent();
+    validateEdits(); // async, non-blocking
+  } else {
+    renderContent();
+  }
+}
+
+async function validateEdits() {
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+    : (state.enfoque === 'Cualitativo' ? `Análisis ${disenoLabel}` : 'Estadística descriptiva');
+
+  const e = state.edited;
+  const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa si los siguientes elementos de una tesis de pregrado son coherentes con el perfil metodológico declarado.
+
+PERFIL METODOLÓGICO DECLARADO:
+- Enfoque: ${state.enfoque}
+- Diseño: ${disenoLabel}
+- Técnica: ${tecnicaLabel}
+- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'}: ${(() => { let v = state.variables.filter(x=>x!=='otro'); if(state.variables.includes('otro')&&state.variablesOtro.trim()) v=v.concat(state.variablesOtro.split(',').map(x=>x.trim()).filter(Boolean)); return v.join(', '); })()}
+- Población: ${getPoblacionCompleta()}
+
+ELEMENTOS EDITADOS POR EL ESTUDIANTE:
+1. Tema: "${e.tema||''}"
+2. Pregunta: "${e.pregunta||''}"
+3. Objetivo general: "${e.objetivo||''}"
+4. Objetivo específico 1: "${e.obj_esp1||''}"
+5. Objetivo específico 2: "${e.obj_esp2||''}"
+6. Objetivo específico 3: "${e.obj_esp3||''}"
+7. ${state.enfoque==='Cualitativo'?'Supuestos':'Hipótesis'}: "${e.hipotesis||''}"
+8. Justificación: "${e.justificacion||''}"
+
+Evalúa cada elemento con estos criterios:
+- ¿Usa el lenguaje correcto para el paradigma (${state.enfoque})?
+- ¿Los verbos son coherentes con el diseño ${disenoLabel}?
+- ¿Los objetivos específicos son diferentes entre sí y al general?
+- ¿La hipótesis/supuesto es apropiada para el enfoque?
+- ¿Algún campo usa lenguaje del paradigma contrario? (ej: lenguaje estadístico en cualitativo, o lenguaje fenomenológico en cuantitativo)
+
+Responde SOLO con JSON:
+{
+  "coherencia_global": "alta|media|baja",
+  "emoji": "✅|⚠️|🔴",
+  "resumen": "frase de 10 palabras máximo",
+  "problemas": [
+    {"campo": "nombre del campo con problema", "descripcion": "qué está mal y cómo corregirlo en una frase"}
+  ],
+  "aciertos": ["elemento bien logrado 1", "elemento bien logrado 2"]
+}
+Si no hay problemas, "problemas" debe ser un array vacío [].`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 700,
+        messages: [{role: 'user', content: valPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b=>b.text||'').join('')||'';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    state.editValidation = parsed;
+  } catch(e) {
+    state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
+  } finally {
+    state.editValidating = false;
+    if(state.step === 5 && state.result) renderContent();
+    saveState();
+  }
+}
 
 function nuevoProyecto(){
   if(confirm('¿Estás seguro de que quieres empezar un nuevo proyecto? Se perderá toda la información actual.')){
@@ -1490,6 +1768,14 @@ function nuevoProyecto(){
       aiVarsError:false,
       aiValidation:null,
       aiValidationLoading:false,
+      aiNextSteps:null,
+      editValidation:null,
+      editValidating:false,
+      aiInstruments:null,
+      aiInstrumentsLoading:false,
+      aiNextSteps:null,
+      editValidation:null,
+      editValidating:false,
       tecnica:"",
       experiencia:"",
       viabilidad:"",
@@ -1498,7 +1784,7 @@ function nuevoProyecto(){
       result:null,
       loading:false,
       editMode:false,
-      edited:{tema:"",pregunta:"",objetivo:"",hipotesis:""}
+      edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""}
     };
     
     // Volver al inicio
@@ -1625,6 +1911,67 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
 }
 
 // ── INTERVENCIÓN 1: Variables dinámicas prefetched en segundo plano ──
+async function generateNextSteps() {
+  if(!state.result || !state.edited) return;
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+    : (state.enfoque === 'Cualitativo' ? `Análisis ${disenoLabel}` : 'Estadística descriptiva');
+
+  let vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim())
+    vars = vars.concat(state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean));
+
+  const stepsPrompt = `Eres un metodólogo experto en psicología y asesor de tesis en el Perú.
+
+Un estudiante de pregrado acaba de definir su proyecto de investigación con el siguiente perfil:
+- Área: ${efectiveArea()}
+- Población: ${getPoblacionCompleta()}
+- Problema: ${efectiveProblema()}
+- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
+- Enfoque: ${state.enfoque} | Diseño: ${disenoLabel} | Técnica: ${tecnicaLabel}
+- Tema generado: ${state.edited.tema}
+- Objetivo general: ${state.edited.objetivo}
+- Contexto: ${state.contexto || 'No especificado'}
+- Experiencia previa: ${state.experiencia}
+- Acceso a la población: ${state.viabilidad}
+
+Genera exactamente 5 próximos pasos CONCRETOS y PERSONALIZADOS para ESTE proyecto específico. Cada paso debe:
+- Mencionar las variables, diseño o población específica del proyecto
+- Ser accionable con instrucciones concretas (no genéricas)
+- Incluir recursos o herramientas específicas cuando aplique (bases de datos, software, instrumentos)
+- Considerar el contexto peruano (MINSA, INEI, Redalyc, SciELO Perú, etc.)
+- Estar ordenados cronológicamente en el proceso de tesis
+
+Responde SOLO con un array JSON de 5 strings. Cada string es un paso con formato HTML básico permitido (<strong>):
+["<strong>Paso 1:</strong> texto concreto...","<strong>Paso 2:</strong> ...","<strong>Paso 3:</strong> ...","<strong>Paso 4:</strong> ...","<strong>Paso 5:</strong> ..."]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{role: 'user', content: stepsPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(Array.isArray(parsed) && parsed.length >= 3) {
+      state.aiNextSteps = parsed;
+      saveState();
+      if(state.step === 5 && state.result) renderContent();
+    }
+  } catch(e) {
+    console.error('generateNextSteps error:', e);
+  }
+}
+
 async function prefetchAIVars() {
   // Solo prefetch si hay problema definido y no hay ya vars de IA
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
@@ -1637,9 +1984,11 @@ async function prefetchAIVars() {
   if(state.step === 2) renderContent();
 
   const enfoque = state.enfoque || 'Cuantitativo';
-  const area = efectiveArea();
-  const poblacion = efectivePoblacion() || 'No especificada';
+  const isQualText = enfoque === 'Cualitativo' ? 'categorías de análisis cualitativo (ejes temáticos para entrevistas)' : 'variables psicológicas cuantificables';
+  const area = efectiveArea() || 'Psicología';
+  const poblacion = getPoblacionCompleta() || efectivePoblacion() || 'No especificada';
   const isQual = enfoque === 'Cualitativo';
+  const varType = isQualText;
 
   const varPrompt = `Eres un experto en metodología de investigación en psicología en el contexto peruano.
 
@@ -1649,7 +1998,7 @@ Dado el siguiente perfil:
 - Problema/fenómeno: ${problema}
 - Enfoque: ${enfoque}
 
-Genera exactamente 8 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que sean:
+Genera exactamente 8 ${varType} que sean:
 1. Operacionalizables con instrumentos validados disponibles en Perú o Latinoamérica
 2. Relevantes para el problema específico en el contexto peruano
 3. ${isQual ? 'Ejes temáticos explorables mediante entrevistas o grupos focales' : 'Medibles con escalas tipo Likert validadas'}
@@ -1759,7 +2108,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
 }
 
 async function generate(){
-  state.loading=true;state.result=null;renderContent();
+  state.loading=true;state.result=null;state.editValidation=null;state.editValidating=false;renderContent();
   
   let variablesList = state.variables.filter(v => v !== 'otro');
   if(state.variables.includes('otro') && state.variablesOtro.trim()) {
@@ -1986,7 +2335,12 @@ Población: Mujeres adultas con cáncer de mama, Lima, Perú
 ✅ OBJETIVO: Comprender la experiencia vivida de mujeres adultas con cáncer de mama en Lima respecto al significado del diagnóstico, las estrategias de afrontamiento empleadas y el apoyo social percibido durante su proceso de enfermedad.
 ✅ SUPUESTO: Se espera que las participantes describan experiencias subjetivas diversas y significativas sobre el diagnóstico, el afrontamiento y el apoyo social, exploradas mediante entrevistas semi-estructuradas en profundidad (n≈8-12) y analizadas con IPA (Smith et al., 2009), garantizando credibilidad mediante reducción fenomenológica, triangulación y reflexividad del investigador.
 ❌ MALO: "¿Cómo significan el cáncer las mujeres?" → genérica, no usa las variables
-❌ MALO: "Determinar el nivel de apoyo social" → verbo cuantitativo`;
+❌ MALO: "Determinar el nivel de apoyo social" → verbo cuantitativo
+✅ OBJ ESP 1: Identificar los significados atribuidos al diagnóstico de cáncer de mama en las participantes.
+✅ OBJ ESP 2: Describir las estrategias de afrontamiento empleadas por las mujeres adultas ante la experiencia de la enfermedad.
+✅ OBJ ESP 3: Analizar el papel del apoyo social percibido en la vivencia del proceso oncológico desde la perspectiva de las participantes.
+❌ MALO OBJ ESP: "Comprender el diagnóstico" → repite el verbo del objetivo general
+❌ MALO OBJ ESP: "Medir el apoyo social" → lenguaje cuantitativo en fenomenológico`;
 
       if(dQ === 'analisis-tematico') return `
 EJEMPLO DE CALIDAD ALTA — Análisis Temático (Braun & Clarke, 2006):
@@ -1996,8 +2350,11 @@ Población: Psicólogos clínicos del sector público, Lima, Perú
 ✅ PREGUNTA: ¿Cómo construyen y experimentan su identidad profesional, bienestar psicológico y demandas laborales los psicólogos clínicos del sector público de Lima?
 ✅ OBJETIVO: Explorar y describir los patrones temáticos en torno a la identidad profesional, el bienestar psicológico y las demandas laborales de psicólogos clínicos del sector público de Lima.
 ✅ SUPUESTO: Se espera identificar patrones temáticos recurrentes sobre identidad profesional, bienestar y demandas laborales mediante entrevistas semi-estructuradas o grupos focales, analizados con análisis temático inductivo (Braun & Clarke, 2006), asegurando integridad mediante fundamentación empírica, transparencia analítica y revisión de pares (Pistrang & Barker, 2012).
-❌ MALO: "¿Existe relación entre identidad y bienestar?" → lenguaje cuantitativo
-❌ MALO: "Analizar la relación entre demandas laborales y bienestar" → correlacional`;
+✅ OBJ ESP 1: Identificar los patrones temáticos sobre identidad profesional en psicólogos clínicos del sector público de Lima.
+✅ OBJ ESP 2: Describir las experiencias de bienestar psicológico y demandas laborales desde la perspectiva de los participantes.
+✅ OBJ ESP 3: Analizar las implicancias de los hallazgos para el diseño de programas de bienestar en instituciones públicas de salud de Lima.
+❌ MALO OBJ ESP: "Estudiar la identidad" → verbo genérico no académico
+❌ MALO OBJ ESP: repetir "Explorar" en los 3 objetivos → verbos deben ser distintos entre sí y al general`;
 
       if(dQ === 'etnografico') return `
 EJEMPLO DE CALIDAD ALTA — Etnográfico:
@@ -2082,8 +2439,11 @@ Población: Adolescentes de 14–17 años, colegios públicos de Lima
 ✅ PREGUNTA: ¿Existe relación estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima?
 ✅ OBJETIVO: Determinar la relación entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima.
 ✅ HIPÓTESIS: Existe una relación positiva y estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima (r de Pearson, p<.05).
-❌ MALO: "¿Cómo influye la autoestima en la satisfacción?" → implica causalidad
-❌ MALO: "Determinar el nivel de autoestima" → descriptivo, no correlacional`;
+✅ OBJ ESP 1: Identificar los niveles de autoestima y satisfacción con la vida en adolescentes de 14-17 años de colegios públicos de Lima.
+✅ OBJ ESP 2: Describir las diferencias en autoestima y satisfacción con la vida según variables sociodemográficas (sexo, grado escolar).
+✅ OBJ ESP 3: Establecer la dirección y magnitud de la relación entre autoestima y satisfacción con la vida en la muestra estudiada.
+❌ MALO OBJ ESP: "Determinar la relación" → pertenece al objetivo general
+❌ MALO OBJ ESP: "Ver si se relacionan" → no es lenguaje académico`;
 
       if(state.tecnica === 'regresion-simple') return `
 EJEMPLO DE CALIDAD ALTA — Regresión Simple (OLS):
@@ -2093,8 +2453,11 @@ Población: Estudiantes universitarios de primer año, UNMSM, Lima
 ✅ PREGUNTA: ¿En qué medida la autoeficacia predice el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima?
 ✅ OBJETIVO: Determinar la capacidad predictiva de la autoeficacia sobre el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima.
 ✅ HIPÓTESIS: La autoeficacia predice significativamente el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima (β significativo, p<.05, R²>0).
-❌ MALO: "¿Existe relación entre autoeficacia y rendimiento?" → solo correlación, no predicción
-❌ MALO: "Analizar la autoeficacia" → genérico, no menciona predicción`;
+✅ OBJ ESP 1: Identificar los niveles de autoeficacia y rendimiento académico en estudiantes de primer año de la UNMSM.
+✅ OBJ ESP 2: Describir la distribución de autoeficacia y rendimiento según variables sociodemográficas (facultad, sexo, procedencia).
+✅ OBJ ESP 3: Establecer el coeficiente de determinación (R²) de la autoeficacia sobre el rendimiento académico en la muestra.
+❌ MALO OBJ ESP: "Determinar la capacidad predictiva" → es el objetivo general
+❌ MALO OBJ ESP: usar verbos cualitativos (Comprender, Explorar) en diseño cuantitativo`;
 
       if(state.tecnica === 'regresion-multiple') return `
 EJEMPLO DE CALIDAD ALTA — Regresión Múltiple (OLS):
@@ -2104,8 +2467,11 @@ Población: Estudiantes de secundaria, colegios privados, Arequipa, Perú
 ✅ PREGUNTA: ¿En qué medida la motivación intrínseca, el apoyo familiar y la autoeficacia predicen el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa?
 ✅ OBJETIVO: Determinar la capacidad predictiva de la motivación intrínseca, el apoyo familiar y la autoeficacia sobre el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa.
 ✅ HIPÓTESIS: La motivación intrínseca, el apoyo familiar y la autoeficacia predicen significativamente el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa (R² significativo, p<.05).
-❌ MALO: "¿Cuál variable tiene más efecto?" → no es el objetivo principal de la regresión múltiple sin especificar β comparativos
-❌ MALO: "Determinar si existe relación" → correlacional, no predictivo`;
+✅ OBJ ESP 1: Identificar los niveles de motivación intrínseca, apoyo familiar, autoeficacia y rendimiento académico en los estudiantes de la muestra.
+✅ OBJ ESP 2: Analizar la contribución individual de cada predictor (motivación, apoyo familiar, autoeficacia) sobre el rendimiento académico (coeficientes β).
+✅ OBJ ESP 3: Comparar el poder predictivo del modelo con las variables sociodemográficas como covariables de control.
+❌ MALO OBJ ESP: "Predecir el rendimiento" → es el objetivo general, no específico
+❌ MALO OBJ ESP: tres objetivos con el mismo verbo (Analizar x3)`;
 
       if(state.tecnica === 'mediacion') return `
 EJEMPLO DE CALIDAD ALTA — Mediación Simple (Hayes PROCESS Modelo 4):
@@ -2115,8 +2481,11 @@ Población: Enfermeras de hospitales públicos, Lima, Perú
 ✅ PREGUNTA: ¿En qué medida el agotamiento emocional media la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima?
 ✅ OBJETIVO: Examinar el efecto mediador del agotamiento emocional en la relación entre el estrés laboral (X) y la intención de renuncia (Y) en enfermeras de hospitales públicos de Lima.
 ✅ HIPÓTESIS: El agotamiento emocional media significativamente la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima (efecto indirecto a×b significativo, IC bootstrap 95% excluye el cero).
-❌ MALO: "¿Existe relación entre estrés y renuncia?" → ignora el mediador
-❌ MALO: "Analizar el agotamiento emocional" → descriptivo`;
+✅ OBJ ESP 1: Identificar los niveles de estrés laboral, agotamiento emocional e intención de renuncia en enfermeras de hospitales públicos de Lima.
+✅ OBJ ESP 2: Analizar el efecto directo del estrés laboral sobre la intención de renuncia en la muestra estudiada.
+✅ OBJ ESP 3: Establecer el efecto indirecto del estrés laboral sobre la intención de renuncia a través del agotamiento emocional mediante bootstrapping.
+❌ MALO OBJ ESP: "Examinar la mediación" en obj esp → eso es el objetivo GENERAL, no el específico
+❌ MALO OBJ ESP: verbos iguales entre objetivos específicos`;
 
       if(state.tecnica === 'moderacion') return `
 EJEMPLO DE CALIDAD ALTA — Moderación Simple (Hayes PROCESS Modelo 1):
@@ -2126,8 +2495,11 @@ Población: Estudiantes universitarios de psicología, PUCP, Lima
 ✅ PREGUNTA: ¿En qué medida el apoyo social modera la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima?
 ✅ OBJETIVO: Analizar el efecto moderador del apoyo social (W) en la relación entre la autoeficacia (X) y el rendimiento académico (Y) en estudiantes de psicología de la PUCP de Lima.
 ✅ HIPÓTESIS: El apoyo social modera significativamente la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima (término de interacción X×W significativo, p<.05).
-❌ MALO: "¿Existe relación entre autoeficacia y rendimiento?" → solo correlacional
-❌ MALO: "El apoyo social afecta el rendimiento" → ignora la interacción`;
+✅ OBJ ESP 1: Identificar los niveles de autoeficacia, apoyo social y rendimiento académico en estudiantes de psicología de la PUCP.
+✅ OBJ ESP 2: Analizar la relación directa entre autoeficacia y rendimiento académico controlando el efecto del apoyo social.
+✅ OBJ ESP 3: Establecer si el efecto de la autoeficacia sobre el rendimiento varía según el nivel de apoyo social mediante análisis de interacción.
+❌ MALO OBJ ESP: "Analizar la moderación" → eso pertenece al objetivo general
+❌ MALO OBJ ESP: "Estudiar el apoyo social" → verbo genérico`;
 
       if(state.tecnica === 'mediacion-moderada') return `
 EJEMPLO DE CALIDAD ALTA — Mediación Moderada (Hayes PROCESS Modelo 7/14/58):
@@ -2255,9 +2627,30 @@ PERFIL DEL PROYECTO
 • Diseño: ${disenoLabel}
 • ${tecnicaInfo}
 • Lugar/Contexto: ${state.contexto || "No especificado"}
+${state.contexto && state.contexto.trim().length > 3 ? `
+⚡ USO DEL CONTEXTO GEOGRÁFICO (obligatorio porque el campo no está vacío):
+El contexto declarado es: "${state.contexto.trim()}"
+Instrucciones de uso — aplica TODAS las que correspondan:
+1. TEMA Y POBLACIÓN: incluye el contexto geográfico específico en el tema y en la población (ej: "...en adolescentes del distrito de SJL, Lima" en lugar de "...en adolescentes de Lima")
+2. JUSTIFICACIÓN con datos contextuales: en el campo justificación menciona fuentes de datos específicas para ese contexto:
+   - Si es Lima o distrito limeño → INEI (Encuesta Nacional de Hogares), MINSA (HIS-MINSA), DIRESA Lima, estadísticas del MINDES
+   - Si es región andina (Cusco, Puno, Ayacucho, etc.) → DIRESA regional, datos de pobreza INEI, contexto intercultural
+   - Si es Amazonía → DIRESA Amazónica, SERNANP, contexto de comunidades nativas si aplica
+   - Si es institución específica (hospital, colegio, empresa) → menciónala como contexto de aplicación directa
+   - Si es contexto rural → ENAHO rural, brechas de acceso a salud mental del MINSA
+3. PRÓXIMOS PASOS (en el campo justificación): sugiere que el tesista consulte los datos estadísticos del INEI o MINSA para ese distrito/región para sustentar la prevalencia del problema en ese contexto específico
+4. No generalices: si dice "SJL" no escribas solo "Lima"; si dice "Cusco" no escribas "región andina"` : '/* contexto no especificado — usar solo población genérica */'}
 • Experiencia del investigador: ${state.experiencia}
 • Acceso a la población: ${state.viabilidad}
 • Motivación: ${state.motivacion || "No especificada"}
+${state.motivacion && state.motivacion.trim().length > 5 ? `
+⚡ USO DE LA MOTIVACIÓN DEL INVESTIGADOR (solo aplica porque el campo no está vacío):
+La motivación declarada es: "${state.motivacion.trim()}"
+Instrucciones de uso:
+- Si menciona una institución, hospital, colegio, ONG o lugar específico → úsalo para anclar el contexto en el tema o en la justificación (ej: "...en el Hospital X de Lima" o "observado en la práctica pre-profesional en...")
+- Si refleja experiencia directa (práctica clínica, trabajo de campo, vivencia personal) → incorpóralo en la justificación como evidencia de pertinencia del investigador con el fenómeno
+- Si menciona una brecha de conocimiento o ausencia de estudios → úsala para reforzar la relevancia teórica en la justificación
+- En todos los casos: úsala con sobriedad, sin exagerarla; que enriquezca, no que domine` : '/* motivación vacía — ignorar */'}
 
 ═══════════════════════════════════════════════
 EJEMPLOS DE REFERENCIA (calidad esperada)
@@ -2287,8 +2680,30 @@ ${objetivoInstruccion}
 
 ${chainOfThought}
 
+CAMPOS OBLIGATORIOS — todos son necesarios, no omitas ninguno:
+
+1. "tema" → máx 15 palabras. Incluye fenómeno + población + lugar geográfico.
+
+2. "pregunta" → pregunta de investigación principal coherente con el diseño.
+
+3. "objetivo" → objetivo general. Verbo en infinitivo apropiado al diseño. Incluye todas las variables/categorías y la población con lugar.
+
+4. "obj_esp1" → PRIMER objetivo específico. Verbo: preferir IDENTIFICAR, CARACTERIZAR o DESCRIBIR. Debe abordar una variable/categoría específica o el perfil de la muestra.
+
+5. "obj_esp2" → SEGUNDO objetivo específico. Verbo diferente al anterior: preferir ANALIZAR, EXPLORAR o COMPARAR. Debe profundizar en relaciones entre variables o patrones del fenómeno.
+
+6. "obj_esp3" → TERCER objetivo específico. Verbo diferente: preferir ESTABLECER, EVALUAR o PROPONER. Puede ser de alcance metodológico, aplicado o de implicancias. NUNCA repitas verbos usados en obj_esp1 u obj_esp2.
+
+7. "hipotesis" → hipótesis (cuantitativo/mixto) O supuestos cualitativos flexibles con técnica de recolección y criterios de rigor.
+
+8. "justificacion" → ESTRUCTURA OBLIGATORIA en exactamente 3 oraciones académicas:
+   ORACIÓN 1 — Relevancia teórica: estado del arte + brecha de conocimiento. Menciona si hay escasa investigación en Perú o Latinoamérica sobre este problema en esta población. Cita algún dato estadístico del MINSA, INEI, OPS o estudio reciente si aplica al contexto.
+   ORACIÓN 2 — Relevancia práctica: cómo los resultados pueden orientar la intervención profesional, política pública o práctica clínica/educativa/organizacional en el contexto específico declarado.
+   ORACIÓN 3 — Relevancia social: beneficio directo para la población estudiada y para la sociedad peruana. Menciona a la población con su contexto geográfico.
+   REGLA: máximo 5 oraciones en total, lenguaje académico formal, sin frases genéricas como "es importante investigar este tema".
+
 Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicaciones:
-{"tema":"...","pregunta":"...","objetivo":"...","hipotesis":"..."}`;
+{"tema":"...","pregunta":"...","objetivo":"...","obj_esp1":"...","obj_esp2":"...","obj_esp3":"...","hipotesis":"...","justificacion":"..."}`;
 
   try{
     const res=await fetch("/api/chat",{
@@ -2310,10 +2725,17 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
         : state.enfoque==="Cualitativo" ? `Se espera comprender el fenómeno de ${efectiveProblema()} en ${getPoblacionCompleta()}.`
         : `Existe una relación significativa entre ${variablesList.slice(0,2).join(' y ')} en ${getPoblacionCompleta()}.`;
     }
+    if(!parsed.obj_esp1) parsed.obj_esp1 = `Identificar las características de ${variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`;
+    if(!parsed.obj_esp2) parsed.obj_esp2 = `Describir la relación entre ${(variablesList[1]||variablesList[0])||efectiveProblema()} y el fenómeno de estudio en ${getPoblacionCompleta()}.`;
+    if(!parsed.obj_esp3) parsed.obj_esp3 = `Analizar las implicancias metodológicas y prácticas de los hallazgos para ${getPoblacionCompleta()}.`;
+    if(!parsed.justificacion) parsed.justificacion = `Este estudio contribuye al conocimiento sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, un área con escasa investigación en el contexto peruano. A nivel práctico, los resultados pueden orientar intervenciones profesionales dirigidas a esta población. Socialmente, aporta evidencia para el diseño de políticas y programas de atención psicológica en el Perú.`;
     
     state.result=parsed;
     state.edited={...parsed};
+    state.aiNextSteps = null; // reset so new ones are generated
+    state.aiInstruments = null; state.aiInstrumentsLoading = false;
     saveState();
+    generateNextSteps(); // fire async — no await, runs in background
   }catch(e){
     console.error("Error:", e);
 
@@ -2408,7 +2830,13 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     state.result={ ...fb,
       error:`⚠️ API no disponible. Se generó un ejemplo coherente con tu técnica (${tecnicaLabel}). Edítalo según tu criterio.`
     };
-    state.edited={ tema:fb.tema, pregunta:fb.pregunta, objetivo:fb.objetivo, hipotesis:fb.hipotesis };
+    state.edited={ 
+      tema:fb.tema, pregunta:fb.pregunta, objetivo:fb.objetivo, hipotesis:fb.hipotesis,
+      obj_esp1: `Identificar las características de ${variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`,
+      obj_esp2: `Describir los patrones de ${variablesList[1]||variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`,
+      obj_esp3: `Analizar las implicancias de los hallazgos para la intervención psicológica en ${getPoblacionCompleta()}.`,
+      justificacion: `Este estudio contribuye al conocimiento sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, área con escasa investigación en el contexto peruano. A nivel práctico, orienta intervenciones profesionales para esta población. Socialmente, aporta evidencia para políticas y programas de atención psicológica en el Perú.`
+    };
     saveState();
   }
   state.loading=false;
@@ -2648,7 +3076,11 @@ async function downloadDoc() {
   ${fieldLabel('Tema de Investigación')}${fieldValue(state.edited.tema)}
   ${fieldLabel('Pregunta de Investigación')}${fieldValue(state.edited.pregunta)}
   ${fieldLabel('Objetivo General')}${fieldValue(state.edited.objetivo)}
+  ${state.edited.obj_esp1?fieldLabel('Objetivo Específico 1')+fieldValue(state.edited.obj_esp1):''}
+  ${state.edited.obj_esp2?fieldLabel('Objetivo Específico 2')+fieldValue(state.edited.obj_esp2):''}
+  ${state.edited.obj_esp3?fieldLabel('Objetivo Específico 3')+fieldValue(state.edited.obj_esp3):''}
   ${fieldLabel(hipLabel)}${fieldValue(state.edited.hipotesis)}
+  ${state.edited.justificacion?fieldLabel('Justificación del Estudio')+fieldValue(state.edited.justificacion):''}
 
   ${heading('2. PERFIL METODOLÓGICO','059669')}
   <w:tbl>
