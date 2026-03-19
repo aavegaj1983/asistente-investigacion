@@ -818,6 +818,59 @@ function findInstrumento(varName) {
   return entry ? entry[1] : null;
 }
 
+async function prefetchAIPoblaciones() {
+  if(!state.area || state.area === 'otro' || state.aiPoblacionesLoading) return;
+
+  state.aiPoblacionesLoading = true;
+  state.aiPoblaciones = [];
+  if(state.step === 1) renderContent();
+
+  const area = efectiveArea();
+
+  const pobPrompt = `Eres un experto en investigación psicológica en el contexto peruano.
+
+Para el área de "${area}", genera exactamente 7 poblaciones de estudio ESPECÍFICAS y CONTEXTUALIZADAS para una tesis de pregrado en psicología en el Perú. Cada población debe:
+1. Ser específica: incluir características demográficas relevantes (edad, condición, contexto institucional)
+2. Ser viable para un tesista de pregrado (accesible, tamaño razonable)
+3. Reflejar la realidad peruana: mencionar tipos de instituciones, contextos o grupos presentes en el Perú
+4. Ser diversa: cubrir distintos grupos etarios, géneros, contextos (urbano/rural, público/privado)
+5. NO ser genérica: evitar "Adultos en general" o "Población general"
+
+Ejemplos de especificidad esperada:
+- ❌ "Adultos mayores" → ✅ "Adultos mayores de 65+ años en centros de día del MINSA, Lima"
+- ❌ "Trabajadores" → ✅ "Trabajadores de salud del primer nivel de atención EsSalud, Lima Metropolitana"
+- ❌ "Estudiantes" → ✅ "Estudiantes de 5to de secundaria de colegios públicos en zonas periurbanas de Lima Norte"
+
+Responde SOLO con un array JSON de 7 strings:
+["Población específica 1","Población específica 2","Población específica 3","Población específica 4","Población específica 5","Población específica 6","Población específica 7"]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{role: 'user', content: pobPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(Array.isArray(parsed) && parsed.length >= 4) {
+      state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
+    }
+  } catch(e) {
+    state.aiPoblacionesLoading = false; // silent fail — static list remains
+    if(state.step === 1) renderContent();
+    return;
+  }
+  state.aiPoblacionesLoading = false;
+  if(state.step === 1) renderContent();
+  saveState();
+}
+
 async function generateAIInstruments(varsList) {
   if(!varsList || varsList.length === 0 || state.aiInstrumentsLoading) return;
   // Only run for qualitative (no standard scales) or vars not in static bank
@@ -993,7 +1046,9 @@ const stateDefaults = {
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
   aiValidation:null, aiValidationLoading:false,
   aiNextSteps:null, editValidation:null, editValidating:false,
-  aiInstruments:null, aiInstrumentsLoading:false
+  aiInstruments:null, aiInstrumentsLoading:false,
+  aiPoblaciones:[], aiPoblacionesLoading:false,
+  aiPoblaciones:[], aiPoblacionesLoading:false
 };
 if(savedState) {
   // Ensure edited has all new fields
@@ -1190,22 +1245,42 @@ function renderContent(){
 
   else if(s===1){
     let h=sectionLabel("¿Con qué población quieres trabajar?");
-    const pobs=state.area&&state.area!=="otro"?POBLACIONES[state.area]:[];
-    if(pobs.length>0){
+
+    const staticPobs = state.area && state.area!=="otro" ? POBLACIONES[state.area] : [];
+    const usandoAI = state.aiPoblaciones && state.aiPoblaciones.length > 0;
+    const pobs = usandoAI ? state.aiPoblaciones : staticPobs;
+
+    if(state.aiPoblacionesLoading){
+      h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:8px">
+        <span style="animation:pulse 1s infinite;font-size:16px">🤖</span>
+        <span>Generando poblaciones específicas para el contexto peruano...</span>
+      </div>`;
+    } else if(usandoAI){
+      h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <span>✨ <strong>Poblaciones generadas por IA</strong> para el contexto peruano</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="state.aiPoblaciones=[];state.aiPoblacionesLoading=false;prefetchAIPoblaciones()" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
+          <button onclick="state.aiPoblaciones=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver generales</button>
+        </div>
+      </div>`;
+    }
+
+    if(pobs.length > 0 && !state.aiPoblacionesLoading){
       h+=`<div class="options">`;
       pobs.forEach(p=>{
-        const esc=p.replace(/'/g,"\\'");
+        const esc=p.replace(/'/g,"\'");
         h+=badge(p, state.poblacion===p, `selectPoblacion('${esc}')`);
       });
       h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
       h+=`</div>`;
-    } else {
+    } else if(!state.aiPoblacionesLoading){
       h+=`<div class="options">`;
       h+=badge("Otro", state.poblacion==="otro", `selectPoblacion('otro')`);
       h+=`</div>`;
     }
+
     if(state.poblacion==="otro"){
-      h+=`<input type="text" class="otro-input" placeholder="Especifica tu poblacion" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState()"/>`;
+      h+=`<input type="text" class="otro-input" placeholder="Especifica tu poblacion (ej: Adultos mayores del CAM EsSalud, Cusco)" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState()"/>`;
     }
     el.innerHTML=h;
   }
@@ -1250,9 +1325,12 @@ function renderContent(){
           <span>Generando variables personalizadas para tu proyecto...</span>
         </div>`;
       } else if(state.aiVars.length > 0){
-        h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px">
-          ✨ <strong>Variables generadas por IA</strong> para tu proyecto específico
-          <button onclick="state.aiVars=[];renderContent()" style="margin-left:8px;font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:1px 6px;cursor:pointer;color:var(--green)">Ver estáticas</button>
+        h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <span>✨ <strong>Variables generadas por IA</strong> para tu proyecto específico</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button onclick="state.aiVars=[];state.aiVarsLoading=false;state.variables=[];prefetchAIVars()" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
+            <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
+          </div>
         </div>`;
       }
 
@@ -1469,13 +1547,10 @@ function renderContent(){
         }
         validationHtml += `</div>`;
       } else if(!state.aiValidation) {
-        // Not yet validated — show validate button
-        validationHtml = `<div style="margin-bottom:20px;padding:14px 16px;background:#F8FAFF;border:1px dashed #C7D2FE;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div>
-            <div style="font-weight:600;font-size:13px;color:#3730A3">🤖 Validación IA del perfil metodológico</div>
-            <div style="font-size:12px;color:#6B7280;margin-top:2px">Verificar coherencia entre variables, diseño y técnica antes de generar</div>
-          </div>
-          <button onclick="validateCoherence()" style="padding:8px 16px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Validar perfil</button>
+        // Validation not done yet — show subtle pending indicator
+        validationHtml = `<div style="margin-bottom:16px;padding:10px 14px;background:#F8FAFF;border:1px solid #C7D2FE;border-radius:10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px;animation:pulse 1.2s infinite">🔍</span>
+          <span style="font-size:12px;color:#3730A3">Analizando tu perfil metodológico...</span>
         </div>`;
       }
 
@@ -1548,7 +1623,31 @@ function renderContent(){
       editValHtml += `</div>`;
     }
 
-    let h= errorMsg + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
+    // Show pre-generation validation panel above results too (persists)
+    let preValHtml = '';
+    if(state.aiValidationLoading) {
+      preValHtml = `<div style="margin-bottom:14px;padding:10px 14px;background:#F8FAFF;border:1px solid #C7D2FE;border-radius:10px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px;animation:pulse 1.2s infinite">🔍</span>
+        <span style="font-size:12px;color:#3730A3">Analizando coherencia metodológica...</span>
+      </div>`;
+    } else if(state.aiValidation && state.aiValidation.nivel_coherencia !== 'error') {
+      const pv = state.aiValidation;
+      const pvBg = pv.nivel_coherencia==='alta'?'#ECFDF5':pv.nivel_coherencia==='media'?'#FFFBEB':'#FEF2F2';
+      const pvBorder = pv.nivel_coherencia==='alta'?'#A7F3D0':pv.nivel_coherencia==='media'?'#FDE68A':'#FECACA';
+      const pvTc = pv.nivel_coherencia==='alta'?'#065F46':pv.nivel_coherencia==='media'?'#92400E':'#991B1B';
+      preValHtml = `<div style="margin-bottom:14px;padding:12px 16px;background:${pvBg};border:1px solid ${pvBorder};border-radius:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${(pv.alertas&&pv.alertas.length)||(pv.sugerencia_clave)?'8px':'0'}">
+          <span style="font-size:16px">${pv.emoji}</span>
+          <span style="font-weight:700;font-size:13px;color:${pvTc}">${pv.titulo}</span>
+          <span style="margin-left:auto;font-size:11px;color:#9CA3AF;background:white;padding:2px 8px;border-radius:10px;border:1px solid #E5E7EB">Perfil: ${pv.nivel_coherencia}</span>
+          <button onclick="state.aiValidation=null;renderContent()" style="font-size:11px;background:none;border:none;cursor:pointer;color:#9CA3AF;padding:2px">✕</button>
+        </div>
+        ${pv.alertas&&pv.alertas.length?pv.alertas.map(a=>`<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:5px 8px;border-radius:6px;margin-bottom:4px">⚠️ ${a}</div>`).join(''):''}
+        ${pv.sugerencia_clave?`<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:7px 10px;border-radius:6px;border-left:3px solid #3B82F6;margin-top:4px">💡 ${pv.sugerencia_clave}</div>`:''}
+      </div>`;
+    }
+
+    let h= errorMsg + preValHtml + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
     h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
     h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
@@ -1635,10 +1734,20 @@ function render(){
   updateNav();
 }
 
-function nextStep(){if(canNext()&&state.step<5){state.step++;render();saveState();}}
+function nextStep(){
+  if(canNext()&&state.step<5){
+    state.step++;
+    render();
+    saveState();
+    // Auto-validate when reaching step 5 (pre-generate)
+    if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
+      validateCoherence();
+    }
+  }
+}
 function prevStep(){if(state.step>0){state.step--;render();saveState();}}
 
-function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];updateNav();renderContent();saveState();}
+function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();if(v!=='otro')prefetchAIPoblaciones();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();prefetchAIVars();}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3)prefetchAIVars();}
@@ -1773,6 +1882,8 @@ function nuevoProyecto(){
       editValidating:false,
       aiInstruments:null,
       aiInstrumentsLoading:false,
+      aiPoblaciones:[],
+      aiPoblacionesLoading:false,
       aiNextSteps:null,
       editValidation:null,
       editValidating:false,
