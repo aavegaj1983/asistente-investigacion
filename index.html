@@ -1019,7 +1019,7 @@ Responde SOLO con un array JSON de 7 strings:
 ["Población 1 anclada al contexto","Población 2","Población 3","Población 4","Población 5","Población 6","Población 7"]`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1091,7 +1091,7 @@ Responde SOLO con JSON sin texto adicional:
 ]`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1297,7 +1297,7 @@ Responde SOLO con JSON sin texto adicional:
 ]`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1345,6 +1345,46 @@ try {
 } catch(e) {}
 
 // Merge savedState with defaults so new fields are always present
+// ── GLOBAL AI REQUEST QUEUE ───────────────────────────────────────
+// Serializa todas las llamadas a /api/chat para evitar 429 en Groq
+const AIQueue = {
+  _queue: [],
+  _running: false,
+  _minGap: 2500, // ms mínimos entre requests
+  _lastCall: 0,
+
+  async add(fn) {
+    return new Promise((resolve, reject) => {
+      this._queue.push({ fn, resolve, reject });
+      this._run();
+    });
+  },
+
+  async _run() {
+    if (this._running) return;
+    this._running = true;
+    while (this._queue.length > 0) {
+      const { fn, resolve, reject } = this._queue.shift();
+      const now = Date.now();
+      const wait = Math.max(0, this._minGap - (now - this._lastCall));
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      try {
+        this._lastCall = Date.now();
+        const result = await fn();
+        resolve(result);
+      } catch (e) {
+        reject(e);
+      }
+    }
+    this._running = false;
+  },
+
+  // Helper: fetch con cola
+  async fetch(url, options) {
+    return this.add(() => fetch(url, options));
+  }
+};
+
 const REGEN_MAX = 3;
 const stateDefaults = {
   step:0, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
@@ -2270,7 +2310,7 @@ Responde SOLO con JSON:
 Si no hay problemas, "problemas" debe ser un array vacío [].`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -2548,7 +2588,7 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
 ["Paso 1: texto concreto...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -2559,14 +2599,8 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     });
     if(!res.ok) {
       if(res.status === 429) {
-        console.warn('Rate limit (429) en próximos pasos — reintentando en 12s (intento ' + ((state._nextStepsRetry||0)+1) + '/2)');
-        state._nextStepsRetry = (state._nextStepsRetry||0) + 1;
-        if(state._nextStepsRetry <= 2) {
-          setTimeout(() => { state.aiNextSteps = null; generateNextSteps(); }, 12000 * state._nextStepsRetry);
-        } else {
-          console.warn('Máximo de reintentos alcanzado para próximos pasos');
-          state._nextStepsRetry = 0;
-        }
+        console.warn('Rate limit (429) en próximos pasos — omitiendo, se usará lista estática');
+        state._nextStepsRetry = 0;
         return;
       }
       throw new Error('API error ' + res.status);
@@ -2634,7 +2668,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
 [{"nombre":"...","referencia":"...","antecedente":"..."}]`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -2645,19 +2679,11 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     });
     if(!res.ok) {
       if(res.status === 429) {
-        console.warn('Rate limit (429) en variables IA — reintentando en 8s (intento ' + ((state._varsRetry||0)+1) + '/2)');
-        state._varsRetry = (state._varsRetry||0) + 1;
+        console.warn('Rate limit (429) en variables IA — usando lista estática');
+        state._varsRetry = 0;
         state.aiVarsLoading = false;
+        state.aiVarsError = true;
         if(state.step === 2) renderContent();
-        if(state._varsRetry <= 2) {
-          clearTimeout(window._varsRetryTimer);
-          window._varsRetryTimer = setTimeout(() => prefetchAIVars(), 8000 * state._varsRetry);
-        } else {
-          console.warn('Máximo de reintentos alcanzado para variables IA');
-          state._varsRetry = 0;
-          state.aiVarsError = true;
-          if(state.step === 2) renderContent();
-        }
         return;
       }
       throw new Error('API error ' + res.status);
@@ -2735,7 +2761,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
 }`;
 
   try {
-    const res = await fetch('/api/chat', {
+    const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -3384,7 +3410,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
 {"tema":"...","pregunta":"...","objetivo":"...","obj_esp1":"...","obj_esp2":"...","obj_esp3":"...","hipotesis":"...","planteamiento":"..."}`;
 
   try{
-    const res=await fetch("/api/chat",{
+    const res=await AIQueue.fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})
