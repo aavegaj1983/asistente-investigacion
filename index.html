@@ -553,6 +553,7 @@ textarea{min-height:70px;resize:vertical}
   <span>Alcanzaste el límite de 3 regeneraciones</span>
   <div class="toast-bar"></div>
 </div>
+<div id="retry-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;transition:all .3s ease;background:#1e293b;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap"><span id="retry-toast-spin" style="display:inline-block">⏳</span><span id="retry-toast-msg">Límite de IA alcanzado — reintentando...</span></div>
 
 <script>
 const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
@@ -1023,7 +1024,7 @@ Responde SOLO con un array JSON de 7 strings:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 500,
         messages: [{role: 'user', content: pobPrompt}]
       })
@@ -1095,7 +1096,7 @@ Responde SOLO con JSON sin texto adicional:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 900,
         messages: [{role: 'user', content: instrPrompt}]
       })
@@ -1307,19 +1308,12 @@ Responde SOLO con JSON sin texto adicional:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 2000,
         messages: [{role: 'user', content: refPrompt}]
       })
     });
-    if(!res.ok) {
-      if(res.status === 429) {
-        console.warn('Rate limit (429) en referencias IA — omitiendo sin retry');
-        state.aiReferencias = [];
-        return;
-      }
-      throw new Error('API error ' + res.status);
-    }
+    if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
@@ -1330,8 +1324,22 @@ Responde SOLO con JSON sin texto adicional:
     }
   } catch(e) {
     console.error('generateAIReferencias error:', e);
+    // Si fue un 429 o error de red, reintenta una vez más después de 12s
+    if(!state._refRetried) {
+      state._refRetried = true;
+      console.warn('Referencias fallaron — reintentando en 12s...');
+      if(typeof showRetryToast === 'function') showRetryToast(1, 12000);
+      setTimeout(async () => {
+        if(typeof hideRetryToast === 'function') hideRetryToast();
+        state._refRetried = false;
+        state.aiReferenciasLoading = true;
+        await generateAIReferencias();
+      }, 12000);
+      return;
+    }
     state.aiReferencias = [];
   } finally {
+    state._refRetried = false;
     state.aiReferenciasLoading = false;
     if(state.step === 5 && state.result) renderContent();
     saveState();
@@ -1353,11 +1361,13 @@ try {
 // Merge savedState with defaults so new fields are always present
 // ── GLOBAL AI REQUEST QUEUE ───────────────────────────────────────
 // Serializa todas las llamadas a /api/chat para evitar 429 en Groq
+// Con retry automático + exponential backoff ante rate limits
 const AIQueue = {
   _queue: [],
   _running: false,
-  _minGap: 2500, // ms mínimos entre requests
+  _minGap: 3500, // ms mínimos entre requests
   _lastCall: 0,
+  _MAX_RETRIES: 4,
 
   async add(fn) {
     return new Promise((resolve, reject) => {
@@ -1374,18 +1384,40 @@ const AIQueue = {
       const now = Date.now();
       const wait = Math.max(0, this._minGap - (now - this._lastCall));
       if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      try {
-        this._lastCall = Date.now();
-        const result = await fn();
-        resolve(result);
-      } catch (e) {
-        reject(e);
+      let lastErr;
+      let succeeded = false;
+      for (let attempt = 0; attempt <= this._MAX_RETRIES; attempt++) {
+        try {
+          this._lastCall = Date.now();
+          const result = await fn();
+          // Si es una respuesta 429, hacer retry con backoff
+          if (result && result.status === 429) {
+            const backoff = Math.min(8000, 2000 * Math.pow(2, attempt));
+            console.warn(`429 recibido — reintentando en ${backoff}ms (intento ${attempt + 1}/${this._MAX_RETRIES})`);
+            if (attempt < this._MAX_RETRIES) {
+              if (typeof showRetryToast === 'function') showRetryToast(attempt + 1, backoff);
+              await new Promise(r => setTimeout(r, backoff));
+              if (typeof hideRetryToast === 'function') hideRetryToast();
+              continue;
+            }
+          }
+          resolve(result);
+          succeeded = true;
+          break;
+        } catch (e) {
+          lastErr = e;
+          if (attempt < this._MAX_RETRIES) {
+            const backoff = Math.min(8000, 2000 * Math.pow(2, attempt));
+            await new Promise(r => setTimeout(r, backoff));
+          }
+        }
       }
+      if (!succeeded && lastErr) reject(lastErr);
     }
     this._running = false;
   },
 
-  // Helper: fetch con cola
+  // Helper: fetch con cola y retry
   async fetch(url, options) {
     return this.add(() => fetch(url, options));
   }
@@ -2314,7 +2346,7 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 700,
         messages: [{role: 'user', content: valPrompt}]
       })
@@ -2592,30 +2624,31 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1200,
         messages: [{role: 'user', content: stepsPrompt}]
       })
     });
-    if(!res.ok) {
-      if(res.status === 429) {
-        console.warn('Rate limit (429) en próximos pasos — omitiendo, se usará lista estática');
-        state._nextStepsRetry = 0;
-        return;
-      }
-      throw new Error('API error ' + res.status);
-    }
+    if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
-      state._nextStepsRetry = 0;
       saveState();
       if(state.step === 5 && state.result) renderContent();
     }
   } catch(e) {
     console.error('generateNextSteps error:', e);
+    // Reintenta una vez después de 10s si no se había reintentado ya
+    if(!state._nextStepsRetried) {
+      state._nextStepsRetried = true;
+      console.warn('Próximos pasos fallaron — reintentando en 10s...');
+      setTimeout(async () => {
+        state._nextStepsRetried = false;
+        await generateNextSteps();
+      }, 10000);
+    }
   }
 }
 
@@ -2672,7 +2705,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 900,
         messages: [{role: 'user', content: varPrompt}]
       })
@@ -2765,7 +2798,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 600,
         messages: [{role: 'user', content: valPrompt}]
       })
@@ -3413,7 +3446,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     const res=await AIQueue.fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:2500,messages:[{role:"user",content:prompt}]})
     });
     
     if (!res.ok) {
@@ -4502,6 +4535,22 @@ function showModelDiagram() {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
   window._lastDiagramSVG=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svg}</svg>`;
+}
+
+// ── RETRY TOAST ───────────────────────────────────────────────────
+function showRetryToast(attempt, waitMs) {
+  const el = document.getElementById('retry-toast');
+  if (!el) return;
+  const msg = document.getElementById('retry-toast-msg');
+  if (msg) msg.textContent = `Límite de IA alcanzado — reintentando en ${Math.round(waitMs/1000)}s... (${attempt}/${AIQueue._MAX_RETRIES})`;
+  el.style.transform = 'translateX(-50%) translateY(0)';
+  el.style.opacity = '1';
+}
+function hideRetryToast() {
+  const el = document.getElementById('retry-toast');
+  if (!el) return;
+  el.style.transform = 'translateX(-50%) translateY(80px)';
+  el.style.opacity = '0';
 }
 
 // ── REGEN LIMIT GUARD ─────────────────────────────────────────────
