@@ -140,6 +140,7 @@ h2{
   padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;
   border:1.5px solid var(--gray-200);background:var(--gray-50);
   color:var(--gray-700);font-weight:500;transition:all .15s;
+  position:relative;
 }
 .chip:hover{border-color:var(--green-mid);background:var(--green-light);color:var(--green)}
 .chip.active{
@@ -147,6 +148,19 @@ h2{
   color:var(--green);font-weight:600;
   box-shadow:0 0 0 3px rgba(5,150,105,.1);
 }
+.chip.ai-chip{border-style:dashed;border-color:var(--green-mid)}
+.chip.ai-chip::after{content:"ⓘ";font-size:10px;margin-left:4px;opacity:.6}
+.chip-tooltip{
+  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--gray-900);
+  color:#fff;font-size:11px;line-height:1.5;padding:8px 10px;
+  border-radius:8px;z-index:100;text-align:left;font-weight:400;
+  box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;
+}
+.chip-tooltip::after{content:"";position:absolute;top:100%;left:50%;
+  transform:translateX(-50%);border:5px solid transparent;
+  border-top-color:var(--gray-900)}
+.chip:hover .chip-tooltip{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 
 /* ── HINTS ───────────────────────────────────────────────────────── */
@@ -820,29 +834,37 @@ function findInstrumento(varName) {
 
 async function prefetchAIPoblaciones() {
   if(!state.area || state.area === 'otro' || state.aiPoblacionesLoading) return;
+  // Requires geographic context — don't run without it
+  const contexto = state.contexto ? state.contexto.trim() : '';
+  if(!contexto) return;
 
   state.aiPoblacionesLoading = true;
   state.aiPoblaciones = [];
   if(state.step === 1) renderContent();
 
   const area = efectiveArea();
+  const motivacion = state.motivacion ? state.motivacion.trim() : '';
+  const problema = efectiveProblema() || '';
 
   const pobPrompt = `Eres un experto en investigación psicológica en el contexto peruano.
 
-Para el área de "${area}", genera exactamente 7 poblaciones de estudio ESPECÍFICAS y CONTEXTUALIZADAS para una tesis de pregrado en psicología en el Perú. Cada población debe:
-1. Ser específica: incluir características demográficas relevantes (edad, condición, contexto institucional)
-2. Ser viable para un tesista de pregrado (accesible, tamaño razonable)
-3. Reflejar la realidad peruana: mencionar tipos de instituciones, contextos o grupos presentes en el Perú
-4. Ser diversa: cubrir distintos grupos etarios, géneros, contextos (urbano/rural, público/privado)
-5. NO ser genérica: evitar "Adultos en general" o "Población general"
+Un estudiante de pregrado en psicología quiere investigar en el área de "${area}".
+Contexto geográfico declarado: "${contexto}"
+${problema ? `Problema de interés: "${problema}"` : ''}
+${motivacion ? `Motivación: "${motivacion}"` : ''}
 
-Ejemplos de especificidad esperada:
-- ❌ "Adultos mayores" → ✅ "Adultos mayores de 65+ años en centros de día del MINSA, Lima"
-- ❌ "Trabajadores" → ✅ "Trabajadores de salud del primer nivel de atención EsSalud, Lima Metropolitana"
-- ❌ "Estudiantes" → ✅ "Estudiantes de 5to de secundaria de colegios públicos en zonas periurbanas de Lima Norte"
+Genera exactamente 7 poblaciones de estudio ANCLADAS al contexto geográfico declarado. Cada población debe:
+1. Estar ubicada en "${contexto}" o una institución real de esa zona
+2. Ser viable y accesible para un tesista que vive o estudia en ese lugar
+3. Incluir características demográficas precisas (edad, condición, institución específica)
+4. Ser coherente con el área de "${area}"
+5. NO inventar regiones distintas al contexto declarado
+6. Cubrir variedad de grupos (distintas edades, condiciones, tipos de institución de la zona)
+
+REGLA CLAVE: si el contexto es "Lima, SJL" → TODAS las poblaciones deben ser de Lima/SJL o zonas cercanas. NO sugerir Cusco, Piura o Arequipa si el contexto es Lima.
 
 Responde SOLO con un array JSON de 7 strings:
-["Población específica 1","Población específica 2","Población específica 3","Población específica 4","Población específica 5","Población específica 6","Población específica 7"]`;
+["Población 1 anclada al contexto","Población 2","Población 3","Población 4","Población 5","Población 6","Población 7"]`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -1250,16 +1272,22 @@ function renderContent(){
     const usandoAI = state.aiPoblaciones && state.aiPoblaciones.length > 0;
     const pobs = usandoAI ? state.aiPoblaciones : staticPobs;
 
+    // Show hint if no context yet and no AI poblaciones
+    if(!usandoAI && !state.aiPoblacionesLoading && !state.contexto?.trim()) {
+      h+=`<div class="hint" style="font-size:12px;padding:8px 12px;margin-bottom:8px;background:#FFFBEB;border-color:#FDE68A;color:#92400E">
+        💡 Selecciona una población de la lista. En el <strong>paso 5</strong> ingresa tu contexto geográfico y la IA generará poblaciones personalizadas para tu zona.
+      </div>`;
+    }
     if(state.aiPoblacionesLoading){
       h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:8px">
         <span style="animation:pulse 1s infinite;font-size:16px">🤖</span>
-        <span>Generando poblaciones específicas para el contexto peruano...</span>
+        <span>Generando poblaciones específicas para <strong>${state.contexto}</strong>...</span>
       </div>`;
     } else if(usandoAI){
       h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
         <span>✨ <strong>Poblaciones generadas por IA</strong> para el contexto peruano</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="state.aiPoblaciones=[];state.aiPoblacionesLoading=false;prefetchAIPoblaciones()" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
+          <button onclick="if(!state.contexto?.trim()){alert('Primero ingresa tu contexto geográfico en el paso 5 (Contexto)');}else{state.aiPoblaciones=[];state.aiPoblacionesLoading=false;prefetchAIPoblaciones();}" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
           <button onclick="state.aiPoblaciones=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver generales</button>
         </div>
       </div>`;
@@ -1317,6 +1345,8 @@ function renderContent(){
       // Merge static vars with AI-generated vars (AI vars take priority if available)
       const staticVars = state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
       const vars = state.aiVars.length > 0 ? state.aiVars : staticVars;
+      // When using AI vars, map selected variable names correctly
+      const getVarList = (arr) => arr.map(v => typeof v === 'object' ? v.nombre : v);
 
       // Show AI loading indicator
       if(state.aiVarsLoading){
@@ -1475,7 +1505,7 @@ function renderContent(){
     });
     h+=`</div>`;
     h+=sectionLabel("¿En qué lugar realizarías tu investigación? — Especifica ciudad o región");
-    h+=`<textarea placeholder="Ej: Lima, Perú — distrito de San Juan de Lurigancho; o Arequipa, en una institución educativa pública..." oninput="state.contexto=this.value;saveState()">${state.contexto}</textarea>`;
+    h+=`<textarea placeholder="Ej: Lima, Perú — distrito de San Juan de Lurigancho; o Arequipa, en una institución educativa pública..." oninput="state.contexto=this.value;saveState();if(this.value.trim().length>4){clearTimeout(window._pobTimer);window._pobTimer=setTimeout(()=>{state.aiPoblaciones=[];prefetchAIPoblaciones();},1200);}">${state.contexto}</textarea>`;
     h+=sectionLabel("¿Por qué te interesa este tema? — opcional");
     h+=`<textarea placeholder="Ej: Lo observé en mi práctica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
     h+=`</div>`;
@@ -1745,11 +1775,15 @@ function nextStep(){
     if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
       validateCoherence();
     }
+    // If user arrives at step 5 with context filled → refresh AI poblaciones if not done yet
+    if(state.step===4 && state.contexto?.trim() && !state.aiPoblaciones?.length && !state.aiPoblacionesLoading){
+      prefetchAIPoblaciones();
+    }
   }
 }
 function prevStep(){if(state.step>0){state.step--;render();saveState();}}
 
-function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();if(v!=='otro')prefetchAIPoblaciones();}
+function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();prefetchAIVars();}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3)prefetchAIVars();}
@@ -1763,6 +1797,7 @@ function toggleVar(v){
   if(i>-1) state.variables.splice(i,1); else state.variables.push(v);
   updateNav();renderContent();saveState();
 }
+function getAIVarName(item){ return typeof item === 'object' ? (item.nombre||'') : String(item||''); }
 function setVarsFromText(val){
   const vars = val.split(",").map(v=>v.trim()).filter(Boolean);
   state.variables = vars;
@@ -2086,40 +2121,50 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
 }
 
 async function prefetchAIVars() {
-  // Solo prefetch si hay problema definido y no hay ya vars de IA
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
   if(!problema || state.aiVarsLoading) return;
 
   state.aiVarsLoading = true;
   state.aiVars = [];
   state.aiVarsError = false;
-  // Re-render chips area to show loading state
   if(state.step === 2) renderContent();
 
   const enfoque = state.enfoque || 'Cuantitativo';
-  const isQualText = enfoque === 'Cualitativo' ? 'categorías de análisis cualitativo (ejes temáticos para entrevistas)' : 'variables psicológicas cuantificables';
   const area = efectiveArea() || 'Psicología';
   const poblacion = getPoblacionCompleta() || efectivePoblacion() || 'No especificada';
   const isQual = enfoque === 'Cualitativo';
-  const varType = isQualText;
 
-  const varPrompt = `Eres un experto en metodología de investigación en psicología en el contexto peruano.
+  const varPrompt = `Eres un metodólogo experto en psicología con dominio de la literatura psicológica internacional y latinoamericana.
 
-Dado el siguiente perfil:
+Perfil del proyecto:
 - Área: ${area}
 - Población: ${poblacion}
 - Problema/fenómeno: ${problema}
 - Enfoque: ${enfoque}
 
-Genera exactamente 8 ${varType} que sean:
-1. Operacionalizables con instrumentos validados disponibles en Perú o Latinoamérica
-2. Relevantes para el problema específico en el contexto peruano
-3. ${isQual ? 'Ejes temáticos explorables mediante entrevistas o grupos focales' : 'Medibles con escalas tipo Likert validadas'}
-4. Diversas (no repetitivas ni sinónimas)
-5. Con nivel de especificidad adecuado para una tesis de pregrado
+Genera exactamente 8 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan OBLIGATORIAMENTE los 3 criterios siguientes:
 
-Responde SOLO con un array JSON sin texto adicional ni markdown:
-["Variable 1","Variable 2","Variable 3","Variable 4","Variable 5","Variable 6","Variable 7","Variable 8"]`;
+CRITERIO 1 — NOMBRE CANÓNICO: debe ser el nombre establecido en la literatura psicológica, no una paráfrasis inventada.
+  ✅ "Autoeficacia general" (Bandura, 1977; Schwarzer & Jerusalem, 1995)
+  ✅ "Locus de control en salud" (Wallston et al., 1978)
+  ❌ "Control percibido sobre la salud" — paráfrasis sin constructo propio
+  ❌ "Motivación intrínseca para el cuidado" — no es un constructo establecido
+
+CRITERIO 2 — INSTRUMENTO VALIDADO: debe existir al menos una escala con alpha ≥ .70 en población hispanohablante.
+  ✅ Escala de Autoeficacia General (EAG, Baessler & Schwarzer, 1996)
+  ❌ Variables sin escala propia conocida
+
+CRITERIO 3 — ANTECEDENTE DIRECTO: debe haber estudios publicados que relacionen esta variable con el problema "${problema}" en poblaciones similares.
+
+Para cada variable devuelve un objeto JSON con:
+- "nombre": nombre canónico del constructo
+- "referencia": autor(es) principales y año del constructo o escala más usada
+- "antecedente": 1 frase sobre el antecedente empírico que justifica su relación con "${problema}"
+
+REGLA FINAL: Si no puedes garantizar los 3 criterios para una variable, NO la incluyas. Es mejor devolver 6 variables sólidas que 8 con relleno.
+
+Responde SOLO con JSON sin texto adicional ni markdown:
+[{"nombre":"...","referencia":"...","antecedente":"..."}]`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -2127,7 +2172,7 @@ Responde SOLO con un array JSON sin texto adicional ni markdown:
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
+        max_tokens: 900,
         messages: [{role: 'user', content: varPrompt}]
       })
     });
@@ -2136,7 +2181,11 @@ Responde SOLO con un array JSON sin texto adicional ni markdown:
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
     if(Array.isArray(parsed) && parsed.length >= 4) {
-      state.aiVars = parsed.map(v => String(v).trim()).filter(Boolean);
+      // Accept both old string format and new object format
+      state.aiVars = parsed.map(v => {
+        if(typeof v === 'string') return {nombre: v.trim(), referencia: '', antecedente: ''};
+        return {nombre: String(v.nombre||'').trim(), referencia: String(v.referencia||''), antecedente: String(v.antecedente||'')};
+      }).filter(v => v.nombre);
     }
   } catch(e) {
     state.aiVarsError = true;
