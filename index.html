@@ -1306,7 +1306,14 @@ Responde SOLO con JSON sin texto adicional:
         messages: [{role: 'user', content: refPrompt}]
       })
     });
-    if(!res.ok) throw new Error('API error');
+    if(!res.ok) {
+      if(res.status === 429) {
+        console.warn('Rate limit (429) en referencias IA — omitiendo sin retry');
+        state.aiReferencias = [];
+        return;
+      }
+      throw new Error('API error ' + res.status);
+    }
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
@@ -2552,8 +2559,14 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     });
     if(!res.ok) {
       if(res.status === 429) {
-        console.warn('Rate limit (429) en próximos pasos — reintentando en 10s');
-        setTimeout(() => { state.aiNextSteps = null; generateNextSteps(); }, 10000);
+        console.warn('Rate limit (429) en próximos pasos — reintentando en 12s (intento ' + ((state._nextStepsRetry||0)+1) + '/2)');
+        state._nextStepsRetry = (state._nextStepsRetry||0) + 1;
+        if(state._nextStepsRetry <= 2) {
+          setTimeout(() => { state.aiNextSteps = null; generateNextSteps(); }, 12000 * state._nextStepsRetry);
+        } else {
+          console.warn('Máximo de reintentos alcanzado para próximos pasos');
+          state._nextStepsRetry = 0;
+        }
         return;
       }
       throw new Error('API error ' + res.status);
@@ -2563,6 +2576,7 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
+      state._nextStepsRetry = 0;
       saveState();
       if(state.step === 5 && state.result) renderContent();
     }
@@ -2631,11 +2645,19 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     });
     if(!res.ok) {
       if(res.status === 429) {
-        console.warn('Rate limit (429) en variables IA — reintentando en 8s');
+        console.warn('Rate limit (429) en variables IA — reintentando en 8s (intento ' + ((state._varsRetry||0)+1) + '/2)');
+        state._varsRetry = (state._varsRetry||0) + 1;
         state.aiVarsLoading = false;
         if(state.step === 2) renderContent();
-        clearTimeout(window._varsRetryTimer);
-        window._varsRetryTimer = setTimeout(() => prefetchAIVars(), 8000);
+        if(state._varsRetry <= 2) {
+          clearTimeout(window._varsRetryTimer);
+          window._varsRetryTimer = setTimeout(() => prefetchAIVars(), 8000 * state._varsRetry);
+        } else {
+          console.warn('Máximo de reintentos alcanzado para variables IA');
+          state._varsRetry = 0;
+          state.aiVarsError = true;
+          if(state.step === 2) renderContent();
+        }
         return;
       }
       throw new Error('API error ' + res.status);
@@ -3393,17 +3415,16 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     state.aiReferencias = null; state.aiReferenciasLoading = false;
     saveState();
     // Stagger AI calls to avoid 429 Too Many Requests on Groq's rate limit
-    // Call 1: Next steps immediately (most important for UX)
-    generateNextSteps();
-    // Call 2: AI References after 3 seconds
-    setTimeout(() => generateAIReferencias(), 3000);
-    // Note: generateAIInstruments is triggered lazily by renderContent after 6s delay
-    // to ensure it doesn't collide with the above calls
+    // Call 1: Next steps after 2 seconds (most important for UX)
+    setTimeout(() => generateNextSteps(), 2000);
+    // Call 2: AI References after 8 seconds
+    setTimeout(() => generateAIReferencias(), 8000);
+    // Call 3: Instruments after 14 seconds
     setTimeout(() => {
       state.aiInstruments = null;
       state.aiInstrumentsLoading = false;
       if(state.step === 5 && state.result) renderContent();
-    }, 6000);
+    }, 14000);
   }catch(e){
     console.error("Error:", e);
 
