@@ -1125,13 +1125,19 @@ function renderInstrumentosHtml(varsList) {
   const sinStatic = varsList.filter(v => !findInstrumento(v));
   const needsAI = isQual || sinStatic.length > 0;
 
-  // Trigger AI generation if needed and not yet done
+  // Instruments: show button to load on demand (not auto-triggered)
   if(needsAI && !state.aiInstruments && !state.aiInstrumentsLoading) {
-    generateAIInstruments(varsList);
+    // Show on-demand trigger button
   }
 
   let h = `<div style="margin-top:20px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
-  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</div>`;
+  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <span>Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</span>
+    ${needsAI && !state.aiInstruments && !state.aiInstrumentsLoading
+      ? `<button onclick="generateAIInstruments(${JSON.stringify(varsList)})" style="font-size:11px;font-weight:600;background:#7C3AED;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit">Buscar con IA</button>`
+      : ''
+    }
+  </div>`;
 
   // Loading state
   if(state.aiInstrumentsLoading) {
@@ -2184,7 +2190,8 @@ function renderContent(){
     h += renderInstrumentosHtml(variablesDisplay);
 
     // REFERENCIAS (metodológicas estáticas + temáticas por IA)
-    if(state.result && !state.aiReferencias && !state.aiReferenciasLoading) generateAIReferencias();
+    // AI referencias: disabled auto-trigger, fires after generation with delay
+    // if(state.result && !state.aiReferencias && !state.aiReferenciasLoading) generateAIReferencias();
     h += renderReferenciasHtml();
     
     el.innerHTML=h;
@@ -2209,20 +2216,13 @@ function nextStep(){
     state.step++;
     render();
     saveState();
-    // Pre-trigger coherence validation when leaving step 3 → step 4 (with delay to avoid 429)
-    if(state.step===4 && !state.aiValidation && !state.aiValidationLoading){
-      setTimeout(() => {
-        if(!state.aiValidation && !state.aiValidationLoading) validateCoherence();
-      }, 2000);
-    }
-    // Step 5: only validate if not already done at step 4
+    // Only validate at step 5 (pre-generate), not step 4, to save API calls
     if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
       validateCoherence();
     }
+    // AI poblaciones: disabled auto-trigger to reduce API calls
     // If user arrives at step 4 with context filled → refresh AI poblaciones if not done yet
-    if(state.step===4 && state.contexto?.trim() && !state.aiPoblaciones?.length && !state.aiPoblacionesLoading){
-      setTimeout(() => prefetchAIPoblaciones(), 1000);
-    }
+    // setTimeout(() => prefetchAIPoblaciones(), 1000); // on-demand only via button
   }
 }
 function prevStep(){if(state.step>0){state.step--;render();saveState();}}
@@ -3440,17 +3440,10 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     state.aiInstruments = null; state.aiInstrumentsLoading = false;
     state.aiReferencias = null; state.aiReferenciasLoading = false;
     saveState();
-    // Stagger AI calls to avoid 429 Too Many Requests on Groq's rate limit
-    // Call 1: Next steps after 2 seconds (most important for UX)
-    setTimeout(() => generateNextSteps(), 2000);
-    // Call 2: AI References after 8 seconds
-    setTimeout(() => generateAIReferencias(), 8000);
-    // Call 3: Instruments after 14 seconds
-    setTimeout(() => {
-      state.aiInstruments = null;
-      state.aiInstrumentsLoading = false;
-      if(state.step === 5 && state.result) renderContent();
-    }, 14000);
+    // Only 2 secondary AI calls after generation — via AIQueue, well spaced
+    setTimeout(() => generateNextSteps(), 3000);
+    setTimeout(() => generateAIReferencias(), 9000);
+    // Instruments: on-demand only (not auto-triggered)
   }catch(e){
     console.error("Error:", e);
 
