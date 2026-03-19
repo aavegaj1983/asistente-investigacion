@@ -248,6 +248,35 @@ textarea{min-height:70px;resize:vertical}
 .btn-next:hover{background:var(--brand-dark);box-shadow:0 4px 18px rgba(79,70,229,.4);transform:translateY(-1px)}
 .btn-next:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;box-shadow:none;transform:none}
 
+/* ── MINI COHERENCE WIDGET ───────────────────────────────────────── */
+.mini-coherence{
+  margin-top:18px;border-radius:var(--radius-md);padding:12px 14px;
+  border:1px solid transparent;animation:fadeInUp .35s ease;
+}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.mini-coherence.alta{background:#ECFDF5;border-color:#A7F3D0}
+.mini-coherence.media{background:#FFFBEB;border-color:#FDE68A}
+.mini-coherence.baja{background:#FEF2F2;border-color:#FECACA}
+.mini-coherence-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mini-coherence-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+.alta .mini-coherence-badge{background:#059669;color:#fff}
+.media .mini-coherence-badge{background:#D97706;color:#fff}
+.baja .mini-coherence-badge{background:#DC2626;color:#fff}
+.mini-coherence-title{font-size:13px;font-weight:700}
+.alta .mini-coherence-title{color:#065F46}
+.media .mini-coherence-title{color:#92400E}
+.baja .mini-coherence-title{color:#991B1B}
+.mini-coherence-positive{font-size:12px;display:flex;align-items:flex-start;gap:5px;padding:2px 0}
+.alta .mini-coherence-positive{color:#065F46}
+.media .mini-coherence-positive,.baja .mini-coherence-positive{color:#78350F}
+.mini-coherence-alert{font-size:12px;background:#FEF3C7;color:#92400E;padding:5px 9px;border-radius:6px;margin-top:4px;display:flex;align-items:flex-start;gap:5px}
+.mini-coherence-tip{font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:5px 9px;border-radius:6px;margin-top:4px;border-left:3px solid #3B82F6}
+.mini-coherence-progress{height:3px;border-radius:3px;margin-top:10px;background:var(--gray-200);overflow:hidden}
+.mini-coherence-progress-bar{height:100%;border-radius:3px;transition:width .6s ease}
+.alta .mini-coherence-progress-bar{background:var(--green);width:90%}
+.media .mini-coherence-progress-bar{background:var(--amber);width:55%}
+.baja .mini-coherence-progress-bar{background:var(--red);width:25%}
+
 /* ── CONTENT AREA ────────────────────────────────────────────────── */
 .content{min-height:280px}
 .gap20{display:flex;flex-direction:column;gap:20px}
@@ -1482,6 +1511,68 @@ function getAutoSuggestion() {
   return "";
 }
 
+// ── MINI COHERENCE INDICATOR (reglas locales, sin API) ────────────
+function getMiniCoherence() {
+  if (!state.enfoque || !state.diseno) return null;
+  if (state.enfoque !== 'Cualitativo' && !state.nivel) return null;
+  let alerts = [], positives = [], tips = [];
+  let vars = state.variables.filter(v => v !== 'otro');
+  if (state.variables.includes('otro') && state.variablesOtro.trim())
+    vars = vars.concat(state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean));
+  const nv = vars.length;
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  if (state.enfoque === 'Cuantitativo') positives.push('Enfoque cuantitativo claro');
+  if (state.enfoque === 'Cualitativo')  positives.push('Enfoque cualitativo definido');
+  if (state.enfoque === 'Mixto')        positives.push('Enfoque mixto seleccionado');
+  if (disenoObj) positives.push(`Diseño ${disenoObj.label} adecuado`);
+  if (state.enfoque === 'Cuantitativo') {
+    if (state.nivel === 'correlacional' && nv < 2)
+      alerts.push('Nivel correlacional requiere al menos 2 variables');
+    if (state.nivel === 'explicativo' && nv < 3)
+      alerts.push('Nivel explicativo recomienda 3 o más variables');
+    if (state.tecnica === 'mediacion' && nv !== 3)
+      alerts.push(`Mediación simple requiere exactamente 3 variables (tienes ${nv})`);
+    if (state.tecnica === 'moderacion' && nv < 3)
+      alerts.push(`Moderación requiere 3 variables: X, W y Y (tienes ${nv})`);
+    if (state.tecnica === 'mediacion-moderada' && nv < 4)
+      alerts.push(`Mediación moderada requiere 4 variables (tienes ${nv})`);
+    if (state.tecnica === 'regresion-multiple' && nv < 3)
+      alerts.push(`Regresión múltiple requiere al menos 3 variables (tienes ${nv})`);
+    if (['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(state.tecnica) && state.nivel === 'correlacional')
+      alerts.push('SEM / Path Analysis requieren nivel explicativo');
+    if (state.tecnica === 'correlacion' && nv > 2)
+      tips.push(`Con ${nv} variables considera regresión múltiple o matriz de correlaciones`);
+  }
+  if (state.diseno === 'cuasiexperimental' && state.nivel && state.nivel !== 'explicativo')
+    alerts.push('El diseño cuasi-experimental requiere nivel explicativo');
+  if (state.enfoque === 'Cualitativo' && (state.nivel === 'correlacional' || state.nivel === 'explicativo'))
+    alerts.push('El enfoque cualitativo no admite nivel correlacional ni explicativo');
+  if (state.nivel && state.diseno && alerts.length === 0) {
+    const nivelLabel = NIVELES.find(n => n.id === state.nivel)?.label;
+    if (nivelLabel) positives.push(`Nivel ${nivelLabel.toLowerCase()} coherente`);
+  }
+  if (state.tecnica && alerts.length === 0) positives.push('Técnica compatible con el diseño');
+  let nivel = alerts.length === 0 ? 'alta' : alerts.length === 1 ? 'media' : 'baja';
+  const emojis = { alta:'✅', media:'⚠️', baja:'🔴' };
+  const titles = { alta:'Perfil coherente hasta aquí', media:'Perfil con observaciones', baja:'Revisar coherencia' };
+  return { nivel, emoji: emojis[nivel], title: titles[nivel], positives, alerts, tips };
+}
+
+function renderMiniCoherence(context) {
+  const mc = getMiniCoherence();
+  if (!mc) return '';
+  let h = `<div class="mini-coherence ${mc.nivel}">`;
+  h += `<div class="mini-coherence-header"><span style="font-size:15px">${mc.emoji}</span><span class="mini-coherence-title">${mc.title}</span><span class="mini-coherence-badge" style="margin-left:auto">Coherencia: ${mc.nivel}</span></div>`;
+  mc.positives.slice(0,2).forEach(p => { h += `<div class="mini-coherence-positive"><span>✓</span><span>${p}</span></div>`; });
+  mc.alerts.forEach(a => { h += `<div class="mini-coherence-alert"><span>⚠️</span><span>${a}</span></div>`; });
+  mc.tips.forEach(t => { h += `<div class="mini-coherence-tip">💡 ${t}</div>`; });
+  if (context === 'step4' && mc.nivel !== 'alta')
+    h += `<div style="font-size:11px;color:var(--gray-400);margin-top:8px">← Regresa al paso anterior para ajustar el diseño metodológico</div>`;
+  h += `<div class="mini-coherence-progress"><div class="mini-coherence-progress-bar"></div></div></div>`;
+  return h;
+}
+
 function renderContent(){
   const el=document.getElementById("content");
   const s=state.step;
@@ -1732,11 +1823,13 @@ function renderContent(){
     }
 
     h+=getAutoSuggestion();
+    h+=renderMiniCoherence('step3');
     h+=`</div>`;
     el.innerHTML=h;
   }
   else if(s===4){
     let h=`<div class="gap20">`;
+    h+=renderMiniCoherence('step4');
     h+=sectionLabel("¿Cuánta experiencia tienes con este tema o población?");
     h+=`<div class="options">`;
     EXPERIENCIAS.forEach(e=>{
@@ -1843,8 +1936,18 @@ function renderContent(){
     
     let errorMsg = "";
     if(state.result.error){
-      errorMsg = `<div style="padding:20px;background:#FEF3E8;border:1px solid #F59E0B;border-radius:8px;margin-bottom:20px">
-        <p style="color:#B45309;font-size:14px;line-height:1.6;margin:0">${state.result.error}</p>
+      const tecnicaFallbackLabel = state.tecnica
+        ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+        : 'seleccionada';
+      errorMsg = `<div style="padding:14px 16px;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:10px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">🔌</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px;color:#1D4ED8;margin-bottom:4px">Borrador generado sin IA</div>
+          <p style="color:#1E40AF;font-size:13px;line-height:1.6;margin:0 0 10px">El servidor de IA no respondió. Se usó la plantilla local para <strong>${tecnicaFallbackLabel}</strong>. El resultado es funcional pero menos rico que la versión generada por IA.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:11px;color:#60A5FA;align-self:center">Puedes editar el borrador mientras tanto</span>
+          </div>
+        </div>
       </div>`;
     }
     
@@ -2030,7 +2133,11 @@ function nextStep(){
     if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
       validateCoherence();
     }
-    // If user arrives at step 5 with context filled → refresh AI poblaciones if not done yet
+    // Pre-trigger coherence validation silently when leaving step 3 → step 4
+    if(state.step===4 && !state.aiValidation && !state.aiValidationLoading){
+      validateCoherence();
+    }
+    // If user arrives at step 4 with context filled → refresh AI poblaciones if not done yet
     if(state.step===4 && state.contexto?.trim() && !state.aiPoblaciones?.length && !state.aiPoblacionesLoading){
       prefetchAIPoblaciones();
     }
