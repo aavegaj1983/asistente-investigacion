@@ -975,14 +975,14 @@ Responde SOLO con un array JSON de 7 strings:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
         messages: [{role: 'user', content: pobPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length >= 4) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
@@ -1047,14 +1047,14 @@ Responde SOLO con JSON sin texto adicional:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 900,
         messages: [{role: 'user', content: instrPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiInstruments = parsed;
@@ -1253,14 +1253,14 @@ Responde SOLO con JSON sin texto adicional:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         messages: [{role: 'user', content: refPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length > 0){
       state.aiReferencias = parsed;
@@ -2125,14 +2125,14 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 700,
         messages: [{role: 'user', content: valPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content||'';
+    const text = data.content?.map(b=>b.text||'').join('')||'';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     state.editValidation = parsed;
   } catch(e) {
@@ -2403,14 +2403,14 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1200,
         messages: [{role: 'user', content: stepsPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
@@ -2475,14 +2475,14 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 900,
         messages: [{role: 'user', content: varPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
     if(Array.isArray(parsed) && parsed.length >= 4) {
       // Accept both old string format and new object format
@@ -2554,14 +2554,14 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 600,
         messages: [{role: 'user', content: valPrompt}]
       })
     });
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
     state.aiValidation = parsed;
   } catch(e) {
@@ -3198,7 +3198,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:2500,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})
     });
     
     if (!res.ok) {
@@ -3206,7 +3206,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     }
     
     const data=await res.json();
-    const text=data.choices?.[0]?.message?.content||"";
+    const text=data.content?.map(b=>b.text||"").join("")||"";
     const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
     
     if(!parsed.hipotesis) {
