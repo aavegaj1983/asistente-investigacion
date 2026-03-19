@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Asistente para la creación de proyectos de investigación</title>
+<title>TesisProLab — Asistente IA para investigación</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 40'%3E%3Crect width='32' height='40' rx='8' fill='%234F46E5'/%3E%3Cpath d='M16 4C11 4,5 7,3 13 C1 18,2 23,5 27 C7 29,8 31,8 34 L16 37 Z' fill='white'/%3E%3Cpath d='M16 4C21 4,27 7,29 13 C31 18,30 23,27 27 C25 29,24 31,24 34 L16 37 Z' fill='white'/%3E%3Cline x1='16' y1='5' x2='16' y2='35' stroke='%234F46E5' stroke-width='1.2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='22' r='3' fill='%234F46E5'/%3E%3Cpath d='M15 35 Q12 38,11 41' stroke='white' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Cpath d='M17 35 Q20 38,21 41' stroke='white' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Cellipse cx='16' cy='44' rx='3' ry='4' fill='white'/%3E%3C/svg%3E"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
@@ -2181,8 +2182,8 @@ function prevStep(){if(state.step>0){state.step--;render();saveState();}}
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();prefetchAIVars();}
-function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3)prefetchAIVars();}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
+function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
 function selectDiseno(v){state.diseno=v;state.tecnica="";state.aiValidation=null;updateNav();renderContent();saveState();}
@@ -2628,7 +2629,17 @@ Responde SOLO con JSON sin texto adicional ni markdown:
         messages: [{role: 'user', content: varPrompt}]
       })
     });
-    if(!res.ok) throw new Error('API error');
+    if(!res.ok) {
+      if(res.status === 429) {
+        console.warn('Rate limit (429) en variables IA — reintentando en 8s');
+        state.aiVarsLoading = false;
+        if(state.step === 2) renderContent();
+        clearTimeout(window._varsRetryTimer);
+        window._varsRetryTimer = setTimeout(() => prefetchAIVars(), 8000);
+        return;
+      }
+      throw new Error('API error ' + res.status);
+    }
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
     const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
