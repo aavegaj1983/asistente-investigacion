@@ -15,10 +15,10 @@
   --red:#DC2626;--red-light:#FEF2F2;
   --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
   --gray-400:#9CA3AF;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;
-  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
-  --shadow-lg:0 10px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:24px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 20px rgba(0,0,0,.07),0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.09),0 2px 8px rgba(0,0,0,.05);
   --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 
@@ -26,47 +26,79 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:var(--font);
-  background:linear-gradient(135deg,#EEF2FF 0%,#F0FDF4 50%,#FFF7ED 100%);
+  background:#F5F5F7;
   min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
-  padding:20px 16px 40px;
+  padding:28px 16px 52px;
 }
 
 /* ── CARD ────────────────────────────────────────────────────────── */
 .card{
   background:#fff;border-radius:var(--radius-xl);
-  border:1px solid var(--gray-200);
-  padding:28px 24px;width:100%;max-width:640px;
+  border:1px solid rgba(0,0,0,.06);
+  padding:32px 28px;width:100%;max-width:640px;
   box-shadow:var(--shadow-lg);
   height:fit-content;
   overflow:hidden;
 }
 
-/* ── HEADER ──────────────────────────────────────────────────────── */
+/* ── PRODUCT HEADER ──────────────────────────────────────────────── */
+.product-header{
+  margin-bottom:24px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--gray-100);
+}
+.product-name{
+  display:flex;align-items:center;gap:10px;margin-bottom:4px;
+}
+.product-logo{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.3);
+}
+.product-logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 h2{
-  font-size:17px;font-weight:700;color:var(--gray-900);
-  margin-bottom:6px;letter-spacing:-0.2px;line-height:1.3;
+  font-size:20px;font-weight:800;color:var(--gray-900);
+  letter-spacing:-0.5px;line-height:1.2;
+}
+h2 span{color:var(--brand)}
+.product-subtitle{
+  font-size:12px;color:var(--gray-400);font-weight:500;
+  letter-spacing:.1px;padding-left:42px;
 }
 
 /* ── STEP BAR ────────────────────────────────────────────────────── */
-.steps{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.steps{display:flex;align-items:center;gap:0;margin-bottom:8px}
 .step-circle{
-  width:30px;height:30px;border-radius:50%;
+  width:34px;height:34px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:600;cursor:default;transition:all .25s;
+  font-size:13px;font-weight:700;cursor:default;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
+  flex-shrink:0;
 }
-.step-circle.done{background:var(--brand);color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,.35)}
-.step-circle.active{background:var(--brand-light);color:var(--brand);border:2px solid var(--brand)}
+.step-circle.done{
+  background:var(--brand);color:#fff;cursor:pointer;
+  box-shadow:0 2px 8px rgba(79,70,229,.3);
+}
+.step-circle.active{
+  background:#fff;color:var(--brand);
+  border:2.5px solid var(--brand);
+  box-shadow:0 0 0 4px rgba(79,70,229,.1);
+}
 .step-circle.pending{background:var(--gray-100);color:var(--gray-400)}
-.step-line{height:2px;width:16px;border-radius:2px;transition:background .25s}
+.step-line{height:2.5px;flex:1;transition:background .4s cubic-bezier(.4,0,.2,1)}
 .step-line.done{background:var(--brand)}
 .step-line.pending{background:var(--gray-200)}
-.step-label{font-size:11px;color:var(--gray-400);margin-bottom:22px;font-weight:500;letter-spacing:.2px}
+.step-label{
+  font-size:12px;color:var(--gray-500);margin-bottom:24px;
+  font-weight:600;letter-spacing:.1px;
+}
 
 /* ── SECTION LABEL ───────────────────────────────────────────────── */
 .section-label{
-  font-size:13px;color:var(--gray-500);font-weight:600;
-  margin-bottom:10px;display:flex;align-items:center;gap:6px;
-  text-transform:uppercase;letter-spacing:.5px;
+  font-size:12px;color:var(--gray-500);font-weight:700;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px;
+  text-transform:uppercase;letter-spacing:.6px;
 }
 
 /* ── TOOLTIP ─────────────────────────────────────────────────────── */
@@ -80,7 +112,7 @@ h2{
   visibility:hidden;width:240px;background:var(--gray-900);color:#fff;
   text-align:left;border-radius:var(--radius-sm);padding:10px 12px;
   position:absolute;z-index:10;bottom:130%;left:50%;margin-left:-120px;
-  opacity:0;transition:opacity .25s;font-size:12px;line-height:1.5;
+  opacity:0;transition:opacity .3s ease;font-size:12px;line-height:1.5;
   font-weight:400;box-shadow:var(--shadow-md);
 }
 .tooltip-text::after{
@@ -193,25 +225,27 @@ textarea{min-height:70px;resize:vertical}
 /* ── NAV BUTTONS ─────────────────────────────────────────────────── */
 .nav{
   display:flex;justify-content:space-between;align-items:center;
-  margin-top:28px;padding-top:18px;border-top:1px solid var(--gray-100);
+  margin-top:32px;padding-top:20px;border-top:1px solid var(--gray-100);
   gap:12px;
 }
 .btn{
   padding:11px 22px;border-radius:var(--radius-md);font-size:14px;
   cursor:pointer;font-family:var(--font);border:none;
-  transition:all .2s;font-weight:600;letter-spacing:.1px;
+  transition:all .35s cubic-bezier(.4,0,.2,1);font-weight:600;letter-spacing:.1px;
 }
 .btn-back{
-  border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-500);
+  border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-400);
+  font-weight:500;
 }
-.btn-back:hover{background:var(--gray-50);border-color:var(--gray-400);color:var(--gray-700)}
-.btn-back:disabled{opacity:.35;cursor:not-allowed}
+.btn-back:hover{background:var(--gray-50);border-color:var(--gray-300);color:var(--gray-600)}
+.btn-back:disabled{opacity:.3;cursor:not-allowed}
 .btn-next{
-  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
-  color:#fff;padding:11px 28px;
-  box-shadow:0 4px 14px rgba(79,70,229,.35);
+  background:var(--brand);
+  color:#fff;padding:12px 32px;
+  box-shadow:0 2px 12px rgba(79,70,229,.3);
+  border-radius:var(--radius-md);
 }
-.btn-next:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.4)}
+.btn-next:hover{background:var(--brand-dark);box-shadow:0 4px 18px rgba(79,70,229,.4);transform:translateY(-1px)}
 .btn-next:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;box-shadow:none;transform:none}
 
 /* ── CONTENT AREA ────────────────────────────────────────────────── */
@@ -219,87 +253,113 @@ textarea{min-height:70px;resize:vertical}
 .gap20{display:flex;flex-direction:column;gap:20px}
 
 /* ── RESULT CARDS ────────────────────────────────────────────────── */
-.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.result-header p{font-size:13px;color:var(--gray-400);font-weight:500}
-.result-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn-sm{
-  padding:8px 14px;border-radius:var(--radius-sm);font-size:12px;
-  cursor:pointer;font-family:var(--font);border:1.5px solid var(--gray-200);
-  background:#fff;color:var(--gray-600);transition:all .15s;font-weight:600;
+.result-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+  padding-bottom:14px;border-bottom:1px solid var(--gray-100);
 }
-.btn-sm:hover{background:var(--gray-50);border-color:var(--gray-400)}
-.btn-edit{border-color:var(--gray-200);color:var(--gray-600)}
+.result-header p{font-size:13px;color:var(--gray-400);font-weight:400}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-sm{
+  padding:7px 12px;border-radius:var(--radius-sm);font-size:12px;
+  cursor:pointer;font-family:var(--font);border:1.5px solid var(--gray-200);
+  background:#fff;color:var(--gray-500);
+  transition:all .3s cubic-bezier(.4,0,.2,1);font-weight:500;
+}
+.btn-sm:hover{background:var(--gray-50);border-color:var(--gray-300);color:var(--gray-700)}
+.btn-edit{border-color:var(--gray-200);color:var(--gray-500)}
 .btn-regen{border-color:var(--brand-mid);color:var(--brand);background:var(--brand-light)}
-.btn-regen:hover{background:var(--brand);color:#fff}
-.btn-download{border-color:var(--green-mid);color:var(--green);background:var(--green-light)}
-.btn-download:hover{background:var(--green);color:#fff}
+.btn-regen:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+/* Primary download CTA — visually dominant */
+.btn-download{
+  background:var(--green);color:#fff;border-color:var(--green);
+  padding:8px 16px;font-weight:700;box-shadow:0 2px 8px rgba(5,150,105,.25);
+}
+.btn-download:hover{background:#047857;border-color:#047857;box-shadow:0 4px 14px rgba(5,150,105,.35);transform:translateY(-1px)}
 .btn-download.loading{opacity:.6;pointer-events:none;cursor:wait}
 .result-block{
-  border-radius:var(--radius-md);padding:16px 18px;margin-bottom:12px;
+  border-radius:var(--radius-md);padding:18px 20px;margin-bottom:10px;
   border:1px solid transparent;
+  transition:box-shadow .3s ease;
 }
+.result-block:hover{box-shadow:var(--shadow-sm)}
 .result-block-label{
-  font-size:10px;font-weight:700;margin-bottom:8px;
-  text-transform:uppercase;letter-spacing:1.2px;
+  font-size:10px;font-weight:700;margin-bottom:10px;
+  text-transform:uppercase;letter-spacing:1.4px;
 }
-.result-block p{font-size:15px;line-height:1.7;color:var(--gray-800)}
+.result-block p{font-size:16px;line-height:1.75;color:var(--gray-800)}
 .result-block textarea{
-  font-size:14px;padding:10px;border-radius:var(--radius-sm);
+  font-size:15px;padding:10px;border-radius:var(--radius-sm);
   min-height:70px;width:100%;border:1.5px solid rgba(0,0,0,.1);
   background:rgba(255,255,255,.6);font-family:var(--font);
+  line-height:1.7;
 }
 
 /* ── SUMMARY ─────────────────────────────────────────────────────── */
 .summary{
-  margin-top:6px;padding:14px 18px;background:var(--gray-50);
+  margin-top:6px;padding:16px 20px;background:var(--gray-50);
   border-radius:var(--radius-md);border:1px solid var(--gray-200);
 }
-.summary p.title{font-size:11px;color:var(--gray-400);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.summary p.title{font-size:11px;color:var(--gray-400);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .summary-grid p{font-size:12px;color:var(--gray-600);padding:4px 0}
 .summary-grid span{color:var(--gray-400);font-weight:500}
 
 /* ── LOADING ─────────────────────────────────────────────────────── */
-.loading{text-align:center;padding:48px 0}
-.loading .icon{font-size:36px;margin-bottom:14px;animation:pulse 1.5s ease-in-out infinite}
+.loading{text-align:center;padding:56px 0}
+.loading .icon{font-size:36px;margin-bottom:16px;animation:pulse 2s ease-in-out infinite}
 .loading p{color:var(--gray-400);font-size:14px;font-weight:500}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* ── GENERATE BOX ────────────────────────────────────────────────── */
 .generate-box{text-align:center;padding:36px 0}
-.generate-box p{margin-bottom:24px;font-size:15px;color:var(--gray-500);line-height:1.6}
+.generate-box p{margin-bottom:28px;font-size:15px;color:var(--gray-500);line-height:1.65}
 .btn-generate{
-  padding:14px 36px;border-radius:var(--radius-md);
-  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
-  color:#fff;border:none;font-size:15px;font-weight:700;
+  padding:15px 40px;border-radius:var(--radius-md);
+  background:var(--brand);
+  color:#fff;border:none;font-size:16px;font-weight:700;
   cursor:pointer;font-family:var(--font);
-  box-shadow:0 4px 18px rgba(79,70,229,.4);
-  transition:all .2s;letter-spacing:.2px;
+  box-shadow:0 4px 18px rgba(79,70,229,.35);
+  transition:all .35s cubic-bezier(.4,0,.2,1);letter-spacing:.1px;
 }
-.btn-generate:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,70,229,.45)}
+.btn-generate:hover{background:var(--brand-dark);transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.4)}
 
 /* ── FOOTER ──────────────────────────────────────────────────────── */
 .footer{
-  text-align:center;margin-top:24px;padding-top:16px;
+  text-align:center;margin-top:28px;padding-top:18px;
   border-top:1px solid var(--gray-100);font-size:12px;
   color:var(--gray-400);display:flex;justify-content:center;
   align-items:center;gap:8px;flex-wrap:wrap;
 }
-.footer strong{color:var(--brand)}
+.footer strong{color:var(--gray-500);font-weight:600}
 .footer a{color:var(--brand);text-decoration:none;font-weight:600}
 .footer a:hover{text-decoration:underline}
 
 /* ── NEXT STEPS ──────────────────────────────────────────────────── */
 .next-steps{
-  margin-top:16px;padding:18px;
-  background:linear-gradient(135deg,#F0FDF4,#ECFDF5);
-  border-radius:var(--radius-md);border:1px solid var(--green-mid);
+  margin-top:16px;padding:20px;
+  background:#fff;
+  border-radius:var(--radius-md);
+  border:1px solid var(--gray-200);
 }
-.next-steps-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.next-steps-title{
+  font-size:13px;font-weight:700;color:var(--gray-700);
+  margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
 .next-steps ul{list-style:none;padding:0}
-.next-steps li{padding:10px 0 10px 22px;font-size:13px;color:#065F46;line-height:1.6;border-bottom:1px solid rgba(5,150,105,.1);position:relative;word-break:break-word}
+.next-steps li{
+  padding:10px 0 10px 20px;font-size:14px;color:var(--gray-700);
+  line-height:1.65;border-bottom:1px solid var(--gray-100);
+  position:relative;word-break:break-word;
+}
+.next-steps li:last-child{border-bottom:none;padding-bottom:0}
+.next-steps li::before{
+  content:'';position:absolute;left:0;top:19px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--brand);flex-shrink:0;
+}
 .next-steps li:last-child{border-bottom:none}
-.next-steps li::before{content:"✓";color:var(--green);font-weight:700;font-size:13px;position:absolute;left:0;top:11px}
 
 /* ── AUTO SAVE ───────────────────────────────────────────────────── */
 .auto-save{
@@ -308,8 +368,8 @@ textarea{min-height:70px;resize:vertical}
   font-size:11px;color:var(--gray-500);font-family:var(--font);font-weight:600;
   box-shadow:var(--shadow-md);display:none;
 }
-.auto-save.show{display:flex;align-items:center;gap:6px;animation:slideUp .3s ease}
-@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.auto-save.show{display:flex;align-items:center;gap:6px;animation:slideUp .4s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── ERROR ───────────────────────────────────────────────────────── */
 .error{color:var(--red);font-size:13px;font-weight:500}
@@ -317,13 +377,15 @@ textarea{min-height:70px;resize:vertical}
 /* ── REFERENCIAS ─────────────────────────────────────────────────── */
 .refs{
   margin-top:20px;padding:18px;
-  background:#F8FAFF;border-radius:var(--radius-md);
-  border:1px solid var(--brand-mid);
+  background:#fff;border-radius:var(--radius-md);
+  border:1px solid var(--gray-200);
 }
-.refs-title{font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:14px;
-  display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px}
+.refs-title{
+  font-size:11px;font-weight:700;color:var(--gray-500);margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.6px;
+}
 .refs-item{
-  padding:9px 0;border-bottom:1px solid var(--brand-mid);
+  padding:9px 0;border-bottom:1px solid var(--gray-100);
   font-size:12px;line-height:1.75;color:var(--gray-700);
 }
 .refs-item:last-child{border-bottom:none;padding-bottom:0}
@@ -338,36 +400,38 @@ textarea{min-height:70px;resize:vertical}
 
 /* ── TABLET (≤768px) ─────────────────────────────────────────────── */
 @media (max-width:768px){
-  body{padding:12px 10px 32px}
-  .card{padding:20px 16px;border-radius:var(--radius-lg)}
-  h2{font-size:16px}
-  .steps{gap:3px}
-  .step-circle{width:26px;height:26px;font-size:11px}
-  .step-line{width:10px}
+  body{padding:14px 10px 36px}
+  .card{padding:22px 18px;border-radius:var(--radius-lg)}
+  h2{font-size:18px}
+  .steps{gap:0}
+  .step-circle{width:30px;height:30px;font-size:12px}
   .grid2,.grid3{grid-template-columns:1fr;gap:10px}
   .badge-area{flex-direction:row;text-align:left;padding:12px 14px;gap:10px}
   .badge-area .area-icon{font-size:20px}
-  .nav{flex-direction:column;gap:10px;margin-top:20px}
+  .nav{flex-direction:column;gap:10px;margin-top:24px}
   .btn{width:100%;padding:14px 20px;font-size:15px}
   .btn-next{order:-1}
   .result-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .btn-sm{padding:11px 8px;text-align:center;font-size:13px}
-  .result-block p{font-size:14px}
+  .result-block p{font-size:15px}
   .summary-grid{grid-template-columns:1fr}
   .auto-save{bottom:12px;right:12px}
+  .product-subtitle{padding-left:0;margin-top:4px}
 }
 
 /* ── MÓVIL (≤480px) ──────────────────────────────────────────────── */
 @media (max-width:480px){
   body{padding:8px 6px 28px}
-  .card{padding:16px 14px;border-radius:var(--radius-md)}
-  h2{font-size:15px}
+  .card{padding:18px 14px;border-radius:var(--radius-md)}
+  h2{font-size:17px}
   .steps{overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
   .result-actions{grid-template-columns:1fr}
   .btn-sm{width:100%;min-height:48px;font-size:14px}
-  .result-block p{font-size:13px;line-height:1.7}
+  .result-block p{font-size:14px;line-height:1.75}
   .footer{font-size:11px}
-}
+  .product-logo{width:28px;height:28px}
+  h2{font-size:16px}
+}}
 
 /* ── MODAL DIAGRAMA ──────────────────────────────────────────────── */
 .modal-overlay{
@@ -387,23 +451,60 @@ textarea{min-height:70px;resize:vertical}
 @media (max-width:480px){
   .modal-inner{padding:16px 14px;border-radius:var(--radius-lg);max-height:95vh}
 }
+
+/* ── REGEN LIMIT TOAST ───────────────────────────────────────────── */
+#regen-toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1F2937;color:#fff;padding:12px 20px;border-radius:12px;
+  font-size:13px;font-weight:600;font-family:var(--font);
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:10px;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;
+  opacity:0;z-index:9999;max-width:340px;text-align:center;
+  pointer-events:none;
+}
+#regen-toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#regen-toast .toast-icon{font-size:18px;flex-shrink:0}
+#regen-toast .toast-bar{
+  height:3px;background:#EF4444;border-radius:2px;
+  position:absolute;bottom:0;left:0;right:0;border-radius:0 0 12px 12px;
+  animation:toast-shrink 4s linear forwards;
+}
+@keyframes toast-shrink{from{width:100%}to{width:0%}}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>Asistente para la creación de proyectos de investigación</h2>
+  <div class="product-header">
+    <div class="product-name">
+      <div class="product-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h2>Tesis<span>Pro</span>Lab</h2>
+    </div>
+    <p class="product-subtitle">Asistente IA para la creación de proyectos de investigación</p>
+  </div>
   <div class="steps" id="steps-bar"></div>
   <p class="step-label" id="step-label"></p>
   <div class="content" id="content"></div>
   <div class="nav">
-    <button class="btn btn-back" id="btn-back" onclick="prevStep()">Atras</button>
-    <button class="btn btn-next" id="btn-next" onclick="nextStep()">Siguiente</button>
+    <button class="btn btn-back" id="btn-back" onclick="prevStep()">← Atrás</button>
+    <button class="btn btn-next" id="btn-next" onclick="nextStep()">Siguiente →</button>
   </div>
   <div class="footer">
-    Creado por: <strong>Alan A. Vega Jacome</strong>
+    <strong>TesisProLab</strong> · Desarrollado por Alan A. Vega Jacome
   </div>
 </div>
-<div class="auto-save" id="auto-save">💾 Progreso guardado</div>
+<div class="auto-save" id="auto-save">Guardado</div>
+<div id="regen-toast">
+  <span class="toast-icon">🚫</span>
+  <span>Alcanzaste el límite de 3 regeneraciones</span>
+  <div class="toast-bar"></div>
+</div>
 
 <script>
 const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
@@ -832,11 +933,14 @@ function findInstrumento(varName) {
   return entry ? entry[1] : null;
 }
 
-async function prefetchAIPoblaciones() {
+async function prefetchAIPoblaciones(manualRegen = false) {
   if(!state.area || state.area === 'otro' || state.aiPoblacionesLoading) return;
   // Requires geographic context — don't run without it
   const contexto = state.contexto ? state.contexto.trim() : '';
   if(!contexto) return;
+  // Only guard manual re-triggers, not the auto first-load
+  if (manualRegen && !canRegen('poblaciones')) return;
+  if (manualRegen) incrementRegen();
 
   state.aiPoblacionesLoading = true;
   state.aiPoblaciones = [];
@@ -979,7 +1083,7 @@ function renderInstrumentosHtml(varsList) {
   }
 
   let h = `<div style="margin-top:20px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
-  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">🧪 Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</div>`;
+  h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</div>`;
 
   // Loading state
   if(state.aiInstrumentsLoading) {
@@ -1033,16 +1137,144 @@ function renderInstrumentosHtml(varsList) {
 
 function renderReferenciasHtml() {
   const refs = getRefsFiltradas();
-  if(refs.length === 0) return '';
-  let h = `<div class="refs">`;
-  h += `<div class="refs-title">📚 Referencias metodológicas del proyecto <span style="font-weight:400;color:var(--gray-400);font-size:11px">(${refs.length} relevantes para tu diseño)</span></div>`;
-  refs.forEach(r => {
-    h += `<div class="refs-item">${r.cita}`;
-    if(r.nota) h += `<span class="refs-note">${r.nota}</span>`;
+  let h = '';
+
+  // ── Sección de referencias metodológicas (estáticas, filtradas) ──
+  if(refs.length > 0){
+    h += `<div class="refs">`;
+    h += `<div class="refs-title">Referencias metodológicas del proyecto <span style="font-weight:400;color:var(--gray-400);font-size:11px">(${refs.length} relevantes para tu diseño)</span></div>`;
+    refs.forEach(r => {
+      h += `<div class="refs-item">${r.cita}`;
+      if(r.nota) h += `<span class="refs-note">${r.nota}</span>`;
+      h += `</div>`;
+    });
     h += `</div>`;
-  });
-  h += `</div>`;
+  }
+
+  // ── Sección de referencias temáticas generadas por IA ──
+  if(state.aiReferenciasLoading){
+    h += `<div style="margin-top:14px;padding:16px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px;animation:pulse 1s infinite">🤖</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#7C3AED;margin-bottom:2px">Generando referencias temáticas personalizadas...</div>
+        <div style="font-size:12px;color:#9CA3AF">Buscando fuentes sobre ${efectiveProblema()}, ${getPoblacionCompleta()} y las variables del proyecto</div>
+      </div>
+    </div>`;
+  } else if(state.aiReferencias && state.aiReferencias.length > 0){
+    h += `<div style="margin-top:14px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
+    h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+      Referencias temáticas — IA
+      <span style="font-size:11px;font-weight:500;color:#9CA3AF;margin-left:auto">Verifica disponibilidad en SCOPUS, Redalyc o SciELO</span>
+    </div>`;
+    h += `<p style="font-size:12px;color:#6B7280;margin-bottom:12px">Organizadas por categoría según las variables y población de tu proyecto. Úsalas como punto de partida para tu marco teórico y planteamiento del problema.</p>`;
+    let currentCat = '';
+    state.aiReferencias.forEach(ref => {
+      if(ref.categoria && ref.categoria !== currentCat){
+        currentCat = ref.categoria;
+        h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #EDE9FE">${currentCat}</div>`;
+      }
+      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE">`;
+      h += `<p style="font-size:13px;color:#374151;line-height:1.6;margin:0">${ref.apa}</p>`;
+      if(ref.relevancia) h += `<p style="font-size:11px;color:#7C3AED;margin:4px 0 0;font-style:italic">→ ${ref.relevancia}</p>`;
+      h += `</div>`;
+    });
+    h += `</div>`;
+  } else if(state.aiReferencias && state.aiReferencias.length === 0){
+    h += `<div style="margin-top:10px;padding:10px 14px;background:#FFFBEB;border-radius:8px;border:1px solid #FDE68A;font-size:12px;color:#92400E">
+      ⚠️ No se pudieron generar referencias temáticas. Busca manualmente en SCOPUS, Redalyc o SciELO con las variables: <strong>${state.variables.filter(v=>v!=='otro').join(', ')}</strong>.
+    </div>`;
+  }
+
   return h;
+}
+
+async function generateAIReferencias() {
+  if(state.aiReferenciasLoading || state.aiReferencias) return;
+  state.aiReferenciasLoading = true;
+  if(state.step === 5 && state.result) renderContent();
+
+  let vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim())
+    vars = vars.concat(state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean));
+
+  const enfoqueKey = state.enfoque.toLowerCase();
+  const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
+  const disenoLabel = disenoObj?.label || state.diseno;
+  const tecnicaLabel = state.tecnica
+    ? (TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label || state.tecnica)
+    : (state.enfoque === 'Cualitativo' ? `Análisis ${disenoLabel}` : 'Estadística descriptiva');
+
+  const isQual = state.enfoque === 'Cualitativo';
+  const tipoRef = isQual ? 'estudios cualitativos, fenomenológicos o de análisis temático' : 'estudios empíricos cuantitativos, meta-análisis o revisiones sistemáticas';
+
+  const refPrompt = `Eres un experto en psicología e investigación científica en el contexto peruano y latinoamericano. Tu tarea es sugerir referencias bibliográficas REALES y VERIFICABLES para una tesis de pregrado en psicología.
+
+PROYECTO DE INVESTIGACIÓN:
+- Área: ${efectiveArea()}
+- Problema: ${efectiveProblema()}
+- Población: ${getPoblacionCompleta()}
+- ${isQual ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
+- Enfoque: ${state.enfoque} | Diseño: ${disenoLabel} | Técnica: ${tecnicaLabel}
+- Contexto geográfico: ${state.contexto || 'Perú'}
+
+Genera exactamente 9 referencias organizadas en 3 categorías:
+
+CATEGORÍA 1 — "Sobre el problema y la población" (3 referencias):
+- Artículos o reportes de los últimos 7 años sobre "${efectiveProblema()}" específicamente en ${getPoblacionCompleta()} o poblaciones similares de Latinoamérica/Perú
+- Incluye al menos 1 fuente de datos estadísticos/epidemiológicos (OMS, MINSA, INEI, OPS, UNICEF) relevante para el planteamiento del problema
+
+CATEGORÍA 2 — "Sobre las variables del estudio" (3 referencias):
+- ${tipoRef} sobre ${vars.slice(0,3).join(', ')} en poblaciones similares
+- Preferir estudios con muestras latinoamericanas o con adaptaciones al español
+
+CATEGORÍA 3 — "Fundamentos teóricos y metodológicos" (3 referencias):
+- Teorías o modelos teóricos que sustenten las variables (ej: teoría de Bandura, Lazarus, Beck, etc.)
+- Incluye al menos 1 referencia metodológica específica para el diseño ${disenoLabel} o la técnica ${tecnicaLabel}
+
+REGLAS CRÍTICAS:
+- SOLO incluye referencias que REALMENTE EXISTAN (no inventes autores, años ni DOI)
+- Formato APA 7ª edición estricto
+- Prefer revistas indexadas: Redalyc, SciELO, SCOPUS, PubMed, APA PsycINFO
+- Para datos estadísticos nacionales: MINSA, INEI, DEVIDA, MINEDU (documentos oficiales reales)
+- Si no conoces referencias concretas para una variable, usa una referencia seminal del constructo (ej: Bandura, 1977 para autoeficacia)
+- Incluye una nota de relevancia de 1 frase para cada referencia
+
+Responde SOLO con JSON sin texto adicional:
+[
+  {
+    "categoria": "Sobre el problema y la población",
+    "apa": "Apellido, N. (Año). Título del artículo. Nombre de la Revista, Volumen(Número), páginas. https://doi.org/...",
+    "relevancia": "Por qué esta referencia es útil para este proyecto específico"
+  }
+]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{role: 'user', content: refPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(Array.isArray(parsed) && parsed.length > 0){
+      state.aiReferencias = parsed;
+    } else {
+      state.aiReferencias = [];
+    }
+  } catch(e) {
+    console.error('generateAIReferencias error:', e);
+    state.aiReferencias = [];
+  } finally {
+    state.aiReferenciasLoading = false;
+    if(state.step === 5 && state.result) renderContent();
+    saveState();
+  }
 }
 
 const NIVEL_HINT = {
@@ -1058,19 +1290,21 @@ try {
 } catch(e) {}
 
 // Merge savedState with defaults so new fields are always present
+const REGEN_MAX = 3;
 const stateDefaults = {
   step:0, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
   problema:"", problemaOtro:"", variables:[], variablesOtro:"",
   enfoque:"", nivel:"", epistemologia:"", diseno:"", tecnica:"",
   experiencia:"", viabilidad:"", contexto:"", motivacion:"",
   result:null, loading:false, editMode:false,
-  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""},
+  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
   aiValidation:null, aiValidationLoading:false,
   aiNextSteps:null, editValidation:null, editValidating:false,
   aiInstruments:null, aiInstrumentsLoading:false,
   aiPoblaciones:[], aiPoblacionesLoading:false,
-  aiPoblaciones:[], aiPoblacionesLoading:false
+  aiReferencias:null, aiReferenciasLoading:false,
+  regenCount:0
 };
 if(savedState) {
   // Ensure edited has all new fields
@@ -1101,7 +1335,7 @@ let state = savedState || {
   result:null,
   loading:false,
   editMode:false,
-  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""},
+  edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[],
   aiVarsLoading:false,
   aiVarsError:false,
@@ -1109,7 +1343,10 @@ let state = savedState || {
   aiValidationLoading:false,
   aiNextSteps:null,
   editValidation:null,
-  editValidating:false
+  editValidating:false,
+  aiReferencias:null,
+  aiReferenciasLoading:false,
+  regenCount:0
 };
 
 // GUARDAR ESTADO AUTOMÁTICAMENTE
@@ -1215,7 +1452,7 @@ function renderStepsBar(){
     }
   });
   document.getElementById("steps-bar").innerHTML=h;
-  document.getElementById("step-label").textContent=`Paso ${state.step+1} de 6: ${STEPS[state.step]}`;
+  document.getElementById("step-label").textContent=`${STEPS[state.step]}  ·  Paso ${state.step+1} de 6`;
 }
 
 // SUGERENCIAS AUTOMÁTICAS
@@ -1284,10 +1521,15 @@ function renderContent(){
         <span>Generando poblaciones específicas para <strong>${state.contexto}</strong>...</span>
       </div>`;
     } else if(usandoAI){
+      const regenLeft = REGEN_MAX - (state.regenCount||0);
+      const pobBtnDisabled = regenLeft <= 0;
       h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
         <span>✨ <strong>Poblaciones generadas por IA</strong> para el contexto peruano</span>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="if(!state.contexto?.trim()){alert('Primero ingresa tu contexto geográfico en el paso 5 (Contexto)');}else{state.aiPoblaciones=[];state.aiPoblacionesLoading=false;prefetchAIPoblaciones();}" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          ${pobBtnDisabled
+            ? `<span style="font-size:11px;color:#DC2626;font-weight:600;background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;padding:3px 8px">🚫 Límite alcanzado</span>`
+            : `<button onclick="if(!state.contexto?.trim()){alert('Primero ingresa tu contexto geográfico en el paso 5 (Contexto)');}else{state.aiPoblaciones=[];state.aiPoblacionesLoading=false;prefetchAIPoblaciones(true);}" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
+          }
           <button onclick="state.aiPoblaciones=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver generales</button>
         </div>
       </div>`;
@@ -1355,10 +1597,15 @@ function renderContent(){
           <span>Generando variables personalizadas para tu proyecto...</span>
         </div>`;
       } else if(state.aiVars.length > 0){
+        const regenLeft = REGEN_MAX - (state.regenCount||0);
+        const varBtnDisabled = regenLeft <= 0;
         h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
           <span>✨ <strong>Variables generadas por IA</strong> para tu proyecto específico</span>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button onclick="state.aiVars=[];state.aiVarsLoading=false;state.variables=[];prefetchAIVars()" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            ${varBtnDisabled
+              ? `<span style="font-size:11px;color:#DC2626;font-weight:600;background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;padding:3px 8px">🚫 Límite alcanzado</span>`
+              : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.variables=[];prefetchAIVars(true)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
+            }
             <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
           </div>
         </div>`;
@@ -1589,7 +1836,7 @@ function renderContent(){
         ${validationHtml}
         <p>Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
         <span style="font-size:13px;color:#9CA3AF">Revisa advertencias y validación arriba si las hay.</span></p>
-        <button class="btn-generate" onclick="generate()">✨ Generar propuesta</button>
+        <button class="btn-generate" onclick="generate()">Generar propuesta</button>
       </div>`;
       return;
     }
@@ -1603,14 +1850,14 @@ function renderContent(){
     
     const hipLabel = state.enfoque === "Cuantitativo" ? "Hipótesis de investigación" : state.enfoque === "Cualitativo" ? "Supuestos de investigación" : "Hipótesis";
     const fields=[
-      {key:"tema",         label:"Tema de investigación",    color:"#534AB7", bg:"#EEEDFE"},
+      {key:"tema",         label:"Título de la investigación", color:"#534AB7", bg:"#EEEDFE"},
       {key:"pregunta",     label:"Pregunta de investigación",color:"#0F6E56", bg:"#E1F5EE"},
       {key:"objetivo",     label:"Objetivo general",          color:"#993C1D", bg:"#FAECE7"},
       {key:"obj_esp1",     label:"Objetivo específico 1",     color:"#B45309", bg:"#FFFBEB"},
       {key:"obj_esp2",     label:"Objetivo específico 2",     color:"#B45309", bg:"#FFFBEB"},
       {key:"obj_esp3",     label:"Objetivo específico 3",     color:"#B45309", bg:"#FFFBEB"},
       {key:"hipotesis",    label:hipLabel,                    color:"#7C3AED", bg:"#F3E8FF"},
-      {key:"justificacion",label:"Justificación del estudio", color:"#0369A1", bg:"#F0F9FF"},
+      {key:"planteamiento", label:"Recomendaciones para el planteamiento del problema", color:"#0369A1", bg:"#F0F9FF"},
     ];
     // ── Edit validation banner ────────────────────────────────────
     let editValHtml = '';
@@ -1679,7 +1926,14 @@ function renderContent(){
 
     let h= errorMsg + preValHtml + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
-    h+=`<button class="btn-sm btn-regen" onclick="generate()">Regenerar</button>`;
+    const regenLeftStep6 = REGEN_MAX - (state.regenCount||0);
+    if(regenLeftStep6 <= 0){
+      h+=`<button class="btn-sm" disabled title="Alcanzaste el límite de ${REGEN_MAX} regeneraciones" style="border-color:#FECACA;color:#FCA5A5;cursor:not-allowed;opacity:.7">🚫 Sin regeneraciones</button>`;
+    } else if(state.result && state.result.error){
+      h+=`<button class="btn-sm btn-regen" onclick="generate()" title="Reintenta la generación con IA (requiere conexión al servidor)">🔄 Reintentar con IA <span style="opacity:.6;font-size:11px">(${regenLeftStep6}/${REGEN_MAX})</span></button>`;
+    } else {
+      h+=`<button class="btn-sm btn-regen" onclick="generate()" title="Genera una nueva versión con IA. El resultado puede variar.">✨ Regenerar <span style="opacity:.6;font-size:11px">(${regenLeftStep6}/${REGEN_MAX})</span></button>`;
+    }
     h+=`<button class="btn-sm btn-download" onclick="downloadDoc()">📥 Descargar DOCX</button>`;
     // Mostrar diagrama según técnica seleccionada (no el diseño)
     const tecnicaParaDiagrama = ['regresion-multiple','mediacion','moderacion',
@@ -1721,7 +1975,7 @@ function renderContent(){
 
     // PRÓXIMOS PASOS — dinámicos con IA
     if(state.aiNextSteps && Array.isArray(state.aiNextSteps) && state.aiNextSteps.length > 0){
-      h+=`<div class="next-steps"><div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div><ul>`;
+      h+=`<div class="next-steps"><div class="next-steps-title">Próximos pasos sugeridos</div><ul>`;
       state.aiNextSteps.forEach(step => {
         // Strip any HTML tags from AI response — show as plain text
         const clean = String(step).replace(/<[^>]+>/g, '').trim();
@@ -1730,13 +1984,13 @@ function renderContent(){
       h+=`</ul></div>`;
     } else {
       h+=`<div class="next-steps">
-        <div class="next-steps-title">🎯 Próximos pasos para tu proyecto <span style="font-size:10px;font-weight:400;opacity:.6">(generando versión personalizada...)</span></div>
+        <div class="next-steps-title">Próximos pasos sugeridos <span style="font-size:10px;font-weight:400;opacity:.6">(generando versión personalizada...)</span></div>
         <ul>
-          <li><strong>Justificación:</strong> Explica la relevancia teórica, práctica y social de tu tema en el contexto peruano</li>
-          <li><strong>Marco teórico:</strong> Busca 5-10 artículos de los últimos 5 años en SCOPUS, Redalyc o SciELO sobre tu problema y población</li>
-          <li><strong>Metodología detallada:</strong> Define muestra, instrumentos validados y procedimiento de recolección</li>
-          <li><strong>Análisis:</strong> Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus) según tu técnica</li>
-          <li><strong>Cronograma:</strong> Establece tiempos realistas para cada fase del proyecto</li>
+          <li><strong>Búsqueda bibliográfica:</strong> Busca en SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc con palabras clave de tus variables en español e inglés (últimos 5 años, mínimo 15-20 artículos)</li>
+          <li><strong>Instrumentos de recolección:</strong> Verifica la disponibilidad y adaptación de los instrumentos para tu población; si faltan, búscalos en PsycTESTS o Mental Measurements Yearbook</li>
+          <li><strong>Aspectos éticos y acceso:</strong> Tramita los permisos con la institución, elabora el consentimiento informado y solicita el aval del comité de ética si corresponde</li>
+          <li><strong>Análisis de datos:</strong> Ejecuta el análisis con el software adecuado (SPSS, R, ATLAS.ti, NVivo o Mplus según tu técnica) siguiendo el protocolo definido</li>
+          <li><strong>Difusión de resultados:</strong> Considera publicar en una revista indexada peruana o presentar en un congreso nacional de psicología</li>
         </ul>
       </div>`;
       // Trigger async next steps generation
@@ -1746,7 +2000,8 @@ function renderContent(){
     // INSTRUMENTOS SUGERIDOS EN UI
     h += renderInstrumentosHtml(variablesDisplay);
 
-    // REFERENCIAS BIBLIOGRÁFICAS
+    // REFERENCIAS (metodológicas estáticas + temáticas por IA)
+    if(state.result && !state.aiReferencias && !state.aiReferenciasLoading) generateAIReferencias();
     h += renderReferenciasHtml();
     
     el.innerHTML=h;
@@ -1837,14 +2092,14 @@ PERFIL METODOLÓGICO DECLARADO:
 - Población: ${getPoblacionCompleta()}
 
 ELEMENTOS EDITADOS POR EL ESTUDIANTE:
-1. Tema: "${e.tema||''}"
+1. Título: "${e.tema||''}"
 2. Pregunta: "${e.pregunta||''}"
 3. Objetivo general: "${e.objetivo||''}"
 4. Objetivo específico 1: "${e.obj_esp1||''}"
 5. Objetivo específico 2: "${e.obj_esp2||''}"
 6. Objetivo específico 3: "${e.obj_esp3||''}"
 7. ${state.enfoque==='Cualitativo'?'Supuestos':'Hipótesis'}: "${e.hipotesis||''}"
-8. Justificación: "${e.justificacion||''}"
+8. Planteamiento del problema: "${e.planteamiento||''}"
 
 Evalúa cada elemento con estos criterios:
 - ¿Usa el lenguaje correcto para el paradigma (${state.enfoque})?
@@ -1921,6 +2176,8 @@ function nuevoProyecto(){
       aiInstrumentsLoading:false,
       aiPoblaciones:[],
       aiPoblacionesLoading:false,
+      aiReferencias:null,
+      aiReferenciasLoading:false,
       aiNextSteps:null,
       editValidation:null,
       editValidating:false,
@@ -1932,7 +2189,7 @@ function nuevoProyecto(){
       result:null,
       loading:false,
       editMode:false,
-      edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",justificacion:""}
+      edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""}
     };
     
     // Volver al inicio
@@ -2058,7 +2315,7 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
   return warnings;
 }
 
-// ── INTERVENCIÓN 1: Variables dinámicas prefetched en segundo plano ──
+// ── INTERVENCIÓN 1: Próximos pasos personalizados ──────────────────
 async function generateNextSteps() {
   if(!state.result || !state.edited) return;
   const enfoqueKey = state.enfoque.toLowerCase();
@@ -2072,29 +2329,74 @@ async function generateNextSteps() {
   if(state.variables.includes('otro') && state.variablesOtro.trim())
     vars = vars.concat(state.variablesOtro.split(',').map(v=>v.trim()).filter(Boolean));
 
+  const isQual = state.enfoque === 'Cualitativo';
+
+  // Determine instrument status for each variable
+  const varsConInstrumento = vars.filter(v => findInstrumento(v) || (state.aiInstruments && state.aiInstruments.some(i => i.variable?.toLowerCase() === v.toLowerCase())));
+  const varsSinInstrumento = vars.filter(v => !varsConInstrumento.includes(v));
+  const tieneInstrumentos = varsConInstrumento.length > 0;
+  const faltanInstrumentos = varsSinInstrumento.length > 0;
+
+  // Build instrument context for prompt
+  let instrContext = '';
+  if (isQual) {
+    const tipoInstr = state.diseno === 'fenomenologico' ? 'guion de entrevista semi-estructurada en profundidad'
+      : state.diseno === 'analisis-tematico' ? 'guion de entrevista semi-estructurada o guion de grupo focal'
+      : state.diseno === 'etnografico' ? 'guia de observacion participante y guion de entrevista etnografica'
+      : state.diseno === 'teoria-fundamentada' ? 'guion de entrevista abierta con preguntas emergentes para muestreo teorico'
+      : state.diseno === 'estudio-caso' ? 'protocolo de estudio de caso (guion de entrevista, guia de observacion y registro documental)'
+      : state.diseno === 'narrativo' ? 'guion de entrevista narrativa en profundidad'
+      : state.diseno === 'investigacion-accion' ? 'guion de grupo focal participativo y guia de observacion'
+      : 'guion de entrevista semi-estructurada';
+    instrContext = `INSTRUMENTO: Para este diseño cualitativo (${disenoLabel}), el tesista debe diseñar un ${tipoInstr} basado en las categorías de análisis: ${vars.join(', ')}. Incluye este paso de diseño de instrumento como uno de los 5 pasos.`;
+  } else if (faltanInstrumentos && !tieneInstrumentos) {
+    instrContext = `INSTRUMENTOS: NO se encontraron instrumentos validados para ninguna variable (${vars.join(', ')}). Sugiere buscar instrumentos en PsycTESTS, SCOPUS o Mental Measurements Yearbook. NO sugieras diseñar instrumentos desde cero.`;
+  } else if (faltanInstrumentos) {
+    instrContext = `INSTRUMENTOS: Se tienen instrumentos validados para: ${varsConInstrumento.join(', ')}. Falta instrumento para: ${varsSinInstrumento.join(', ')}. Sugiere buscar el instrumento faltante en PsycTESTS o en literatura especializada. NO sugieras diseñar instrumentos ya identificados.`;
+  } else {
+    instrContext = `INSTRUMENTOS: Ya se identificaron instrumentos validados para TODAS las variables (${vars.join(', ')}). NO sugieras buscar ni diseñar instrumentos — ya están resueltos. Enfoca ese paso en validación piloto o adaptación cultural si aplica.`;
+  }
+
+  // Build keyword suggestions
+  const kwVars = vars.slice(0, 3).join(' AND ');
+  const kwPob = efectivePoblacion().split(' ').slice(0, 3).join(' ');
+  const kwProb = efectiveProblema().split(' ').slice(0, 3).join(' ');
+
   const stepsPrompt = `Eres un metodólogo experto en psicología y asesor de tesis en el Perú.
 
-Un estudiante de pregrado acaba de definir su proyecto de investigación con el siguiente perfil:
+PERFIL DEL PROYECTO:
+- Título: ${state.edited.tema}
 - Área: ${efectiveArea()}
 - Población: ${getPoblacionCompleta()}
 - Problema: ${efectiveProblema()}
-- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
+- ${isQual ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
 - Enfoque: ${state.enfoque} | Diseño: ${disenoLabel} | Técnica: ${tecnicaLabel}
-- Tema generado: ${state.edited.tema}
 - Objetivo general: ${state.edited.objetivo}
 - Contexto: ${state.contexto || 'No especificado'}
-- Experiencia previa: ${state.experiencia}
+- Experiencia del investigador: ${state.experiencia}
 - Acceso a la población: ${state.viabilidad}
 
-Genera exactamente 5 próximos pasos CONCRETOS y PERSONALIZADOS para ESTE proyecto específico. Cada paso debe:
-- Mencionar las variables, diseño o población específica del proyecto
-- Ser accionable con instrucciones concretas (no genéricas)
-- Incluir recursos o herramientas específicas cuando aplique (bases de datos, software, instrumentos)
-- Considerar el contexto peruano (MINSA, INEI, Redalyc, SciELO Perú, etc.)
-- Estar ordenados cronológicamente en el proceso de tesis
+${instrContext}
 
-Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiquetas, sin asteriscos. Cada string comienza con "Paso N:" seguido del contenido:
-["Paso 1: texto concreto y específico para este proyecto...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
+Genera exactamente 5 pasos CONCRETOS, PERSONALIZADOS y CRONOLÓGICAMENTE ORDENADOS para este proyecto específico.
+
+REGLAS OBLIGATORIAS:
+1. El PASO 1 SIEMPRE debe ser sobre búsqueda bibliográfica en bases de datos científicas. Incluye:
+   - Bases de datos: SCOPUS, Web of Science (WOS), PubMed, PsycINFO, Redalyc, SciELO Perú
+   - Palabras clave sugeridas en español e inglés, construidas con las variables del proyecto. Ejemplo de estructura: ("${kwVars}") AND ("${kwPob}" OR "children" OR "adolescents") AND ("${kwProb}")
+   - Filtros recomendados: últimos 5 años, artículos revisados por pares, idioma español e inglés
+   - Número mínimo de artículos a revisar: al menos 15-20
+
+2. El PASO 2 debe referirse a los instrumentos/técnicas de recolección de datos, siguiendo estrictamente el contexto de instrumentos proporcionado arriba (${instrContext.substring(0, 80)}...)
+
+3. Los PASOS 3, 4 y 5 deben cubrir: aspectos éticos y permisos de acceso a la población, análisis estadístico/cualitativo con el software adecuado según la técnica (${tecnicaLabel}), y comunicación/difusión de resultados en el contexto peruano.
+
+4. Cada paso debe mencionar elementos específicos del proyecto (variables, población, lugar, técnica).
+5. NUNCA uses lenguaje genérico como "busca artículos sobre el tema". Siempre nombra las variables exactas.
+6. Para el análisis: menciona el software específico — ${isQual ? 'ATLAS.ti, NVivo o MAXQDA' : ['regresion-simple','regresion-multiple','correlacion'].includes(state.tecnica) ? 'SPSS o R (paquete psych)' : ['mediacion','moderacion','mediacion-moderada'].includes(state.tecnica) ? 'SPSS con macro PROCESS de Hayes o R (mediation/moderation)' : ['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(state.tecnica) ? 'R (lavaan/semTools), AMOS o Mplus' : 'SPSS o R'}.
+
+Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiquetas, sin asteriscos ni comillas internas problemáticas. Cada string comienza con "Paso N:" seguido del contenido:
+["Paso 1: texto concreto...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -2102,7 +2404,7 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 800,
+        max_tokens: 1200,
         messages: [{role: 'user', content: stepsPrompt}]
       })
     });
@@ -2120,9 +2422,11 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
   }
 }
 
-async function prefetchAIVars() {
+async function prefetchAIVars(manualRegen = false) {
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
   if(!problema || state.aiVarsLoading) return;
+  if (manualRegen && !canRegen('vars')) return;
+  if (manualRegen) incrementRegen();
 
   state.aiVarsLoading = true;
   state.aiVars = [];
@@ -2270,7 +2574,14 @@ Responde SOLO con JSON sin texto adicional ni markdown:
 }
 
 async function generate(){
-  state.loading=true;state.result=null;state.editValidation=null;state.editValidating=false;renderContent();
+  // Only count as regen if there's already a result (i.e. it's a re-generation, not the first)
+  const isRegen = !!state.result;
+  if (isRegen && !canRegen('generate')) return;
+  if (isRegen) incrementRegen();
+
+  state.loading=true;state.result=null;state.editValidation=null;state.editValidating=false;
+  state.aiReferencias=null;state.aiReferenciasLoading=false;
+  renderContent();
   
   let variablesList = state.variables.filter(v => v !== 'otro');
   if(state.variables.includes('otro') && state.variablesOtro.trim()) {
@@ -2492,7 +2803,7 @@ Tu estándar de calidad es el de una tesis aprobada con distinción. Cada elemen
 EJEMPLO DE CALIDAD ALTA — Fenomenológico (IPA):
 Variables: Significado del diagnóstico | Estrategias de afrontamiento | Apoyo social percibido
 Población: Mujeres adultas con cáncer de mama, Lima, Perú
-✅ TEMA: Experiencia vivida del diagnóstico de cáncer de mama en mujeres adultas de Lima
+✅ TEMA: Experiencia vivida del diagnóstico oncológico: significados, afrontamiento y apoyo social en mujeres adultas con cáncer de mama de Lima
 ✅ PREGUNTA: ¿Cuál es la experiencia vivida de las mujeres adultas con cáncer de mama en Lima respecto al significado del diagnóstico, sus estrategias de afrontamiento y el apoyo social percibido?
 ✅ OBJETIVO: Comprender la experiencia vivida de mujeres adultas con cáncer de mama en Lima respecto al significado del diagnóstico, las estrategias de afrontamiento empleadas y el apoyo social percibido durante su proceso de enfermedad.
 ✅ SUPUESTO: Se espera que las participantes describan experiencias subjetivas diversas y significativas sobre el diagnóstico, el afrontamiento y el apoyo social, exploradas mediante entrevistas semi-estructuradas en profundidad (n≈8-12) y analizadas con IPA (Smith et al., 2009), garantizando credibilidad mediante reducción fenomenológica, triangulación y reflexividad del investigador.
@@ -2508,7 +2819,7 @@ Población: Mujeres adultas con cáncer de mama, Lima, Perú
 EJEMPLO DE CALIDAD ALTA — Análisis Temático (Braun & Clarke, 2006):
 Variables: Identidad profesional | Bienestar psicológico | Demandas laborales
 Población: Psicólogos clínicos del sector público, Lima, Perú
-✅ TEMA: Identidad profesional, bienestar y demandas laborales en psicólogos clínicos del sector público de Lima
+✅ TEMA: Identidad profesional, bienestar psicológico y demandas laborales en psicólogos clínicos del sector público de Lima
 ✅ PREGUNTA: ¿Cómo construyen y experimentan su identidad profesional, bienestar psicológico y demandas laborales los psicólogos clínicos del sector público de Lima?
 ✅ OBJETIVO: Explorar y describir los patrones temáticos en torno a la identidad profesional, el bienestar psicológico y las demandas laborales de psicólogos clínicos del sector público de Lima.
 ✅ SUPUESTO: Se espera identificar patrones temáticos recurrentes sobre identidad profesional, bienestar y demandas laborales mediante entrevistas semi-estructuradas o grupos focales, analizados con análisis temático inductivo (Braun & Clarke, 2006), asegurando integridad mediante fundamentación empírica, transparencia analítica y revisión de pares (Pistrang & Barker, 2012).
@@ -2522,7 +2833,7 @@ Población: Psicólogos clínicos del sector público, Lima, Perú
 EJEMPLO DE CALIDAD ALTA — Etnográfico:
 Variables: Prácticas comunitarias | Identidad colectiva | Narrativas de resistencia
 Población: Comunidad indígena shipibo-konibo del río Ucayali, Loreto, Perú
-✅ TEMA: Prácticas culturales, identidad colectiva y narrativas de resistencia en comunidad shipibo-konibo del Ucayali
+✅ TEMA: Prácticas culturales, identidad colectiva y narrativas de resistencia en la comunidad shipibo-konibo del río Ucayali, Loreto
 ✅ PREGUNTA: ¿Cómo se construyen y reproducen las prácticas comunitarias, la identidad colectiva y las narrativas de resistencia en la comunidad shipibo-konibo del río Ucayali?
 ✅ OBJETIVO: Describir y analizar las prácticas comunitarias, la identidad colectiva y las narrativas de resistencia en la comunidad shipibo-konibo del río Ucayali mediante un abordaje etnográfico.
 ✅ SUPUESTO: Se espera encontrar patrones culturales compartidos y tensiones entre prácticas tradicionales y procesos de cambio, explorados mediante observación participante prolongada, entrevistas en profundidad y análisis documental, analizados con descripción densa (Geertz), garantizando credibilidad mediante triangulación de fuentes y prolongada permanencia en campo.
@@ -2533,7 +2844,7 @@ Población: Comunidad indígena shipibo-konibo del río Ucayali, Loreto, Perú
 EJEMPLO DE CALIDAD ALTA — Teoría Fundamentada (Strauss & Corbin, 1998):
 Variables: Proceso de adaptación | Redes de apoyo | Estrategias de supervivencia
 Población: Migrantes venezolanos en situación de vulnerabilidad, Lima, Perú
-✅ TEMA: Proceso de adaptación, redes de apoyo y estrategias de supervivencia en migrantes venezolanos vulnerables de Lima
+✅ TEMA: Proceso de adaptación, redes de apoyo y estrategias de supervivencia en migrantes venezolanos en situación de vulnerabilidad de Lima
 ✅ PREGUNTA: ¿Cómo se desarrollan el proceso de adaptación, las redes de apoyo y las estrategias de supervivencia en migrantes venezolanos en situación de vulnerabilidad en Lima?
 ✅ OBJETIVO: Generar una teoría sustantiva sobre el proceso de adaptación, las redes de apoyo y las estrategias de supervivencia de migrantes venezolanos en situación de vulnerabilidad en Lima.
 ✅ SUPUESTO: Se espera generar categorías emergentes que expliquen el proceso de adaptación de los migrantes, exploradas mediante entrevistas en profundidad con muestreo teórico progresivo, analizadas con codificación abierta, axial y selectiva (Strauss & Corbin, 1998), alcanzando saturación teórica como criterio de rigor central.
@@ -2544,7 +2855,7 @@ Población: Migrantes venezolanos en situación de vulnerabilidad, Lima, Perú
 EJEMPLO DE CALIDAD ALTA — Estudio de Caso (Yin, 2018):
 Variables: Modelo de intervención | Factores protectores | Resultados terapéuticos
 Población: Programa de salud mental comunitaria del Centro de Salud Villa El Salvador, Lima
-✅ TEMA: Modelo de intervención, factores protectores y resultados terapéuticos en el programa de salud mental de Villa El Salvador
+✅ TEMA: Modelo de intervención, factores protectores y resultados terapéuticos en el programa de salud mental comunitaria del Centro de Salud de Villa El Salvador, Lima
 ✅ PREGUNTA: ¿Cómo se manifiestan el modelo de intervención, los factores protectores y los resultados terapéuticos en el programa de salud mental comunitaria del Centro de Salud de Villa El Salvador?
 ✅ OBJETIVO: Analizar en profundidad el modelo de intervención, los factores protectores y los resultados terapéuticos del programa de salud mental comunitaria del Centro de Salud de Villa El Salvador, Lima.
 ✅ SUPUESTO: Se espera que el análisis del caso revele la complejidad del modelo de intervención y los factores protectores que inciden en los resultados, explorados mediante entrevistas, observación y análisis documental (triangulación de fuentes), analizados con la metodología de estudio de caso (Yin, 2018), asegurando credibilidad mediante cadena de evidencia y revisión de informantes clave.
@@ -2555,7 +2866,7 @@ Población: Programa de salud mental comunitaria del Centro de Salud Villa El Sa
 EJEMPLO DE CALIDAD ALTA — Narrativo / Historia de vida:
 Variables: Trayectoria de vida | Significados de la enfermedad | Reconstrucción identitaria
 Población: Adultos mayores sobrevivientes de accidente cerebrovascular, Hospital Rebagliati, Lima
-✅ TEMA: Trayectorias de vida, significados de la enfermedad y reconstrucción identitaria en adultos mayores con ACV del Hospital Rebagliati
+✅ TEMA: Trayectorias de vida, significados de la enfermedad y reconstrucción identitaria en adultos mayores sobrevivientes de ACV del Hospital Rebagliati, Lima
 ✅ PREGUNTA: ¿Cuáles son las trayectorias de vida, los significados de la enfermedad y los procesos de reconstrucción identitaria en adultos mayores sobrevivientes de ACV del Hospital Rebagliati de Lima?
 ✅ OBJETIVO: Explorar las trayectorias de vida, los significados atribuidos a la enfermedad y los procesos de reconstrucción identitaria de adultos mayores sobrevivientes de ACV del Hospital Rebagliati de Lima.
 ✅ SUPUESTO: Se espera que las narrativas de los participantes revelen trayectorias vitales diversas y procesos de resignificación sobre la enfermedad y la identidad, recogidas mediante entrevistas narrativas en profundidad, analizadas con análisis narrativo (Murray, 2003; Creswell, 2013), verificando coherencia narrativa y resonancia como criterios de calidad.
@@ -2578,11 +2889,11 @@ Población: Mujeres líderes de comedores populares del Cono Norte, Lima
 EJEMPLO ORIENTADOR — Cualitativo (${dQ}):
 Variables del proyecto: ${cats}
 Población del proyecto: ${pop}
-✅ TEMA (MODELO): [Categoría 1] + [Categoría 2] + [Categoría 3] en [Población + Lugar] → máx 15 palabras
+✅ TÍTULO (MODELO): [Categoría 1], [Categoría 2] y [Categoría 3] en [Población] de [Lugar] → entre 12 y 20 palabras, sin verbos conjugados
 ✅ PREGUNTA (MODELO): ¿Cómo [verbo de comprensión] [Categoría 1], [Categoría 2] y [Categoría 3] los/las [Población] de [Lugar]?
 ✅ OBJETIVO (MODELO): [Verbo cualitativo: Explorar/Comprender/Describir/Generar] [Categoría 1], [Categoría 2] y [Categoría 3] de [Población] de [Lugar].
 ✅ SUPUESTO (MODELO): Se espera [hallazgo tentativo sobre las categorías] en [Población], explorado mediante [técnica de recolección], analizado con [técnica de análisis del diseño], garantizando [criterios de rigor específicos].
-❌ ERRORES A EVITAR: pregunta sin las categorías | verbos cuantitativos | supuesto sin método ni rigor`;
+❌ ERRORES A EVITAR: título con verbo | pregunta sin las categorías | verbos cuantitativos | supuesto sin método ni rigor`;
     }
 
     if(state.enfoque === "Cuantitativo") {
@@ -2597,7 +2908,7 @@ Población del proyecto: ${pop}
 EJEMPLO DE CALIDAD ALTA — Correlación (Pearson/Spearman):
 Variables: Autoestima (X) | Satisfacción con la vida (Y)
 Población: Adolescentes de 14–17 años, colegios públicos de Lima
-✅ TEMA: Autoestima y satisfacción con la vida en adolescentes de colegios públicos de Lima
+✅ TEMA: Autoestima y satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima
 ✅ PREGUNTA: ¿Existe relación estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima?
 ✅ OBJETIVO: Determinar la relación entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima.
 ✅ HIPÓTESIS: Existe una relación positiva y estadísticamente significativa entre la autoestima y la satisfacción con la vida en adolescentes de 14 a 17 años de colegios públicos de Lima (r de Pearson, p<.05).
@@ -2611,7 +2922,7 @@ Población: Adolescentes de 14–17 años, colegios públicos de Lima
 EJEMPLO DE CALIDAD ALTA — Regresión Simple (OLS):
 Variables: Autoeficacia (X predictor) | Rendimiento académico (Y criterio)
 Población: Estudiantes universitarios de primer año, UNMSM, Lima
-✅ TEMA: Capacidad predictiva de la autoeficacia sobre el rendimiento académico en estudiantes de primer año de la UNMSM
+✅ TEMA: Autoeficacia como predictor del rendimiento académico en estudiantes universitarios de primer año de la UNMSM, Lima
 ✅ PREGUNTA: ¿En qué medida la autoeficacia predice el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima?
 ✅ OBJETIVO: Determinar la capacidad predictiva de la autoeficacia sobre el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima.
 ✅ HIPÓTESIS: La autoeficacia predice significativamente el rendimiento académico en estudiantes universitarios de primer año de la UNMSM de Lima (β significativo, p<.05, R²>0).
@@ -2625,7 +2936,7 @@ Población: Estudiantes universitarios de primer año, UNMSM, Lima
 EJEMPLO DE CALIDAD ALTA — Regresión Múltiple (OLS):
 Variables: Motivación intrínseca (X1) | Apoyo familiar (X2) | Autoeficacia (X3) | Rendimiento académico (Y)
 Población: Estudiantes de secundaria, colegios privados, Arequipa, Perú
-✅ TEMA: Predictores del rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa
+✅ TEMA: Motivación intrínseca, apoyo familiar y autoeficacia como predictores del rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa
 ✅ PREGUNTA: ¿En qué medida la motivación intrínseca, el apoyo familiar y la autoeficacia predicen el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa?
 ✅ OBJETIVO: Determinar la capacidad predictiva de la motivación intrínseca, el apoyo familiar y la autoeficacia sobre el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa.
 ✅ HIPÓTESIS: La motivación intrínseca, el apoyo familiar y la autoeficacia predicen significativamente el rendimiento académico en estudiantes de secundaria de colegios privados de Arequipa (R² significativo, p<.05).
@@ -2639,7 +2950,7 @@ Población: Estudiantes de secundaria, colegios privados, Arequipa, Perú
 EJEMPLO DE CALIDAD ALTA — Mediación Simple (Hayes PROCESS Modelo 4):
 Variables: Estrés laboral (X) | Agotamiento emocional (M mediador) | Intención de renuncia (Y)
 Población: Enfermeras de hospitales públicos, Lima, Perú
-✅ TEMA: Efecto mediador del agotamiento emocional en la relación entre estrés laboral e intención de renuncia en enfermeras de hospitales públicos de Lima
+✅ TEMA: Rol mediador del agotamiento emocional en la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima
 ✅ PREGUNTA: ¿En qué medida el agotamiento emocional media la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima?
 ✅ OBJETIVO: Examinar el efecto mediador del agotamiento emocional en la relación entre el estrés laboral (X) y la intención de renuncia (Y) en enfermeras de hospitales públicos de Lima.
 ✅ HIPÓTESIS: El agotamiento emocional media significativamente la relación entre el estrés laboral y la intención de renuncia en enfermeras de hospitales públicos de Lima (efecto indirecto a×b significativo, IC bootstrap 95% excluye el cero).
@@ -2653,7 +2964,7 @@ Población: Enfermeras de hospitales públicos, Lima, Perú
 EJEMPLO DE CALIDAD ALTA — Moderación Simple (Hayes PROCESS Modelo 1):
 Variables: Autoeficacia (X) | Apoyo social (W moderador) | Rendimiento académico (Y)
 Población: Estudiantes universitarios de psicología, PUCP, Lima
-✅ TEMA: Efecto moderador del apoyo social en la relación entre autoeficacia y rendimiento académico en estudiantes de la PUCP
+✅ TEMA: Efecto moderador del apoyo social en la relación entre autoeficacia y rendimiento académico en estudiantes de psicología de la PUCP, Lima
 ✅ PREGUNTA: ¿En qué medida el apoyo social modera la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima?
 ✅ OBJETIVO: Analizar el efecto moderador del apoyo social (W) en la relación entre la autoeficacia (X) y el rendimiento académico (Y) en estudiantes de psicología de la PUCP de Lima.
 ✅ HIPÓTESIS: El apoyo social modera significativamente la relación entre la autoeficacia y el rendimiento académico en estudiantes de psicología de la PUCP de Lima (término de interacción X×W significativo, p<.05).
@@ -2667,7 +2978,7 @@ Población: Estudiantes universitarios de psicología, PUCP, Lima
 EJEMPLO DE CALIDAD ALTA — Mediación Moderada (Hayes PROCESS Modelo 7/14/58):
 Variables: Clima organizacional (X) | Satisfacción laboral (M) | Bienestar (Y) | Liderazgo (W moderador)
 Población: Trabajadores del sector bancario privado, Lima, Perú
-✅ TEMA: Mediación moderada del liderazgo en el efecto del clima organizacional sobre el bienestar a través de la satisfacción laboral en trabajadores bancarios de Lima
+✅ TEMA: Modelo de mediación moderada del liderazgo en el efecto del clima organizacional sobre el bienestar a través de la satisfacción laboral en trabajadores del sector bancario de Lima
 ✅ PREGUNTA: ¿En qué medida el liderazgo modera el efecto mediador de la satisfacción laboral en la relación entre el clima organizacional y el bienestar en trabajadores del sector bancario de Lima?
 ✅ OBJETIVO: Examinar el modelo de mediación moderada en el que el liderazgo (W) modera el efecto mediador de la satisfacción laboral (M) en la relación entre el clima organizacional (X) y el bienestar (Y) en trabajadores del sector bancario de Lima.
 ✅ HIPÓTESIS: El efecto indirecto del clima organizacional sobre el bienestar a través de la satisfacción laboral varía significativamente en función del liderazgo en trabajadores del sector bancario de Lima (índice de mediación moderada significativo, IC bootstrap 95%).
@@ -2677,7 +2988,7 @@ Población: Trabajadores del sector bancario privado, Lima, Perú
 EJEMPLO DE CALIDAD ALTA — Path Analysis (AMOS/lavaan):
 Variables: Apoyo familiar (X1) | Motivación académica (X2) | Autoeficacia (mediador) | Rendimiento (Y)
 Población: Estudiantes de secundaria pública, región Cusco, Perú
-✅ TEMA: Estructura causal entre apoyo familiar, motivación, autoeficacia y rendimiento en estudiantes de secundaria de la región Cusco
+✅ TEMA: Modelo de rutas entre apoyo familiar, motivación académica, autoeficacia y rendimiento en estudiantes de secundaria pública de la región Cusco
 ✅ PREGUNTA: ¿Cuál es la estructura de relaciones directas e indirectas entre el apoyo familiar, la motivación académica, la autoeficacia y el rendimiento en estudiantes de secundaria pública de la región Cusco?
 ✅ OBJETIVO: Analizar la estructura de relaciones directas e indirectas entre el apoyo familiar, la motivación académica, la autoeficacia y el rendimiento en estudiantes de secundaria pública de la región Cusco mediante path analysis.
 ✅ HIPÓTESIS: El modelo de rutas propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) y las trayectorias directas e indirectas entre el apoyo familiar, la motivación, la autoeficacia y el rendimiento son estadísticamente significativas en estudiantes de secundaria de la región Cusco.
@@ -2771,7 +3082,7 @@ Antes de escribir el JSON, razona internamente así:
 1. ¿Las ${nv} variables/categorías están TODAS presentes en la pregunta y el objetivo? Si no → corrígelo.
 2. ¿La pregunta es coherente con el diseño "${disenoLabel}" y el enfoque "${state.enfoque}"? Si no → reformúlala.
 3. ¿El verbo del objetivo corresponde al diseño? Si no → cámbialo.
-4. ¿El tema tiene máx 15 palabras y es específico? Si no → acórtalo.
+4. ¿El título tiene entre 12 y 25 palabras, es nominal (sin verbo conjugado), incluye las variables/constructos principales, la población y el lugar? Si no → corrígelo.
 5. ¿La hipótesis/supuesto es falseable y menciona el método? Si no → enriquécela.
 Solo después de este razonamiento, produce el JSON final.`;
 
@@ -2794,13 +3105,13 @@ ${state.contexto && state.contexto.trim().length > 3 ? `
 El contexto declarado es: "${state.contexto.trim()}"
 Instrucciones de uso — aplica TODAS las que correspondan:
 1. TEMA Y POBLACIÓN: incluye el contexto geográfico específico en el tema y en la población (ej: "...en adolescentes del distrito de SJL, Lima" en lugar de "...en adolescentes de Lima")
-2. JUSTIFICACIÓN con datos contextuales: en el campo justificación menciona fuentes de datos específicas para ese contexto:
+2. PLANTEAMIENTO con datos contextuales: en el campo planteamiento menciona fuentes de datos específicas para ese contexto:
    - Si es Lima o distrito limeño → INEI (Encuesta Nacional de Hogares), MINSA (HIS-MINSA), DIRESA Lima, estadísticas del MINDES
    - Si es región andina (Cusco, Puno, Ayacucho, etc.) → DIRESA regional, datos de pobreza INEI, contexto intercultural
    - Si es Amazonía → DIRESA Amazónica, SERNANP, contexto de comunidades nativas si aplica
    - Si es institución específica (hospital, colegio, empresa) → menciónala como contexto de aplicación directa
    - Si es contexto rural → ENAHO rural, brechas de acceso a salud mental del MINSA
-3. PRÓXIMOS PASOS (en el campo justificación): sugiere que el tesista consulte los datos estadísticos del INEI o MINSA para ese distrito/región para sustentar la prevalencia del problema en ese contexto específico
+3. PRÓXIMOS PASOS (en el campo planteamiento): sugiere que el tesista consulte los datos estadísticos del INEI o MINSA para ese distrito/región para sustentar la prevalencia del problema en ese contexto específico
 4. No generalices: si dice "SJL" no escribas solo "Lima"; si dice "Cusco" no escribas "región andina"` : '/* contexto no especificado — usar solo población genérica */'}
 • Experiencia del investigador: ${state.experiencia}
 • Acceso a la población: ${state.viabilidad}
@@ -2809,9 +3120,9 @@ ${state.motivacion && state.motivacion.trim().length > 5 ? `
 ⚡ USO DE LA MOTIVACIÓN DEL INVESTIGADOR (solo aplica porque el campo no está vacío):
 La motivación declarada es: "${state.motivacion.trim()}"
 Instrucciones de uso:
-- Si menciona una institución, hospital, colegio, ONG o lugar específico → úsalo para anclar el contexto en el tema o en la justificación (ej: "...en el Hospital X de Lima" o "observado en la práctica pre-profesional en...")
-- Si refleja experiencia directa (práctica clínica, trabajo de campo, vivencia personal) → incorpóralo en la justificación como evidencia de pertinencia del investigador con el fenómeno
-- Si menciona una brecha de conocimiento o ausencia de estudios → úsala para reforzar la relevancia teórica en la justificación
+- Si menciona una institución, hospital, colegio, ONG o lugar específico → úsalo para anclar el contexto en el tema o en el planteamiento (ej: "...en el Hospital X de Lima" o "observado en la práctica pre-profesional en...")
+- Si refleja experiencia directa (práctica clínica, trabajo de campo, vivencia personal) → incorpóralo en el planteamiento como evidencia de pertinencia del investigador con el fenómeno
+- Si menciona una brecha de conocimiento o ausencia de estudios → úsala para reforzar la relevancia teórica en el planteamiento
 - En todos los casos: úsala con sobriedad, sin exagerarla; que enriquezca, no que domine` : '/* motivación vacía — ignorar */'}
 
 ═══════════════════════════════════════════════
@@ -2844,7 +3155,21 @@ ${chainOfThought}
 
 CAMPOS OBLIGATORIOS — todos son necesarios, no omitas ninguno:
 
-1. "tema" → máx 15 palabras. Incluye fenómeno + población + lugar geográfico.
+1. "tema" → TÍTULO FORMAL DE TESIS. Normas obligatorias:
+   - Entre 12 y 25 palabras (ni muy corto ni excesivamente largo)
+   - Sintaxis nominal: SIN verbos conjugados ni infinitivos al inicio. No usar "Estudio de", "Análisis de", "Investigación sobre"
+   - Estructura canónica según la técnica:
+     · Correlación: "[Variable X] y [Variable Y] en [Población] de [Lugar]"
+     · Regresión simple/múltiple: "Capacidad predictiva de [X] sobre [Y] en [Población] de [Lugar]" o "[X] como predictor de [Y] en [Población] de [Lugar]"
+     · Mediación: "Rol mediador de [M] en la relación entre [X] e [Y] en [Población] de [Lugar]"
+     · Moderación: "Efecto moderador de [W] en la relación entre [X] e [Y] en [Población] de [Lugar]"
+     · Mediación moderada: "Modelo de mediación moderada: [X], [M], [Y] y [W] en [Población] de [Lugar]"
+     · Path Analysis / SEM: "Modelo [estructural/de rutas] de [variables] en [Población] de [Lugar]"
+     · Cualitativo: "[Fenómeno]: experiencias/significados/narrativas de [Población] de [Lugar]"
+     · Descriptivo: "[Variable(s)] en [Población] de [Lugar]: un estudio descriptivo"
+   - Incluir SIEMPRE: variables o constructos principales + población específica + lugar geográfico
+   - NUNCA incluir siglas sin desarrollar, abreviaciones informales ni signos de puntuación innecesarios
+   - El título debe permitir identificar el diseño metodológico solo con leerlo
 
 2. "pregunta" → pregunta de investigación principal coherente con el diseño.
 
@@ -2858,14 +3183,16 @@ CAMPOS OBLIGATORIOS — todos son necesarios, no omitas ninguno:
 
 7. "hipotesis" → hipótesis (cuantitativo/mixto) O supuestos cualitativos flexibles con técnica de recolección y criterios de rigor.
 
-8. "justificacion" → ESTRUCTURA OBLIGATORIA en exactamente 3 oraciones académicas:
-   ORACIÓN 1 — Relevancia teórica: estado del arte + brecha de conocimiento. Menciona si hay escasa investigación en Perú o Latinoamérica sobre este problema en esta población. Cita algún dato estadístico del MINSA, INEI, OPS o estudio reciente si aplica al contexto.
-   ORACIÓN 2 — Relevancia práctica: cómo los resultados pueden orientar la intervención profesional, política pública o práctica clínica/educativa/organizacional en el contexto específico declarado.
-   ORACIÓN 3 — Relevancia social: beneficio directo para la población estudiada y para la sociedad peruana. Menciona a la población con su contexto geográfico.
-   REGLA: máximo 5 oraciones en total, lenguaje académico formal, sin frases genéricas como "es importante investigar este tema".
+8. "planteamiento" → RECOMENDACIONES PERSONALIZADAS PARA EL PLANTEAMIENTO DEL PROBLEMA. Estructura obligatoria en 5 párrafos orientadores (tono académico-didáctico, dirigido al tesista, en segunda persona formal):
+   PÁRRAFO 1 — De lo general a lo particular: Indica al tesista que debe comenzar describiendo el problema desde el contexto mundial o regional (OMS, OPS, UNICEF, etc.), luego Latinoamérica/Perú (MINSA, INEI, DEVIDA), y finalmente su contexto específico (${state.contexto || 'la zona de estudio'}). Menciona explícitamente qué tipo de datos estadísticos o epidemiológicos debe buscar según el problema "${efectiveProblema()}" (ej: tasas de prevalencia, índices de incidencia, cifras de cobertura, etc.).
+   PÁRRAFO 2 — Descripción del problema: Guía al tesista para que explique en qué consiste el fenómeno "${efectiveProblema()}", cuáles son sus características principales, cómo se manifiesta y qué lo distingue de otros fenómenos relacionados. Sugiere 2-3 autores clave o estudios recientes (últimos 5 años) que lo definan conceptualmente.
+   PÁRRAFO 3 — A quiénes afecta y cuánto: Orienta al tesista para que describa específicamente cómo afecta "${efectiveProblema()}" a ${getPoblacionCompleta()}, qué consecuencias tiene, con qué magnitud y frecuencia ocurre. Sugiere fuentes estadísticas concretas y pertinentes (nacionales o internacionales) donde puede encontrar cifras actualizadas sobre este problema en esta población.
+   PÁRRAFO 4 — Vacío de conocimiento y relevancia de las variables: Indica que debe argumentar por qué es necesario estudiar la relación entre ${variablesList.join(', ')} en este contexto. Señala qué se sabe y qué no se sabe aún sobre estas variables en la población objetivo. Sugiere que busque en SCOPUS, Redalyc, SciELO o PsycINFO estudios de los últimos 5 años sobre estas variables en poblaciones similares.
+   PÁRRAFO 5 — Formulación del problema: Indica que, con todo lo anterior, el tesista debe cerrar el planteamiento con una pregunta de investigación que emerja naturalmente de la evidencia presentada, y que puede usar como base la pregunta generada en este asistente. Recomienda que el planteamiento tenga entre 1 y 2 páginas, con al menos 6-8 referencias citadas en formato APA 7ª edición.
+   REGLA: Escribe cada párrafo como una guía directa al estudiante (usa "debes", "se recomienda", "es importante que"), no como el planteamiento en sí. El tesista redactará su propio planteamiento siguiendo estas recomendaciones.
 
 Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicaciones:
-{"tema":"...","pregunta":"...","objetivo":"...","obj_esp1":"...","obj_esp2":"...","obj_esp3":"...","hipotesis":"...","justificacion":"..."}`;
+{"tema":"...","pregunta":"...","objetivo":"...","obj_esp1":"...","obj_esp2":"...","obj_esp3":"...","hipotesis":"...","planteamiento":"..."}`;
 
   try{
     const res=await fetch("/api/chat",{
@@ -2890,14 +3217,16 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     if(!parsed.obj_esp1) parsed.obj_esp1 = `Identificar las características de ${variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`;
     if(!parsed.obj_esp2) parsed.obj_esp2 = `Describir la relación entre ${(variablesList[1]||variablesList[0])||efectiveProblema()} y el fenómeno de estudio en ${getPoblacionCompleta()}.`;
     if(!parsed.obj_esp3) parsed.obj_esp3 = `Analizar las implicancias metodológicas y prácticas de los hallazgos para ${getPoblacionCompleta()}.`;
-    if(!parsed.justificacion) parsed.justificacion = `Este estudio contribuye al conocimiento sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, un área con escasa investigación en el contexto peruano. A nivel práctico, los resultados pueden orientar intervenciones profesionales dirigidas a esta población. Socialmente, aporta evidencia para el diseño de políticas y programas de atención psicológica en el Perú.`;
+    if(!parsed.planteamiento) parsed.planteamiento = `Para elaborar el planteamiento del problema de tu investigación sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, debes seguir una estructura de lo general a lo particular. Inicia describiendo el problema a nivel mundial con datos de la OMS u OPS, luego presenta cifras nacionales del MINSA o INEI, y finaliza con el contexto específico de ${state.contexto || 'tu zona de estudio'}. Explica en qué consiste el fenómeno, a quiénes afecta y con qué magnitud. Argumenta la necesidad de estudiar ${variablesList.join(', ')} en esta población y cierra con la pregunta de investigación. Se recomienda entre 1 y 2 páginas con al menos 6-8 referencias en APA 7ª edición.`;
     
     state.result=parsed;
     state.edited={...parsed};
     state.aiNextSteps = null; // reset so new ones are generated
     state.aiInstruments = null; state.aiInstrumentsLoading = false;
+    state.aiReferencias = null; state.aiReferenciasLoading = false;
     saveState();
     generateNextSteps(); // fire async — no await, runs in background
+    generateAIReferencias(); // fire async — personalized references
   }catch(e){
     console.error("Error:", e);
 
@@ -2944,24 +3273,24 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
         fb.hipotesis = `Se espera comprender cómo ${pop} experimenta y da sentido a ${prob} en su contexto particular, mediante entrevistas semi-estructuradas y análisis temático (Braun & Clarke, 2006).`;
       }
     } else if(state.tecnica === 'correlacion') {
-      fb.tema      = `Relación entre ${X} y ${Y} en ${pop}`;
+      fb.tema      = `${X} y ${Y} en ${pop}`;
       fb.pregunta  = `¿Existe relación entre ${X} y ${Y} en ${pop}?`;
       fb.objetivo  = `Determinar la relación entre ${X} e ${Y} en ${pop}.`;
       fb.hipotesis = `Existe una relación estadísticamente significativa entre ${X} e ${Y} en ${pop}.`;
     } else if(state.tecnica === 'regresion-simple') {
-      fb.tema      = `Capacidad predictiva de ${X} sobre ${Y} en ${pop}`;
+      fb.tema      = `${X} como predictor de ${Y} en ${pop}`;
       fb.pregunta  = `¿En qué medida ${X} predice ${Y} en ${pop}?`;
       fb.objetivo  = `Determinar la capacidad predictiva de ${X} sobre ${Y} en ${pop}.`;
       fb.hipotesis = `${X} predice significativamente ${Y} en ${pop} (β significativo).`;
     } else if(state.tecnica === 'regresion-multiple') {
       const preds = variablesList.slice(0,-1).join(', ');
-      fb.tema      = `Predictores de ${Y} en ${pop}`;
+      fb.tema      = `${preds} como predictores de ${Y} en ${pop}`;
       fb.pregunta  = `¿En qué medida ${preds} predicen ${Y} en ${pop}?`;
       fb.objetivo  = `Determinar la capacidad predictiva de ${preds} sobre ${Y} en ${pop}.`;
       fb.hipotesis = `${preds} predicen significativamente ${Y} en ${pop}.`;
     } else if(state.tecnica === 'mediacion' || state.tecnica === 'sem-mediacion') {
       const latente = state.tecnica === 'sem-mediacion' ? ' (constructos latentes)' : '';
-      fb.tema      = `Efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}`;
+      fb.tema      = `Rol mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}`;
       fb.pregunta  = `¿En qué medida ${M} media la relación entre ${X} e ${Y}${latente} en ${pop}?`;
       fb.objetivo  = `Examinar el efecto mediador de ${M} en la relación entre ${X} e ${Y}${latente} en ${pop}.`;
       fb.hipotesis = `${M} media significativamente la relación entre ${X} e ${Y} en ${pop} (efecto indirecto a×b significativo).`;
@@ -2972,12 +3301,12 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
       fb.hipotesis = `${W} modera significativamente la relación entre ${X} e ${Y} en ${pop} (interacción X×W significativa).`;
     } else if(state.tecnica === 'mediacion-moderada') {
       const W4 = variablesList[3]||'Moderador';
-      fb.tema      = `Modelo de mediación moderada: ${X}, ${M}, ${Y} y ${W4} en ${pop}`;
+      fb.tema      = `Modelo de mediación moderada de ${X}, ${M}, ${Y} y ${W4} en ${pop}`;
       fb.pregunta  = `¿En qué medida ${W4} modera el efecto mediador de ${M} en la relación entre ${X} e ${Y} en ${pop}?`;
       fb.objetivo  = `Examinar el modelo de mediación moderada con ${X}, ${M}, ${Y} y ${W4} en ${pop}.`;
       fb.hipotesis = `El efecto indirecto de ${X} sobre ${Y} a través de ${M} varía significativamente en función de ${W4} en ${pop}.`;
     } else if(['path-analysis','sem-completo'].includes(state.tecnica)) {
-      fb.tema      = `Modelo estructural entre ${variablesList.slice(0,3).join(', ')} en ${pop}`;
+      fb.tema      = `Modelo de rutas entre ${variablesList.slice(0,3).join(', ')} en ${pop}`;
       fb.pregunta  = `¿Cuál es la estructura de relaciones entre ${variablesList.join(', ')} en ${pop}?`;
       fb.objetivo  = `Analizar el modelo de rutas entre ${variablesList.join(', ')} en ${pop}.`;
       fb.hipotesis = `El modelo propuesto presenta índices de ajuste adecuados (CFI≥.95, RMSEA≤.06) en ${pop}.`;
@@ -2987,7 +3316,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
       fb.objetivo  = `Analizar ${prob} y su relación con las variables seleccionadas en ${pop}.`;
       fb.hipotesis = `Existe una relación significativa entre las variables seleccionadas en ${pop}.`;
     }
-    fb.tema = fb.tema.substring(0, 120);
+    fb.tema = fb.tema.substring(0, 160);
 
     state.result={ ...fb,
       error:`⚠️ API no disponible. Se generó un ejemplo coherente con tu técnica (${tecnicaLabel}). Edítalo según tu criterio.`
@@ -2997,7 +3326,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
       obj_esp1: `Identificar las características de ${variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`,
       obj_esp2: `Describir los patrones de ${variablesList[1]||variablesList[0]||efectiveProblema()} en ${getPoblacionCompleta()}.`,
       obj_esp3: `Analizar las implicancias de los hallazgos para la intervención psicológica en ${getPoblacionCompleta()}.`,
-      justificacion: `Este estudio contribuye al conocimiento sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, área con escasa investigación en el contexto peruano. A nivel práctico, orienta intervenciones profesionales para esta población. Socialmente, aporta evidencia para políticas y programas de atención psicológica en el Perú.`
+      planteamiento: `Para elaborar el planteamiento del problema de tu investigación sobre ${efectiveProblema()} en ${getPoblacionCompleta()}, comienza describiendo el problema desde el nivel global (OMS, OPS) hasta el contexto local de ${state.contexto || 'tu zona'}. Explica en qué consiste "${efectiveProblema()}", a quiénes afecta y con qué magnitud, apoyándote en cifras del MINSA o INEI. Argumenta por qué es necesario estudiar ${variablesList.join(', ')} en esta población y cierra con la pregunta de investigación generada. Extiende el planteamiento entre 1 y 2 páginas con al menos 6-8 referencias en APA 7ª edición.`
     };
     saveState();
   }
@@ -3217,7 +3546,6 @@ async function downloadDoc() {
 
     // ── Referencias bibliográficas XML ──────────────────────────
     const refItem = (cita, nota) => {
-      // Strip HTML tags from cita for XML
       const citaClean = cita.replace(/<em>/g,'').replace(/<\/em>/g,'').replace(/&amp;/g,'&');
       const citaXe = xe(citaClean);
       const notaXe = nota ? xe(nota) : '';
@@ -3230,13 +3558,47 @@ async function downloadDoc() {
             <w:t xml:space="preserve">${notaXe}</w:t></w:r></w:p>` : ''}`;
     };
 
+    // AI thematic references for DOCX
+    const aiRefItemXml = (ref) => {
+      const apaClean = xe(ref.apa || '');
+      const relev = ref.relevancia ? xe('→ ' + ref.relevancia) : '';
+      return `
+        <w:p><w:pPr><w:ind w:left="360" w:hanging="360"/><w:spacing w:before="100" w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="374151"/></w:rPr>
+            <w:t xml:space="preserve">${apaClean}</w:t></w:r></w:p>
+        ${relev ? `<w:p><w:pPr><w:ind w:left="360"/><w:spacing w:after="80"/></w:pPr>
+          <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="7C3AED"/></w:rPr>
+            <w:t xml:space="preserve">${relev}</w:t></w:r></w:p>` : ''}`;
+    };
+
+    const aiRefsSection = (state.aiReferencias && state.aiReferencias.length > 0) ? (() => {
+      let cats = [...new Set(state.aiReferencias.map(r => r.categoria).filter(Boolean))];
+      let xml = `
+        ${emptyPara(160)}
+        ${heading((secRefs+1)+'. REFERENCIAS TEMÁTICAS SUGERIDAS POR IA','7C3AED')}
+        <w:p><w:pPr><w:spacing w:after="120"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
+            <w:t>Referencias organizadas por categoría según las variables y población del proyecto. Verifique disponibilidad en SCOPUS, Redalyc o SciELO. Cite en formato APA 7ª edición.</w:t></w:r></w:p>`;
+      cats.forEach(cat => {
+        xml += `
+          <w:p><w:pPr><w:spacing w:before="200" w:after="80"/></w:pPr>
+            <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="7C3AED"/></w:rPr>
+              <w:t>${xe(cat)}</w:t></w:r></w:p>`;
+        state.aiReferencias.filter(r => r.categoria === cat).forEach(r => {
+          xml += aiRefItemXml(r);
+        });
+      });
+      return xml;
+    })() : '';
+
     const refsXml = `
       ${emptyPara(200)}
       ${heading(secRefs+'. REFERENCIAS METODOLÓGICAS','4F46E5')}
       <w:p><w:pPr><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
           <w:t>Las siguientes referencias sustentan el marco metodológico del proyecto de investigación.</w:t></w:r></w:p>
-      ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}`;
+      ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}
+      ${aiRefsSection}`;
 
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3251,14 +3613,14 @@ async function downloadDoc() {
       <w:t>Asistente de Investigación en Psicología</w:t></w:r></w:p>
 
   ${heading('1. ELEMENTOS DE LA INVESTIGACIÓN')}
-  ${fieldLabel('Tema de Investigación')}${fieldValue(state.edited.tema)}
+  ${fieldLabel('Título de la Investigación')}${fieldValue(state.edited.tema)}
   ${fieldLabel('Pregunta de Investigación')}${fieldValue(state.edited.pregunta)}
   ${fieldLabel('Objetivo General')}${fieldValue(state.edited.objetivo)}
   ${state.edited.obj_esp1?fieldLabel('Objetivo Específico 1')+fieldValue(state.edited.obj_esp1):''}
   ${state.edited.obj_esp2?fieldLabel('Objetivo Específico 2')+fieldValue(state.edited.obj_esp2):''}
   ${state.edited.obj_esp3?fieldLabel('Objetivo Específico 3')+fieldValue(state.edited.obj_esp3):''}
   ${fieldLabel(hipLabel)}${fieldValue(state.edited.hipotesis)}
-  ${state.edited.justificacion?fieldLabel('Justificación del Estudio')+fieldValue(state.edited.justificacion):''}
+  ${state.edited.planteamiento?fieldLabel('Recomendaciones para el Planteamiento del Problema')+fieldValue(state.edited.planteamiento):''}
 
   ${heading('2. PERFIL METODOLÓGICO','059669')}
   <w:tbl>
@@ -3285,17 +3647,17 @@ async function downloadDoc() {
   ${imageXml}
 
   ${emptyPara(200)}
-  ${heading(secPasos+'. PRÓXIMOS PASOS','D97706')}
+  ${heading(secPasos+'. PRÓXIMOS PASOS SUGERIDOS','D97706')}
   ${(() => {
     // Use AI-generated next steps if available, else fallback to generic
     const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
       ? state.aiNextSteps.map(s => String(s).replace(/<[^>]+>/g,'').trim())
       : [
-          'Justificación: Explica la relevancia teórica, práctica y social del problema de investigación en el contexto peruano.',
-          'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa los diseños usados en estudios similares siguiendo Ato et al. (2013).',
-          'Metodología detallada: Define el tipo y tamaño de muestra, instrumentos de medición validados y procedimiento de recolección. Consulta Hernández & Mendoza (2018).',
-          'Análisis estadístico o cualitativo: Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos según la técnica elegida.',
-          'Cronograma: Establece tiempos realistas para cada fase del proyecto de investigación.'
+          'Busqueda bibliografica: Consulta SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc usando palabras clave de tus variables en espanol e ingles, filtrando por los ultimos 5 anos. Revisa al menos 15-20 articulos sobre el problema y la poblacion de tu proyecto.',
+          'Instrumentos de recoleccion: Verifica la disponibilidad de los instrumentos identificados para tu poblacion especifica. Si falta alguno, busca en PsycTESTS o Mental Measurements Yearbook. Para disenos cualitativos, disenha el guion de entrevista o grupo focal basado en tus categorias de analisis.',
+          'Aspectos eticos y acceso a la poblacion: Tramita los permisos ante la institucion donde recolectaras datos, elabora el consentimiento informado y, si corresponde, solicita aval de un comite de etica universitario.',
+          'Analisis de datos: Ejecuta el analisis con el software adecuado segun tu tecnica (SPSS/R para cuantitativo, ATLAS.ti o NVivo para cualitativo, AMOS/Mplus para SEM). Reporta los estadisticos o categorias emergentes segun normas APA 7.',
+          'Difusion de resultados: Prepara los resultados en formato de articulo cientifico para presentar en un congreso nacional de psicologia o publicar en una revista indexada peruana o latinoamericana.'
         ];
     return steps.map((s, i) => stepItem(i+1, s)).join('\n  ');
   })()}
@@ -3919,6 +4281,37 @@ function showModelDiagram() {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
   window._lastDiagramSVG=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa">${svg}</svg>`;
+}
+
+// ── REGEN LIMIT GUARD ─────────────────────────────────────────────
+function showRegenToast() {
+  const el = document.getElementById('regen-toast');
+  if (!el) return;
+  el.classList.remove('show');
+  void el.offsetWidth; // reflow
+  el.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function canRegen(source) {
+  const count = state.regenCount || 0;
+  if (count >= REGEN_MAX) {
+    showRegenToast();
+    return false;
+  }
+  return true;
+}
+
+function incrementRegen() {
+  state.regenCount = (state.regenCount || 0) + 1;
+  saveState();
+}
+
+function regenLabel() {
+  const used = state.regenCount || 0;
+  const left = REGEN_MAX - used;
+  return left > 0 ? `(${left} restante${left===1?'':'s'})` : '';
 }
 
 render();
