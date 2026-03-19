@@ -283,9 +283,9 @@ textarea{min-height:70px;resize:vertical}
 }
 .next-steps-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .next-steps ul{list-style:none;padding:0}
-.next-steps li{padding:8px 0;font-size:13px;color:#065F46;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid rgba(5,150,105,.1)}
+.next-steps li{padding:10px 0 10px 22px;font-size:13px;color:#065F46;line-height:1.6;border-bottom:1px solid rgba(5,150,105,.1);position:relative;word-break:break-word}
 .next-steps li:last-child{border-bottom:none}
-.next-steps li::before{content:"✓";color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:1px}
+.next-steps li::before{content:"✓";color:var(--green);font-weight:700;font-size:13px;position:absolute;left:0;top:11px}
 
 /* ── AUTO SAVE ───────────────────────────────────────────────────── */
 .auto-save{
@@ -1693,7 +1693,9 @@ function renderContent(){
     if(state.aiNextSteps && Array.isArray(state.aiNextSteps) && state.aiNextSteps.length > 0){
       h+=`<div class="next-steps"><div class="next-steps-title">🎯 Próximos pasos para tu proyecto</div><ul>`;
       state.aiNextSteps.forEach(step => {
-        h+=`<li>${step}</li>`;
+        // Strip any HTML tags from AI response — show as plain text
+        const clean = String(step).replace(/<[^>]+>/g, '').trim();
+        h+=`<li>${clean}</li>`;
       });
       h+=`</ul></div>`;
     } else {
@@ -2056,8 +2058,8 @@ Genera exactamente 5 próximos pasos CONCRETOS y PERSONALIZADOS para ESTE proyec
 - Considerar el contexto peruano (MINSA, INEI, Redalyc, SciELO Perú, etc.)
 - Estar ordenados cronológicamente en el proceso de tesis
 
-Responde SOLO con un array JSON de 5 strings. Cada string es un paso con formato HTML básico permitido (<strong>):
-["<strong>Paso 1:</strong> texto concreto...","<strong>Paso 2:</strong> ...","<strong>Paso 3:</strong> ...","<strong>Paso 4:</strong> ...","<strong>Paso 5:</strong> ..."]`;
+Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiquetas, sin asteriscos. Cada string comienza con "Paso N:" seguido del contenido:
+["Paso 1: texto concreto y específico para este proyecto...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -2993,7 +2995,23 @@ async function downloadDoc() {
                    : state.enfoque==="Cualitativo" ?"SUPUESTOS DE INVESTIGACIÓN":"HIPÓTESIS";
 
     // ── Escapar XML ───────────────────────────────────────────────
-    const xe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const xe = s => {
+      // Normalize special chars that break Word XML rendering
+      const normalized = (s||'')
+        .replace(/[\u2018\u2019]/g, "'")   // smart single quotes → '
+        .replace(/[\u201C\u201D]/g, '"')   // smart double quotes → "
+        .replace(/\u2013/g, '-')            // en dash → -
+        .replace(/\u2014/g, '--')           // em dash → --
+        .replace(/\u2026/g, '...')          // ellipsis → ...
+        .replace(/\u00B0/g, 'grados')      // degree symbol
+        .replace(/[\u0080-\u009F]/g, '')   // strip control chars
+        .replace(/<[^>]+>/g, '');           // strip any HTML tags
+      return normalized
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    };
 
     // ── Helpers Open XML ─────────────────────────────────────────
     const heading = (text, color='4F46E5') =>
@@ -3219,11 +3237,19 @@ async function downloadDoc() {
 
   ${emptyPara(200)}
   ${heading(secPasos+'. PRÓXIMOS PASOS','D97706')}
-  ${stepItem(1,'Justificación: Explica la relevancia teórica, práctica y social del problema de investigación.')}
-  ${stepItem(2,'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa los diseños utilizados en estudios similares siguiendo la clasificación de Ato et al. (2013).')}
-  ${stepItem(3,'Metodología detallada: Define el tipo y tamaño de muestra, instrumentos de medición validados y procedimiento de recolección. Consulta Hernández & Mendoza (2018) para fundamentar tu diseño.')}
-  ${stepItem(4,'Análisis estadístico o cualitativo: Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos según la técnica elegida.')}
-  ${stepItem(5,'Cronograma: Establece tiempos realistas para cada fase del proyecto de investigación.')}
+  ${(() => {
+    // Use AI-generated next steps if available, else fallback to generic
+    const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
+      ? state.aiNextSteps.map(s => String(s).replace(/<[^>]+>/g,'').trim())
+      : [
+          'Justificación: Explica la relevancia teórica, práctica y social del problema de investigación en el contexto peruano.',
+          'Marco teórico: Busca 5-10 artículos (nacionales e internacionales) de los últimos 5 años en SCOPUS, Google Académico, Redalyc o SciELO. Revisa los diseños usados en estudios similares siguiendo Ato et al. (2013).',
+          'Metodología detallada: Define el tipo y tamaño de muestra, instrumentos de medición validados y procedimiento de recolección. Consulta Hernández & Mendoza (2018).',
+          'Análisis estadístico o cualitativo: Especifica el software (SPSS, R, ATLAS.ti, NVivo, Mplus, etc.) y los procedimientos según la técnica elegida.',
+          'Cronograma: Establece tiempos realistas para cada fase del proyecto de investigación.'
+        ];
+    return steps.map((s, i) => stepItem(i+1, s)).join('\n  ');
+  })()}
 
   ${instrSectionXml}
   ${refsXml}
