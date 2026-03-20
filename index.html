@@ -3458,7 +3458,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     const res=await AIQueue.fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:2500,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:1800,messages:[{role:"user",content:prompt}]})
     });
     
     if (!res.ok) {
