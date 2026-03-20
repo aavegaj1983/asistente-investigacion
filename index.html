@@ -2183,7 +2183,18 @@ function renderContent(){
         const esc=state.edited[f.key].replace(/"/g,"&quot;");
         h+=`<textarea style="border:1px solid ${f.color}" oninput="state.edited.${f.key}=this.value;saveState()">${state.edited[f.key]}</textarea>`;
       } else {
-        h+=`<p>${state.edited[f.key]}</p>`;
+        if(f.key === 'planteamiento') {
+          // Separar párrafos numerados: "1. texto 2. texto..." en párrafos distintos
+          const raw = state.edited[f.key] || '';
+          const paras = raw.split(/(?=\s*\d+\.\s+[A-ZÁÉÍÓÚ*\*])/u).map(p => p.trim()).filter(Boolean);
+          if(paras.length > 1) {
+            h += paras.map(p => `<p style="margin-bottom:10px;line-height:1.75">${p}</p>`).join('');
+          } else {
+            h += `<p>${raw}</p>`;
+          }
+        } else {
+          h+=`<p>${state.edited[f.key]}</p>`;
+        }
       }
       h+=`</div>`;
     });
