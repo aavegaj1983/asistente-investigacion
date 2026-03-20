@@ -560,13 +560,16 @@ textarea{min-height:70px;resize:vertical}
 
 // Helper: limpia caracteres de control invalidos del JSON devuelto por la IA
 function sanitizeJSON(str) {
+  if (!str) return '';
   var result = '';
   for (var i = 0; i < str.length; i++) {
     var code = str.charCodeAt(i);
-    // Permite: tab(9), newline(10), carriage return(13), y todo lo mayor a 31
-    if (code === 9 || code === 10 || code === 13 || code >= 32) {
-      result += str[i];
-    }
+    // Filtra: caracteres de control (0-8, 11, 12, 14-31)
+    // Filtra tambien: U+2028 (line separator) y U+2029 (paragraph separator)
+    // que son invalidos en JSON string literals
+    if (code === 0x2028 || code === 0x2029) continue;
+    if (code < 32 && code !== 9 && code !== 10 && code !== 13) continue;
+    result += str[i];
   }
   return result;
 }
