@@ -1135,7 +1135,7 @@ function renderInstrumentosHtml(varsList) {
   h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:8px">
     <span>Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</span>
     ${needsAI && !state.aiInstruments && !state.aiInstrumentsLoading
-      ? `<button onclick="generateAIInstruments(${JSON.stringify(varsList)})" style="font-size:11px;font-weight:600;background:#7C3AED;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit">Buscar con IA</button>`
+      ? `<button onclick="generateAIInstruments(${JSON.stringify(varsList)})" style="font-size:11px;font-weight:600;background:#7C3AED;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit">${isQual ? "Generar guiones con IA" : "Buscar con IA"}</button>`
       : ''
     }
   </div>`;
@@ -1183,7 +1183,11 @@ function renderInstrumentosHtml(varsList) {
       h += `</div>`;
     });
   } else if(!state.aiInstrumentsLoading && needsAI && (!state.aiInstruments || state.aiInstruments.length === 0)) {
-    h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ No se encontraron instrumentos estándar para: ${(isQual ? varsList : sinStatic).join(', ')}. Busca en SCOPUS, PsycINFO o consulta el <em>Mental Measurements Yearbook</em>.</p>`;
+    if(isQual) {
+      h += `<p style="font-size:12px;color:#6B7280;margin-top:6px;line-height:1.6">En investigación cualitativa no se usan escalas psicométricas. Haz clic en <strong style="color:#7C3AED">Buscar con IA</strong> para generar guiones metodológicos personalizados: guía de entrevista semi-estructurada, guión de grupo focal, guía de observación u otros según tu diseño.</p>`;
+    } else {
+      h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ No se encontraron instrumentos estándar para: ${sinStatic.join(', ')}. Busca en SCOPUS, PsycINFO o consulta el <em>Mental Measurements Yearbook</em>.</p>`;
+    }
   }
 
   h += `</div>`;
@@ -2764,12 +2768,13 @@ async function validateCoherence() {
         ? `Análisis mixto (${disenoLabel})`
         : 'Estadística descriptiva / Sin técnica avanzada';
 
+  const isQualVal = state.enfoque === 'Cualitativo';
   const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa la coherencia metodológica del siguiente perfil de tesis de pregrado:
 
 - Área: ${efectiveArea()}
 - Población: ${getPoblacionCompleta()}
 - Problema: ${efectiveProblema()}
-- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'} (${vars.length}): ${vars.join(', ')}
+- ${isQualVal ? 'Categorías de análisis' : 'Variables'} (${vars.length}): ${vars.join(', ')}
 - Enfoque: ${state.enfoque}
 - Nivel/Paradigma: ${nivelLabel}
 - Diseño: ${disenoLabel}
@@ -2777,11 +2782,18 @@ async function validateCoherence() {
 - Contexto: ${state.contexto || 'No especificado'}
 
 Evalúa considerando:
-1. ¿Las variables/categorías son coherentes con el problema y el diseño?
-2. ¿El número de variables es adecuado para la técnica elegida?
+1. ¿Las ${isQualVal ? 'categorías' : 'variables'} son coherentes con el problema y el diseño?
+2. ¿El número de ${isQualVal ? 'categorías' : 'variables'} es adecuado para la técnica elegida?
 3. ¿El diseño y la técnica son apropiados para el nivel de investigación?
-4. ¿Hay algún riesgo metodológico importante que el tesista deba saber antes de continuar?
+4. ¿Hay algún riesgo metodológico REAL e importante? Solo alerta si es un error claro y grave.
 5. ¿El proyecto es viable para un tesista de pregrado?
+
+${isQualVal ? `REGLAS OBLIGATORIAS PARA ENFOQUE CUALITATIVO:
+- El contexto No especificado es NORMAL en esta etapa — NO lo incluyas como alerta.
+- El análisis temático (Braun & Clarke) ES una técnica completa — NO alertes sobre falta de detalle.
+- Los diseños cualitativos no requieren hipótesis ni estadística — no lo marques como error.
+- Solo alerta ante errores REALES: lenguaje cuantitativo en diseño cualitativo, mezcla de paradigmas incompatibles, o más de 5 categorías para pregrado.
+- Si el perfil es coherente cualitativamente, el campo alertas DEBE ser [] (array vacío).` : ''}
 
 Responde SOLO con JSON sin texto adicional ni markdown:
 {
@@ -2789,8 +2801,8 @@ Responde SOLO con JSON sin texto adicional ni markdown:
   "emoji": "✅|⚠️|🔴",
   "titulo": "frase corta de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza 1 específica al proyecto","fortaleza 2"],
-  "alertas": ["alerta específica 1 si existe, sino array vacío"],
-  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto antes de generar"
+  "alertas": ["alerta SOLO si hay error metodológico real y grave, sino []"],
+  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto"
 }`;
 
   try {
