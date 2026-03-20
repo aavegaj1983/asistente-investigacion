@@ -1,6 +1,6 @@
 // TesisProLab API handler
-// Cascada: Groq -> Cohere -> error
-// Variables en Vercel: GROQ_API_KEY, COHERE_API_KEY
+// Cascada: Groq -> Mistral -> Cohere -> error
+// Variables en Vercel: GROQ_API_KEY, MISTRAL_API_KEY, COHERE_API_KEY
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -14,36 +14,61 @@ module.exports = async function handler(req, res) {
   const userMessage = messages?.[messages.length - 1]?.content || "";
   if (!userMessage) return res.status(400).json({ error: "No se proporciono ningun mensaje" });
 
+  // Helper: APIs compatibles con OpenAI (Groq y Mistral usan el mismo formato)
+  async function callOpenAI(url, apiKey, model, maxTok) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: userMessage }],
+        temperature: 0.7,
+        max_tokens: maxTok || 1500
+      })
+    });
+  }
+
   // ── 1. GROQ — llama-3.3-70b (100k tokens/dia, muy rapido) ─────────
   if (process.env.GROQ_API_KEY) {
     try {
-      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.GROQ_API_KEY },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: userMessage }],
-          temperature: 0.7,
-          max_tokens: max_tokens || 1500
-        })
-      });
+      const r = await callOpenAI(
+        "https://api.groq.com/openai/v1/chat/completions",
+        process.env.GROQ_API_KEY,
+        "llama-3.3-70b-versatile",
+        max_tokens
+      );
       if (r.ok) {
         const data = await r.json();
         const text = data.choices?.[0]?.message?.content || "";
         if (text) { console.log("Groq OK"); return res.status(200).json({ content: [{ type: "text", text }] }); }
       }
-      console.warn("Groq fallo (" + r.status + ") - probando Cohere...");
+      console.warn("Groq fallo (" + r.status + ") - probando Mistral...");
     } catch (e) { console.warn("Groq excepcion:", e.message); }
   }
 
-  // ── 2. COHERE — 1000 llamadas/mes gratis sin tarjeta ──────────────
-  // Modelos activos (command-r y command-r-plus fueron eliminados sep 2025)
+  // ── 2. MISTRAL — mistral-small (sin limite diario fijo, gratis sin tarjeta) ──
+  if (process.env.MISTRAL_API_KEY) {
+    try {
+      const r = await callOpenAI(
+        "https://api.mistral.ai/v1/chat/completions",
+        process.env.MISTRAL_API_KEY,
+        "mistral-small-latest",
+        max_tokens
+      );
+      if (r.ok) {
+        const data = await r.json();
+        const text = data.choices?.[0]?.message?.content || "";
+        if (text) { console.log("Mistral OK"); return res.status(200).json({ content: [{ type: "text", text }] }); }
+      }
+      console.warn("Mistral fallo (" + r.status + ") - probando Cohere...");
+    } catch (e) { console.warn("Mistral excepcion:", e.message); }
+  } else {
+    console.warn("MISTRAL_API_KEY no configurada - saltando a Cohere...");
+  }
+
+  // ── 3. COHERE — 1000 llamadas/mes gratis sin tarjeta ──────────────
   if (process.env.COHERE_API_KEY) {
-    const cohereModels = [
-      "command-r-08-2024",       // Command R actualizado - bueno para espanol
-      "command-r-plus-08-2024",  // Command R+ actualizado - el mas potente free
-      "command-a-03-2025"        // Command A - el mas reciente y potente
-    ];
+    const cohereModels = ["command-r-08-2024", "command-r-plus-08-2024", "command-a-03-2025"];
     for (const model of cohereModels) {
       try {
         const r = await fetch("https://api.cohere.com/v2/chat", {
@@ -72,6 +97,6 @@ module.exports = async function handler(req, res) {
     console.warn("COHERE_API_KEY no configurada");
   }
 
-  console.error("Groq y Cohere fallaron");
+  console.error("Las 3 APIs fallaron");
   return res.status(503).json({ error: "Servicio no disponible. Intenta en unos minutos." });
 };
