@@ -1046,7 +1046,7 @@ Responde SOLO con un array JSON de 7 strings:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
     if(Array.isArray(parsed) && parsed.length >= 4) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
@@ -1118,7 +1118,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiInstruments = parsed;
     }
@@ -1334,7 +1334,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
     if(Array.isArray(parsed) && parsed.length > 0){
       state.aiReferencias = parsed;
     } else {
@@ -2372,7 +2372,7 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b=>b.text||'').join('')||'';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
     state.editValidation = parsed;
   } catch(e) {
     state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
@@ -2650,7 +2650,7 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
       saveState();
@@ -3481,13 +3481,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     
     const data=await res.json();
     const text=data.content?.map(b=>b.text||"").join("")||"";
-    // Limpiar caracteres de control invalidos que rompen JSON.parse (comun en Mistral/Cohere)
-    const cleanText = text
-      .replace(/```json|```/g, "")
-      .replace(/[--]/g, "") // control chars excepto 	 
- 
-      .trim();
-    const parsed=JSON.parse(cleanText);
+    const parsed=JSON.parse(sanitizeJSON(text.replace(/```json|```/g,"").trim()));
     
     if(!parsed.hipotesis) {
       parsed.hipotesis = tecInstr ? tecInstr.hipotesis
