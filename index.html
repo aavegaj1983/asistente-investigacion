@@ -1280,7 +1280,7 @@ function renderReferenciasHtml() {
         currentCat = ref.categoria;
         h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #EDE9FE">${currentCat}</div>`;
       }
-      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE">`;
+      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE;word-break:break-all;overflow-wrap:anywhere">`;
       h += `<p style="font-size:13px;color:#374151;line-height:1.6;margin:0">${ref.apa}</p>`;
       if(ref.relevancia) h += `<p style="font-size:11px;color:#7C3AED;margin:4px 0 0;font-style:italic">→ ${ref.relevancia}</p>`;
       h += `</div>`;
@@ -2186,11 +2186,18 @@ function renderContent(){
       } else {
         if(f.key === 'planteamiento') {
           const raw = state.edited[f.key] || '';
-          const paras = raw.split(/(?=\s*\d+\.\s)/).map(p => p.trim()).filter(Boolean);
+          // Split by numbered items: "1. texto 2. texto..."
+          const paras = raw.split(/(?=\s*\d+\.\s+)/).map(p => p.trim()).filter(Boolean);
           if(paras.length > 1) {
-            h += paras.map(p => '<p style="margin-bottom:10px;line-height:1.75">' + p + '</p>').join('');
+            h += '<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:14px">';
+            paras.forEach(p => {
+              // Remove leading number like "1. "
+              const text = p.replace(/^\d+\.\s*/, '');
+              h += '<li style="font-size:15px;line-height:1.75;color:#1e293b;padding-left:4px">' + text + '</li>';
+            });
+            h += '</ol>';
           } else {
-            h += '<p>' + raw + '</p>';
+            h += '<p style="line-height:1.75">' + raw + '</p>';
           }
         } else {
           h+=`<p>${state.edited[f.key]}</p>`;
@@ -3952,7 +3959,7 @@ async function downloadDoc() {
     <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
       <w:t>TesisProLab · Asistente IA para proyectos de investigación · Desarrollado por Alan A. Vega Jacome</w:t></w:r></w:p>
 
-  <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+  <w:sectPr><w:headerReference w:type="default" r:id="rId99"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1700" w:right="1440" w:bottom="1440" w:left="1440" w:header="708"/></w:sectPr>
 </w:body></w:document>`;
 
     // ── Styles ────────────────────────────────────────────────────
@@ -3974,6 +3981,7 @@ async function downloadDoc() {
   <Default Extension="png"  ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
   <Override PartName="/word/styles.xml"   ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/header1.xml"  ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>
 </Types>`,
       '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -3982,7 +3990,33 @@ async function downloadDoc() {
       'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   ${imageRels}
+  <Relationship Id="rId99" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
 </Relationships>`,
+      'word/header1.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:p>
+    <w:pPr>
+      <w:pBdr><w:bottom w:val="single" w:sz="4" w:space="4" w:color="E5E7EB"/></w:pBdr>
+      <w:tabs>
+        <w:tab w:val="right" w:pos="9350"/>
+      </w:tabs>
+    </w:pPr>
+    <w:r>
+      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/></w:rPr>
+      <w:t>TesisProLab</w:t>
+    </w:r>
+    <w:r>
+      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="18"/><w:color w:val="C7D2FE"/></w:rPr>
+      <w:t xml:space="preserve">  ·  Asistente IA para investigación</w:t>
+    </w:r>
+    <w:r><w:tab/></w:r>
+    <w:r>
+      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="9CA3AF"/></w:rPr>
+      <w:t>Desarrollado por Alan A. Vega Jacome</w:t>
+    </w:r>
+  </w:p>
+</w:hdr>`,
       'word/styles.xml': stylesXml,
       'word/document.xml': docXml,
     };
