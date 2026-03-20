@@ -3697,11 +3697,20 @@ function downloadPDF() {
   .header-logo { height:36px; }
   .header-right { font-size:9pt; color:#9CA3AF; }
 
-  /* Title block */
-  .title-block { text-align:center; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid #E5E7EB; }
-  .doc-title { font-size:18pt; font-weight:800; color:#1E1B4B; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
-  .doc-area { font-size:11pt; color:#4F46E5; font-weight:600; margin-bottom:4px; }
-  .doc-sub { font-size:9pt; color:#9CA3AF; font-style:italic; }
+  /* Cover page */
+  .cover-page { text-align:center; min-height:80vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:40px 20px;
+    border-bottom:2px solid #E5E7EB; margin-bottom:30px; }
+  .doc-title { font-size:20pt; font-weight:800; color:#1E1B4B; text-transform:uppercase;
+    letter-spacing:.5px; margin-bottom:10px; }
+  .doc-area { font-size:12pt; color:#4F46E5; font-weight:600; margin-bottom:6px; }
+  .doc-sub { font-size:9pt; color:#9CA3AF; font-style:italic; margin-bottom:40px; }
+  .cover-titulo-label { font-size:9pt; font-weight:700; color:#374151; text-transform:uppercase;
+    letter-spacing:.6px; margin-bottom:10px; margin-top:30px; }
+  .cover-titulo { font-size:16pt; font-weight:700; color:#111827; line-height:1.4;
+    max-width:80%; }
+  .page-break-before { page-break-before:always; }
+  @media print { .cover-page { min-height:0; } }
 
   /* Sections */
   .section { margin-bottom:20px; }
@@ -3751,15 +3760,16 @@ function downloadPDF() {
   <div class="header-right">Desarrollado por Alan A. Vega Jacome</div>
 </div>
 
-<div class="title-block">
+<div class="cover-page">
   <div class="doc-title">Propuesta de Proyecto de Investigación</div>
   <div class="doc-area">Psicología — ${efectiveArea()}</div>
   <div class="doc-sub">Generado con TesisProLab · Asistente IA para investigación</div>
+  <div class="cover-titulo-label">Título de la Investigación</div>
+  <div class="cover-titulo">${e.tema||'—'}</div>
 </div>
 
-<div class="section">
+<div class="section page-break-before">
   <h2>1. Elementos de la Investigación</h2>
-  <div class="field"><div class="field-label">Título de la Investigación</div><div class="field-value">${e.tema||'—'}</div></div>
   <div class="field"><div class="field-label">Pregunta de Investigación</div><div class="field-value">${e.pregunta||'—'}</div></div>
   <div class="field"><div class="field-label">Objetivo General</div><div class="field-value">${e.objetivo||'—'}</div></div>
   ${e.obj_esp1?`<div class="field"><div class="field-label">Objetivo Específico 1</div><div class="field-value">${e.obj_esp1}</div></div>`:''}
