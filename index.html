@@ -3892,10 +3892,7 @@ async function downloadDoc() {
       ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}
       ${aiRefsSection}`;
 
-    // ── Logo PNG para encabezado (224x40px, optimizado para Word) ──
-    const headerLogoBase64 = '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';
-    const headerLogoRel = '<Relationship Id="rId98" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/header_logo.png"/>';
-    const headerLogoXml = '<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="2133600" cy="381000"/><wp:docPr id="98" name="hlogo"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="98" name="hlogo"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId98" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="2133600" cy="381000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>';
+    // Sin logo — Word no puede cargar imágenes desde ZIP generado en browser
 
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -4012,24 +4009,30 @@ async function downloadDoc() {
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   ${imageRels}
   <Relationship Id="rId99" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
-  ${headerLogoRel}
 </Relationships>`,
       'word/header1.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-       xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-       xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <w:p>
     <w:pPr>
       <w:pBdr><w:bottom w:val="single" w:sz="4" w:space="4" w:color="E5E7EB"/></w:pBdr>
       <w:tabs><w:tab w:val="right" w:pos="9350"/></w:tabs>
-      <w:spacing w:before="40" w:after="40"/>
+      <w:spacing w:before="60" w:after="60"/>
     </w:pPr>
-    <w:r>${headerLogoXml}</w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
+      <w:t xml:space="preserve">Tesis</w:t>
+    </w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="22"/><w:color w:val="4F46E5"/></w:rPr>
+      <w:t>Pro</w:t>
+    </w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
+      <w:t xml:space="preserve">Lab  </w:t>
+    </w:r>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="C7D2FE"/></w:rPr>
+      <w:t>Asistente IA para investigación</w:t>
+    </w:r>
     <w:r><w:tab/></w:r>
-    <w:r>
-      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="9CA3AF"/><w:vertAlign w:val="baseline"/></w:rPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="9CA3AF"/></w:rPr>
       <w:t>Desarrollado por Alan A. Vega Jacome</w:t>
     </w:r>
   </w:p>
@@ -4039,7 +4042,7 @@ async function downloadDoc() {
     };
 
     // Añadir imagen PNG si existe
-    const zip = await buildZip(files, imageBytes, headerLogoBase64);
+    const zip = await buildZip(files, imageBytes);
     const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -4056,7 +4059,7 @@ async function downloadDoc() {
 }
 
 // ── ZIP builder (sin librerías) ───────────────────────────────────
-async function buildZip(files, pngBytes, headerLogoPng) {
+async function buildZip(files, pngBytes) {
   // Use fflate if available, otherwise simple store-only ZIP
   const entries = [];
   const enc = new TextEncoder();
@@ -4086,15 +4089,7 @@ async function buildZip(files, pngBytes, headerLogoPng) {
     const crc  = crc32(data);
     entries.push({name:nameBytes, data, crc, size:data.length});
   }
-  // Add header logo PNG if provided
-  if(headerLogoPng){
-    const nameBytes = enc.encode('word/media/header_logo.png');
-    const bin = atob(headerLogoPng);
-    const data = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) data[i]=bin.charCodeAt(i);
-    const crc = crc32(data);
-    entries.push({name:nameBytes, data, crc, size:data.length});
-  }
+
 
   // Build ZIP
   const localHeaders = [];
