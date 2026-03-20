@@ -418,6 +418,7 @@ textarea{min-height:70px;resize:vertical}
 .refs-item{
   padding:9px 0;border-bottom:1px solid var(--gray-100);
   font-size:12px;line-height:1.75;color:var(--gray-700);
+  word-break:break-all;overflow-wrap:anywhere;
 }
 .refs-item:last-child{border-bottom:none;padding-bottom:0}
 .refs-item em{font-style:italic}
@@ -556,6 +557,19 @@ textarea{min-height:70px;resize:vertical}
 <div id="retry-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;transition:all .3s ease;background:#1e293b;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap"><span id="retry-toast-spin" style="display:inline-block">⏳</span><span id="retry-toast-msg">Límite de IA alcanzado — reintentando...</span></div>
 
 <script>
+
+// Helper: limpia caracteres de control invalidos del JSON devuelto por la IA
+function sanitizeJSON(str) {
+  var result = '';
+  for (var i = 0; i < str.length; i++) {
+    var code = str.charCodeAt(i);
+    // Permite: tab(9), newline(10), carriage return(13), y todo lo mayor a 31
+    if (code === 9 || code === 10 || code === 13 || code >= 32) {
+      result += str[i];
+    }
+  }
+  return result;
+}
 const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
 
 const AREAS = [
@@ -1032,7 +1046,7 @@ Responde SOLO con un array JSON de 7 strings:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
     if(Array.isArray(parsed) && parsed.length >= 4) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
@@ -1104,7 +1118,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiInstruments = parsed;
     }
@@ -1232,7 +1246,7 @@ function renderReferenciasHtml() {
         currentCat = ref.categoria;
         h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #EDE9FE">${currentCat}</div>`;
       }
-      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE">`;
+      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE;word-break:break-all;overflow-wrap:anywhere">`;
       h += `<p style="font-size:13px;color:#374151;line-height:1.6;margin:0">${ref.apa}</p>`;
       if(ref.relevancia) h += `<p style="font-size:11px;color:#7C3AED;margin:4px 0 0;font-style:italic">→ ${ref.relevancia}</p>`;
       h += `</div>`;
@@ -1320,7 +1334,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
     if(Array.isArray(parsed) && parsed.length > 0){
       state.aiReferencias = parsed;
     } else {
@@ -2358,7 +2372,7 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b=>b.text||'').join('')||'';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
     state.editValidation = parsed;
   } catch(e) {
     state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
@@ -2636,7 +2650,7 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'')).split('').filter(function(c){var code=c.charCodeAt(0);return code>8&&code!==11&&code!==12&&code>13||code>31;}).join('').trim());
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
       saveState();
@@ -2727,7 +2741,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     }
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g, '').trim()));
     if(Array.isArray(parsed) && parsed.length >= 4) {
       // Accept both old string format and new object format
       state.aiVars = parsed.map(v => {
@@ -2818,7 +2832,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g, '').trim()));
     state.aiValidation = parsed;
   } catch(e) {
     state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
