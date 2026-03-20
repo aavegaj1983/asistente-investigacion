@@ -3621,9 +3621,15 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
 
 
 // ── PDF GENERATOR ──────────────────────────────────────────────────
-function downloadPDF() {
+async function downloadPDF() {
   const btn = document.querySelector('.btn-download');
   if(btn){ btn.classList.add('loading'); btn.innerHTML='⏳ Generando PDF...'; }
+
+  // ── Generar/recuperar diagrama SVG ───────────────────────────────
+  let diagramSvg = null;
+  if(DISENOS_CON_DIAGRAMA.includes(state.tecnica)) {
+    diagramSvg = buildDiagramSVG() || window._lastDiagramSVG || null;
+  }
 
   // Gather data
   const e = state.edited;
@@ -3725,6 +3731,11 @@ function downloadPDF() {
   .field-label { font-size:9pt; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px; }
   .field-value { font-size:10.5pt; line-height:1.7; color:#111827; }
 
+  /* Diagram */
+  .diagram-box { margin:16px 0; padding:12px; background:#F8FAFF; border:1px solid #C7D2FE; border-radius:8px; }
+  .diagram-caption { font-size:8.5pt; color:#4F46E5; font-weight:600; text-align:center; margin-top:8px; }
+  .diagram-box svg { width:100%; height:auto; display:block; }
+
   /* Table */
   table { width:100%; border-collapse:collapse; font-size:9.5pt; margin-bottom:4px; }
   td { padding:5px 8px; border:1px solid #E5E7EB; }
@@ -3791,6 +3802,7 @@ function downloadPDF() {
     <tr><td>Diseño</td><td>${disenoLabel}</td></tr>
     <tr><td>Técnica de análisis</td><td>${tecnicaLabel}</td></tr>
   </table>
+  ${diagramSvg ? `<div class="diagram-box">${diagramSvg}<div class="diagram-caption">Figura 1. ${titulo_diagrama()} — ${tecnicaLabel}</div></div>` : ''}
 </div>
 
 <div class="section">
