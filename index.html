@@ -549,31 +549,61 @@ textarea{min-height:70px;resize:vertical}
   </div>
 </div>
 <div class="auto-save" id="auto-save">Guardado</div>
+<div id="retry-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;transition:all .3s ease;background:#1e293b;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3)"><span>⏳</span><span id="retry-toast-msg">Reintentando...</span></div>
 <div id="regen-toast">
   <span class="toast-icon">🚫</span>
   <span>Alcanzaste el límite de 3 regeneraciones</span>
   <div class="toast-bar"></div>
 </div>
-<div id="retry-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;transition:all .3s ease;background:#1e293b;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap"><span id="retry-toast-spin" style="display:inline-block">⏳</span><span id="retry-toast-msg">Límite de IA alcanzado — reintentando...</span></div>
 
 <script>
-
-// Helper: limpia caracteres de control invalidos del JSON devuelto por la IA
+// ── JSON SANITIZER ───────────────────────────────────────────────
 function sanitizeJSON(str) {
   if (!str) return '';
+  var fenceA = String.fromCharCode(96); var fence = fenceA+fenceA+fenceA;
+  str = str.split(fence+'json').join('').split(fence).join('').trim();
+  var firstBrace = str.indexOf('{'), firstBracket = str.indexOf('[');
+  var start = -1;
+  if (firstBrace >= 0 && (firstBracket < 0 || firstBrace < firstBracket)) start = firstBrace;
+  else if (firstBracket >= 0) start = firstBracket;
+  if (start > 0) str = str.slice(start);
+  var lastBrace = str.lastIndexOf('}'), lastBracket = str.lastIndexOf(']');
+  var end = Math.max(lastBrace, lastBracket);
+  if (end >= 0 && end < str.length - 1) str = str.slice(0, end + 1);
   var result = '';
   for (var i = 0; i < str.length; i++) {
     var code = str.charCodeAt(i);
-    // Filtra: caracteres de control (0-8, 11, 12, 14-31)
-    // Filtra tambien: U+2028 (line separator) y U+2029 (paragraph separator)
-    // que son invalidos en JSON string literals
     if (code === 0x2028 || code === 0x2029) continue;
     if (code < 32 && code !== 9 && code !== 10 && code !== 13) continue;
     result += str[i];
   }
   return result;
 }
-const STEPS = ["Área","Población","Problema","Metodología","Contexto","Resultado"];
+
+function safeParseJSON(text) {
+  var clean = sanitizeJSON(text);
+  try {
+    return JSON.parse(clean);
+  } catch(e1) {
+    try {
+      var fixed = '';
+      var inStr = false, esc = false;
+      for (var i = 0; i < clean.length; i++) {
+        var ch = clean[i], code = clean.charCodeAt(i);
+        if (esc) { fixed += ch; esc = false; continue; }
+        if (ch === '\\') { esc = true; fixed += ch; continue; }
+        if (ch === '"') { inStr = !inStr; fixed += ch; continue; }
+        if (inStr && (code === 10 || code === 13 || code === 9)) { fixed += ' '; continue; }
+        fixed += ch;
+      }
+      return JSON.parse(fixed);
+    } catch(e2) {
+      throw new Error('JSON parse failed: ' + e1.message);
+    }
+  }
+}
+
+const STEPS = ["Área","Población","Problema","Metodología","Resultado"];
 
 const AREAS = [
   {id:"clinica", label:"Psicología clínica y salud mental", icon:`<svg width="28" height="28" viewBox="0 0 40 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="18.5" y="2" width="3" height="52" rx="1.5" fill="#4F46E5"/><circle cx="20" cy="3" r="3.5" fill="#4F46E5"/><path d="M20 10 C27 10, 27 16, 20 16 C13 16, 13 22, 20 22 C27 22, 27 28, 20 28 C13 28, 13 34, 20 34 C27 34, 27 40, 20 40 C13 40, 13 46, 20 46" stroke="#059669" stroke-width="2.4" stroke-linecap="round" fill="none"/><ellipse cx="20" cy="8.5" rx="3.2" ry="2.2" fill="#059669"/><circle cx="18.8" cy="8" r="0.7" fill="white"/><circle cx="21.2" cy="8" r="0.7" fill="white"/><circle cx="18.8" cy="8" r="0.32" fill="#111"/><circle cx="21.2" cy="8" r="0.32" fill="#111"/><path d="M19 7 L17.4 5.5 M21 7 L22.6 5.5" stroke="#DC2626" stroke-width="0.9" stroke-linecap="round"/></svg>`},
@@ -1049,7 +1079,7 @@ Responde SOLO con un array JSON de 7 strings:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
+    const parsed = safeParseJSON(text);
     if(Array.isArray(parsed) && parsed.length >= 4) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
@@ -1074,7 +1104,7 @@ async function generateAIInstruments(varsList) {
 
   state.aiInstrumentsLoading = true;
   state.aiInstruments = null;
-  if(state.step === 5 && state.result) renderContent();
+  if(state.step === 4 && state.result) renderContent();
 
   const targetVars = isQual ? varsList : sinInstrumento;
   const instrPrompt = `Eres un experto en psicometría y evaluación psicológica en el contexto peruano y latinoamericano.
@@ -1121,7 +1151,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
+    const parsed = safeParseJSON(text);
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiInstruments = parsed;
     }
@@ -1130,7 +1160,7 @@ Responde SOLO con JSON sin texto adicional:
     state.aiInstruments = [];
   } finally {
     state.aiInstrumentsLoading = false;
-    if(state.step === 5 && state.result) renderContent();
+    if(state.step === 4 && state.result) renderContent();
     saveState();
   }
 }
@@ -1201,7 +1231,7 @@ function renderInstrumentosHtml(varsList) {
     });
   } else if(!state.aiInstrumentsLoading && needsAI && (!state.aiInstruments || state.aiInstruments.length === 0)) {
     if(isQual) {
-      h += `<p style="font-size:12px;color:#6B7280;margin-top:6px;line-height:1.6">En investigación cualitativa no se usan escalas psicométricas. Haz clic en <strong style="color:#7C3AED">Buscar con IA</strong> para generar guiones metodológicos personalizados: guía de entrevista semi-estructurada, guión de grupo focal, guía de observación u otros según tu diseño.</p>`;
+      h += `<p style="font-size:12px;color:#6B7280;margin-top:6px;line-height:1.6">En investigación cualitativa no se usan escalas psicométricas. Haz clic en <strong style="color:#7C3AED">Generar guiones con IA</strong> para obtener guiones metodológicos personalizados: guía de entrevista semi-estructurada, guión de grupo focal, guía de observación u otros según tu diseño.</p>`;
     } else {
       h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ No se encontraron instrumentos estándar para: ${sinStatic.join(', ')}. Busca en SCOPUS, PsycINFO o consulta el <em>Mental Measurements Yearbook</em>.</p>`;
     }
@@ -1250,7 +1280,7 @@ function renderReferenciasHtml() {
         currentCat = ref.categoria;
         h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid #EDE9FE">${currentCat}</div>`;
       }
-      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE;word-break:break-all;overflow-wrap:anywhere">`;
+      h += `<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid #EDE9FE">`;
       h += `<p style="font-size:13px;color:#374151;line-height:1.6;margin:0">${ref.apa}</p>`;
       if(ref.relevancia) h += `<p style="font-size:11px;color:#7C3AED;margin:4px 0 0;font-style:italic">→ ${ref.relevancia}</p>`;
       h += `</div>`;
@@ -1268,7 +1298,7 @@ function renderReferenciasHtml() {
 async function generateAIReferencias() {
   if(state.aiReferenciasLoading || state.aiReferencias) return;
   state.aiReferenciasLoading = true;
-  if(state.step === 5 && state.result) renderContent();
+  if(state.step === 4 && state.result) renderContent();
 
   let vars = state.variables.filter(v => v !== 'otro');
   if(state.variables.includes('otro') && state.variablesOtro.trim())
@@ -1338,7 +1368,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
+    const parsed = safeParseJSON(text);
     if(Array.isArray(parsed) && parsed.length > 0){
       state.aiReferencias = parsed;
     } else {
@@ -1346,24 +1376,21 @@ Responde SOLO con JSON sin texto adicional:
     }
   } catch(e) {
     console.error('generateAIReferencias error:', e);
-    // Si fue un 429 o error de red, reintenta una vez más después de 12s
     if(!state._refRetried) {
       state._refRetried = true;
-      console.warn('Referencias fallaron — reintentando en 12s...');
       if(typeof showRetryToast === 'function') showRetryToast(1, 12000);
       setTimeout(async () => {
         if(typeof hideRetryToast === 'function') hideRetryToast();
-        state._refRetried = false;
         state.aiReferenciasLoading = true;
         await generateAIReferencias();
       }, 12000);
       return;
     }
+    state._refRetried = false;
     state.aiReferencias = [];
   } finally {
-    state._refRetried = false;
     state.aiReferenciasLoading = false;
-    if(state.step === 5 && state.result) renderContent();
+    if(state.step === 4 && state.result) renderContent();
     saveState();
   }
 }
@@ -1383,11 +1410,10 @@ try {
 // Merge savedState with defaults so new fields are always present
 // ── GLOBAL AI REQUEST QUEUE ───────────────────────────────────────
 // Serializa todas las llamadas a /api/chat para evitar 429 en Groq
-// Con retry automático + exponential backoff ante rate limits
 const AIQueue = {
   _queue: [],
   _running: false,
-  _minGap: 3500, // ms mínimos entre requests
+  _minGap: 3500,
   _lastCall: 0,
   _MAX_RETRIES: 4,
 
@@ -1412,10 +1438,8 @@ const AIQueue = {
         try {
           this._lastCall = Date.now();
           const result = await fn();
-          // Si es una respuesta 429, hacer retry con backoff
           if (result && result.status === 429) {
             const backoff = Math.min(8000, 2000 * Math.pow(2, attempt));
-            console.warn(`429 recibido — reintentando en ${backoff}ms (intento ${attempt + 1}/${this._MAX_RETRIES})`);
             if (attempt < this._MAX_RETRIES) {
               if (typeof showRetryToast === 'function') showRetryToast(attempt + 1, backoff);
               await new Promise(r => setTimeout(r, backoff));
@@ -1439,7 +1463,6 @@ const AIQueue = {
     this._running = false;
   },
 
-  // Helper: fetch con cola y retry
   async fetch(url, options) {
     return this.add(() => fetch(url, options));
   }
@@ -1570,7 +1593,7 @@ function canNext(){
     }
     return true;
   }
-  if(s===4) return state.experiencia!=="" && state.viabilidad!=="";
+  if(s===4) return true; // step 4 ahora es Resultado
   return true;
 }
 
@@ -1607,7 +1630,7 @@ function renderStepsBar(){
     }
   });
   document.getElementById("steps-bar").innerHTML=h;
-  document.getElementById("step-label").textContent=`${STEPS[state.step]}  ·  Paso ${state.step+1} de 6`;
+  document.getElementById("step-label").textContent=`${STEPS[state.step]}  · Paso ${state.step+1} de 5`;
 }
 
 // SUGERENCIAS AUTOMÁTICAS
@@ -1961,31 +1984,6 @@ function renderContent(){
     el.innerHTML=h;
   }
   else if(s===4){
-    let h=`<div class="gap20">`;
-    h+=renderMiniCoherence('step4');
-    h+=sectionLabel("¿Cuánta experiencia tienes con este tema o población?");
-    h+=`<div class="options">`;
-    EXPERIENCIAS.forEach(e=>{
-      const esc=e.replace(/'/g,"\\'");
-      h+=badge(e, state.experiencia===e, `state.experiencia='${esc}';updateNav();renderContent();saveState()`);
-    });
-    h+=`</div>`;
-    h+=sectionLabel("¿Tienes acceso a la población que quieres estudiar?");
-    h+=`<div class="options">`;
-    VIABILIDADES.forEach(v=>{
-      const esc=v.replace(/'/g,"\\'");
-      h+=badge(v, state.viabilidad===v, `state.viabilidad='${esc}';updateNav();renderContent();saveState()`);
-    });
-    h+=`</div>`;
-    h+=sectionLabel("¿En qué lugar realizarías tu investigación? — Especifica ciudad o región");
-    h+=`<textarea placeholder="Ej: Lima, Perú — distrito de San Juan de Lurigancho; o Arequipa, en una institución educativa pública..." oninput="state.contexto=this.value;saveState();if(this.value.trim().length>4){clearTimeout(window._pobTimer);window._pobTimer=setTimeout(()=>{state.aiPoblaciones=[];prefetchAIPoblaciones();},1200);}">${state.contexto}</textarea>`;
-    h+=sectionLabel("¿Por qué te interesa este tema? — opcional");
-    h+=`<textarea placeholder="Ej: Lo observé en mi práctica pre-profesional..." oninput="state.motivacion=this.value;saveState()">${state.motivacion}</textarea>`;
-    h+=`</div>`;
-    el.innerHTML=h;
-  }
-
-  else if(s===5){
     if(state.loading){
       el.innerHTML=`<div class="loading"><div class="icon">⏳</div><p>Generando tu propuesta de investigacion...</p></div>`;
       return;
@@ -2187,13 +2185,12 @@ function renderContent(){
         h+=`<textarea style="border:1px solid ${f.color}" oninput="state.edited.${f.key}=this.value;saveState()">${state.edited[f.key]}</textarea>`;
       } else {
         if(f.key === 'planteamiento') {
-          // Separar párrafos numerados: "1. texto 2. texto..." en párrafos distintos
           const raw = state.edited[f.key] || '';
-          const paras = raw.split(/(?=\s*\d+\.\s+[A-ZÁÉÍÓÚ*\*])/u).map(p => p.trim()).filter(Boolean);
+          const paras = raw.split(/(?=\s*\d+\.\s)/).map(p => p.trim()).filter(Boolean);
           if(paras.length > 1) {
-            h += paras.map(p => `<p style="margin-bottom:10px;line-height:1.75">${p}</p>`).join('');
+            h += paras.map(p => '<p style="margin-bottom:10px;line-height:1.75">' + p + '</p>').join('');
           } else {
-            h += `<p>${raw}</p>`;
+            h += '<p>' + raw + '</p>';
           }
         } else {
           h+=`<p>${state.edited[f.key]}</p>`;
@@ -2260,7 +2257,7 @@ function updateNav(){
   document.getElementById("btn-back").disabled=state.step===0;
   const nb=document.getElementById("btn-next");
   nb.disabled=!canNext();
-  nb.style.display=state.step===5?"none":"block";
+  nb.style.display=state.step===4?"none":"block";
 }
 
 function render(){
@@ -2270,12 +2267,12 @@ function render(){
 }
 
 function nextStep(){
-  if(canNext()&&state.step<5){
+  if(canNext()&&state.step<4){
     state.step++;
     render();
     saveState();
-    // Only validate at step 5 (pre-generate), not step 4, to save API calls
-    if(state.step===5 && !state.aiValidation && !state.aiValidationLoading){
+    // Validate at step 4 (pre-generate)
+    if(state.step===4 && !state.aiValidation && !state.aiValidationLoading){
       validateCoherence();
     }
     // AI poblaciones: disabled auto-trigger to reduce API calls
@@ -2380,13 +2377,13 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b=>b.text||'').join('')||'';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
+    const parsed = safeParseJSON(text);
     state.editValidation = parsed;
   } catch(e) {
     state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
   } finally {
     state.editValidating = false;
-    if(state.step === 5 && state.result) renderContent();
+    if(state.step === 4 && state.result) renderContent();
     saveState();
   }
 }
@@ -2658,18 +2655,16 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g,'').trim()));
+    const parsed = safeParseJSON(text);
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
       saveState();
-      if(state.step === 5 && state.result) renderContent();
+      if(state.step === 4 && state.result) renderContent();
     }
   } catch(e) {
     console.error('generateNextSteps error:', e);
-    // Reintenta una vez después de 10s si no se había reintentado ya
     if(!state._nextStepsRetried) {
       state._nextStepsRetried = true;
-      console.warn('Próximos pasos fallaron — reintentando en 10s...');
       setTimeout(async () => {
         state._nextStepsRetried = false;
         await generateNextSteps();
@@ -2749,7 +2744,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     }
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g, '').trim()));
+    const parsed = safeParseJSON(text);
     if(Array.isArray(parsed) && parsed.length >= 4) {
       // Accept both old string format and new object format
       state.aiVars = parsed.map(v => {
@@ -2790,13 +2785,12 @@ async function validateCoherence() {
         ? `Análisis mixto (${disenoLabel})`
         : 'Estadística descriptiva / Sin técnica avanzada';
 
-  const isQualVal = state.enfoque === 'Cualitativo';
   const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa la coherencia metodológica del siguiente perfil de tesis de pregrado:
 
 - Área: ${efectiveArea()}
 - Población: ${getPoblacionCompleta()}
 - Problema: ${efectiveProblema()}
-- ${isQualVal ? 'Categorías de análisis' : 'Variables'} (${vars.length}): ${vars.join(', ')}
+- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'} (${vars.length}): ${vars.join(', ')}
 - Enfoque: ${state.enfoque}
 - Nivel/Paradigma: ${nivelLabel}
 - Diseño: ${disenoLabel}
@@ -2804,18 +2798,11 @@ async function validateCoherence() {
 - Contexto: ${state.contexto || 'No especificado'}
 
 Evalúa considerando:
-1. ¿Las ${isQualVal ? 'categorías' : 'variables'} son coherentes con el problema y el diseño?
-2. ¿El número de ${isQualVal ? 'categorías' : 'variables'} es adecuado para la técnica elegida?
+1. ¿Las variables/categorías son coherentes con el problema y el diseño?
+2. ¿El número de variables es adecuado para la técnica elegida?
 3. ¿El diseño y la técnica son apropiados para el nivel de investigación?
-4. ¿Hay algún riesgo metodológico REAL e importante? Solo alerta si es un error claro y grave.
+4. ¿Hay algún riesgo metodológico REAL e importante? Solo alerta ante errores claros y graves.
 5. ¿El proyecto es viable para un tesista de pregrado?
-
-${isQualVal ? `REGLAS OBLIGATORIAS PARA ENFOQUE CUALITATIVO:
-- El contexto No especificado es NORMAL en esta etapa — NO lo incluyas como alerta.
-- El análisis temático (Braun & Clarke) ES una técnica completa — NO alertes sobre falta de detalle.
-- Los diseños cualitativos no requieren hipótesis ni estadística — no lo marques como error.
-- Solo alerta ante errores REALES: lenguaje cuantitativo en diseño cualitativo, mezcla de paradigmas incompatibles, o más de 5 categorías para pregrado.
-- Si el perfil es coherente cualitativamente, el campo alertas DEBE ser [] (array vacío).` : ''}
 
 Responde SOLO con JSON sin texto adicional ni markdown:
 {
@@ -2823,8 +2810,8 @@ Responde SOLO con JSON sin texto adicional ni markdown:
   "emoji": "✅|⚠️|🔴",
   "titulo": "frase corta de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza 1 específica al proyecto","fortaleza 2"],
-  "alertas": ["alerta SOLO si hay error metodológico real y grave, sino []"],
-  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto"
+  "alertas": ["alerta SOLO si hay error metodológico real y grave — si el perfil cualitativo es coherente, usa []"],
+  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto antes de generar"
 }`;
 
   try {
@@ -2840,7 +2827,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = data.content?.map(b => b.text || '').join('') || '';
-    const parsed = JSON.parse(sanitizeJSON(text.replace(/```json|```/g, '').trim()));
+    const parsed = safeParseJSON(text);
     state.aiValidation = parsed;
   } catch(e) {
     state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
@@ -3489,7 +3476,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     
     const data=await res.json();
     const text=data.content?.map(b=>b.text||"").join("")||"";
-    const parsed=JSON.parse(sanitizeJSON(text.replace(/```json|```/g,"").trim()));
+    const parsed=safeParseJSON(text);
     
     if(!parsed.hipotesis) {
       parsed.hipotesis = tecInstr ? tecInstr.hipotesis
@@ -3503,10 +3490,12 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     
     state.result=parsed;
     state.edited={...parsed};
-    state.aiNextSteps = null; // reset so new ones are generated
+    state.aiNextSteps = null;
     state.aiInstruments = null; state.aiInstrumentsLoading = false;
     state.aiReferencias = null; state.aiReferenciasLoading = false;
     saveState();
+    setTimeout(() => generateNextSteps(), 3000);
+    setTimeout(() => generateAIReferencias(), 9000);
     // Only 2 secondary AI calls after generation — via AIQueue, well spaced
     setTimeout(() => generateNextSteps(), 3000);
     setTimeout(() => generateAIReferencias(), 9000);
@@ -3680,21 +3669,20 @@ async function downloadDoc() {
     };
 
     // ── Helpers Open XML ─────────────────────────────────────────
-    const pjsFonts = '<w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans" w:cs="Plus Jakarta Sans"/>';
     const heading = (text, color='4F46E5') =>
-      `<w:p><w:pPr><w:spacing w:before="400" w:after="140"/>
-        <w:pBdr><w:bottom w:val="single" w:sz="6" w:space="4" w:color="${color}"/></w:pBdr></w:pPr>
-        <w:r><w:rPr>${pjsFonts}<w:b/><w:sz w:val="24"/><w:color w:val="${color}"/><w:caps/></w:rPr>
+      `<w:p><w:pPr><w:spacing w:before="320" w:after="120"/>
+        <w:pBdr><w:bottom w:val="single" w:sz="8" w:space="1" w:color="${color}"/></w:pBdr></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="26"/><w:color w:val="${color}"/><w:caps/></w:rPr>
           <w:t>${xe(text)}</w:t></w:r></w:p>`;
 
     const fieldLabel = (text) =>
-      `<w:p><w:pPr><w:spacing w:before="200" w:after="40"/></w:pPr>
-        <w:r><w:rPr>${pjsFonts}<w:b/><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
+      `<w:p><w:pPr><w:spacing w:before="240" w:after="60"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/><w:caps/></w:rPr>
           <w:t>${xe(text)}</w:t></w:r></w:p>`;
 
     const fieldValue = (text) =>
-      `<w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="160"/></w:pPr>
-        <w:r><w:rPr>${pjsFonts}<w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
+      `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="22"/><w:color w:val="111827"/></w:rPr>
           <w:t xml:space="preserve">${xe(text||'—')}</w:t></w:r></w:p>`;
 
     const tableRow = (label, value, shade=true) =>
@@ -3867,7 +3855,7 @@ async function downloadDoc() {
         ${heading((secRefs+1)+'. REFERENCIAS TEMÁTICAS SUGERIDAS POR IA','7C3AED')}
         <w:p><w:pPr><w:spacing w:after="120"/></w:pPr>
           <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr>
-            <w:t>Referencias organizadas por categoría según las variables y población del proyecto. Verifique disponibilidad en SCOPUS, Redalyc o SciELO. Cite en formato APA 7ª edición.</w:t></w:r></w:p>`;
+            <w:t>Referencias organizadas por categoría según las variables y población del proyecto. Cite en formato APA 7ª edición.</w:t></w:r></w:p><w:p><w:pPr><w:spacing w:after="120"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="18"/><w:color w:val="DC2626"/></w:rPr><w:t>IMPORTANTE: Verifique CADA referencia en SCOPUS o Google Scholar — la IA puede generar datos incorrectos.</w:t></w:r></w:p>`;
       cats.forEach(cat => {
         xml += `
           <w:p><w:pPr><w:spacing w:before="200" w:after="80"/></w:pPr>
@@ -3889,80 +3877,23 @@ async function downloadDoc() {
       ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}
       ${aiRefsSection}`;
 
-    // ── Logo PNG para DOCX ───────────────────────────────────────
-    let logoBase64 = '';
-    let logoRel = '';
-    let logoXml = '';
-    try {
-      const logoSvg = `<svg viewBox="0 0 32 50" xmlns="http://www.w3.org/2000/svg" width="64" height="100">
-        <rect width="32" height="50" rx="8" fill="#4F46E5"/>
-        <path d="M16 3 C11 3,5 6,3 12 C1 17,2 22,5 26 C7 28,8 30,8 33 L16 36 Z" fill="white"/>
-        <path d="M16 3 C21 3,27 6,29 12 C31 17,30 22,27 26 C25 28,24 30,24 33 L16 36 Z" fill="white"/>
-        <line x1="16" y1="4" x2="16" y2="34" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/>
-        <circle cx="16" cy="22" r="2.8" fill="#4F46E5"/>
-        <path d="M15 34 Q12 37,11 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M17 34 Q20 37,21 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <ellipse cx="16" cy="43" rx="3.5" ry="4.5" fill="white"/>
-        <circle cx="16" cy="42" r="1.4" fill="#4F46E5"/>
-      </svg>`;
-      const svgBlob = new Blob([logoSvg], {type:'image/svg+xml'});
-      const svgUrl = URL.createObjectURL(svgBlob);
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = svgUrl;
-      });
-      const canvas = document.createElement('canvas');
-      canvas.width = 80; canvas.height = 125;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 80, 125);
-      URL.revokeObjectURL(svgUrl);
-      logoBase64 = canvas.toDataURL('image/png').split(',')[1];
-      logoRel = '<Relationship Id="rId20" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>';
-      // EMU: 80px * 9144 = 731520, 125px * 9144 = 1143000
-      logoXml = `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="80"/></w:pPr>
-        <w:r><w:drawing>
-          <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
-            <wp:extent cx="731520" cy="1143000"/>
-            <wp:docPr id="99" name="logo"/>
-            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                  <pic:nvPicPr><pic:cNvPr id="99" name="logo"/><pic:cNvPicPr/></pic:nvPicPr>
-                  <pic:blipFill>
-                    <a:blip r:embed="rId20" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
-                    <a:stretch><a:fillRect/></a:stretch>
-                  </pic:blipFill>
-                  <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="731520" cy="1143000"/></a:xfrm>
-                    <a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
-                </pic:pic>
-              </a:graphicData>
-            </a:graphic>
-          </wp:inline>
-        </w:drawing></w:r></w:p>`;
-    } catch(e) {
-      console.warn('Logo PNG generation failed:', e.message);
-    }
-
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <w:body>
-  ${logoXml}
   <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="60"/></w:pPr>
     <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="36"/><w:color w:val="1E1B4B"/><w:caps/></w:rPr>
       <w:t>PROPUESTA DE PROYECTO DE INVESTIGACIÓN</w:t></w:r></w:p>
   <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr>
-    <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="4F46E5"/></w:rPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="20"/><w:color w:val="4F46E5"/></w:rPr>
       <w:t>Psicología — ${xe(efectiveArea())}</w:t></w:r></w:p>
   <w:p><w:pPr><w:jc w:val="center"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="4" w:color="4F46E5"/></w:pBdr><w:spacing w:after="40"/></w:pPr>
     <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="9CA3AF"/></w:rPr>
       <w:t>Generado con TesisProLab · Asistente IA para investigación</w:t></w:r></w:p>
   <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="400"/></w:pPr>
-    <w:r><w:rPr><w:sz w:val="16"/><w:color w:val="D1D5DB"/></w:rPr>
-      <w:t>⚠ Las referencias sugeridas por IA deben verificarse en SCOPUS o Google Scholar antes de citar</w:t></w:r></w:p>
+    <w:r><w:rPr><w:sz w:val="16"/><w:color w:val="DC2626"/></w:rPr>
+      <w:t>⚠ Verifica las referencias sugeridas por IA en SCOPUS o Google Scholar antes de citar</w:t></w:r></w:p>
 
   ${heading('1. ELEMENTOS DE LA INVESTIGACIÓN')}
   ${fieldLabel('Título de la Investigación')}${fieldValue(state.edited.tema)}
@@ -4017,12 +3948,9 @@ async function downloadDoc() {
   ${instrSectionXml}
   ${refsXml}
   ${emptyPara(480)}
-  <w:p><w:pPr><w:jc w:val="center"/><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="E5E7EB"/></w:pBdr><w:spacing w:before="240"/></w:pPr>
+  <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
     <w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr>
       <w:t>TesisProLab · Asistente IA para proyectos de investigación · Desarrollado por Alan A. Vega Jacome</w:t></w:r></w:p>
-  <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-    <w:r><w:rPr><w:sz w:val="14"/><w:color w:val="D1D5DB"/></w:rPr>
-      <w:t>⚠ Documento generado con asistencia de IA. Verifique toda la información antes de su uso académico.</w:t></w:r></w:p>
 
   <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
 </w:body></w:document>`;
@@ -4035,13 +3963,6 @@ async function downloadDoc() {
     <w:sz w:val="22"/><w:szCs w:val="22"/>
     <w:color w:val="111827"/>
   </w:rPr></w:rPrDefault></w:docDefaults>
-  <w:style w:type="paragraph" w:styleId="Normal">
-    <w:name w:val="Normal"/>
-    <w:rPr>
-      <w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/>
-      <w:sz w:val="22"/><w:color w:val="111827"/>
-    </w:rPr>
-  </w:style>
 </w:styles>`;
 
     // ── Construir ZIP ─────────────────────────────────────────────
@@ -4061,14 +3982,13 @@ async function downloadDoc() {
       'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   ${imageRels}
-  ${logoRel}
 </Relationships>`,
       'word/styles.xml': stylesXml,
       'word/document.xml': docXml,
     };
 
     // Añadir imagen PNG si existe
-    const zip = await buildZip(files, imageBytes, logoBase64);
+    const zip = await buildZip(files, imageBytes);
     const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -4085,7 +4005,7 @@ async function downloadDoc() {
 }
 
 // ── ZIP builder (sin librerías) ───────────────────────────────────
-async function buildZip(files, pngBytes, logoPngBase64) {
+async function buildZip(files, pngBytes) {
   // Use fflate if available, otherwise simple store-only ZIP
   const entries = [];
   const enc = new TextEncoder();
@@ -4113,15 +4033,6 @@ async function buildZip(files, pngBytes, logoPngBase64) {
     const nameBytes = enc.encode('word/media/diagram.png');
     const data = new Uint8Array(pngBytes);
     const crc  = crc32(data);
-    entries.push({name:nameBytes, data, crc, size:data.length});
-  }
-  // Add logo PNG if provided
-  if(logoPngBase64){
-    const nameBytes = enc.encode('word/media/logo.png');
-    const bin = atob(logoPngBase64);
-    const data = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) data[i]=bin.charCodeAt(i);
-    const crc = crc32(data);
     entries.push({name:nameBytes, data, crc, size:data.length});
   }
 
@@ -4661,7 +4572,7 @@ function showRetryToast(attempt, waitMs) {
   const el = document.getElementById('retry-toast');
   if (!el) return;
   const msg = document.getElementById('retry-toast-msg');
-  if (msg) msg.textContent = `Límite de IA alcanzado — reintentando en ${Math.round(waitMs/1000)}s... (${attempt}/${AIQueue._MAX_RETRIES})`;
+  if (msg) msg.textContent = 'Límite de IA — reintentando en ' + Math.round(waitMs/1000) + 's... (' + attempt + '/' + AIQueue._MAX_RETRIES + ')';
   el.style.transform = 'translateX(-50%) translateY(0)';
   el.style.opacity = '1';
 }
