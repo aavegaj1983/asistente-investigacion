@@ -2186,17 +2186,24 @@ function renderContent(){
       } else {
         if(f.key === 'planteamiento') {
           const raw = state.edited[f.key] || '';
-          // Split by numbered items: "1. texto 2. texto..."
-          const paras = raw.split(/(?=\s*\d+\.\s+)/).map(p => p.trim()).filter(Boolean);
+          // Try multiple split patterns: "1. " "1) " "Párrafo 1" "**1."
+          var paras = [];
+          if(/\s*[1-9][\.\)]\s/.test(raw)) {
+            // Numbered: "1. texto 2. texto"
+            paras = raw.split(/(?=\s*[1-9][\.\)]\s)/).map(p => p.trim()).filter(Boolean);
+          } else if(/PÁRRAFO\s+[1-9]/i.test(raw)) {
+            // "PÁRRAFO 1 — ..."
+            paras = raw.split(/(?=PÁRRAFO\s+[1-9])/i).map(p => p.trim()).filter(Boolean);
+          }
           if(paras.length > 1) {
             h += '<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:14px">';
             paras.forEach(p => {
-              // Remove leading number like "1. "
-              const text = p.replace(/^\d+\.\s*/, '');
+              const text = p.replace(/^[1-9][\.\)]\s*/, '').replace(/^PÁRRAFO\s+[1-9][^\—\-]*[\—\-]\s*/i, '');
               h += '<li style="font-size:15px;line-height:1.75;color:#1e293b;padding-left:4px">' + text + '</li>';
             });
             h += '</ol>';
           } else {
+            // Fallback: split by sentences ending in period + capital — not ideal but better than wall of text
             h += '<p style="line-height:1.75">' + raw + '</p>';
           }
         } else {
@@ -3465,7 +3472,8 @@ CAMPOS OBLIGATORIOS — todos son necesarios, no omitas ninguno:
    PÁRRAFO 3 — A quiénes afecta y cuánto: Orienta al tesista para que describa específicamente cómo afecta "${efectiveProblema()}" a ${getPoblacionCompleta()}, qué consecuencias tiene, con qué magnitud y frecuencia ocurre. Sugiere fuentes estadísticas concretas y pertinentes (nacionales o internacionales) donde puede encontrar cifras actualizadas sobre este problema en esta población.
    PÁRRAFO 4 — Vacío de conocimiento y relevancia de las variables: Indica que debe argumentar por qué es necesario estudiar la relación entre ${variablesList.join(', ')} en este contexto. Señala qué se sabe y qué no se sabe aún sobre estas variables en la población objetivo. Sugiere que busque en SCOPUS, Redalyc, SciELO o PsycINFO estudios de los últimos 5 años sobre estas variables en poblaciones similares.
    PÁRRAFO 5 — Formulación del problema: Indica que, con todo lo anterior, el tesista debe cerrar el planteamiento con una pregunta de investigación que emerja naturalmente de la evidencia presentada, y que puede usar como base la pregunta generada en este asistente. Recomienda que el planteamiento tenga entre 1 y 2 páginas, con al menos 6-8 referencias citadas en formato APA 7ª edición.
-   REGLA: Escribe cada párrafo como una guía directa al estudiante (usa "debes", "se recomienda", "es importante que"), no como el planteamiento en sí. El tesista redactará su propio planteamiento siguiendo estas recomendaciones.
+   REGLA CRÍTICA DE FORMATO: El campo "planteamiento" DEBE comenzar con "1." y cada párrafo DEBE iniciar con su número seguido de punto: "1. texto... 2. texto... 3. texto... 4. texto... 5. texto..." — NUNCA uses saltos de párrafo sin número, NUNCA fusiones los 5 párrafos en uno solo. Si no sigues este formato exacto, el resultado será inutilizable.
+   REGLA DE CONTENIDO: Escribe cada párrafo como una guía directa al estudiante (usa "debes", "se recomienda", "es importante que"), no como el planteamiento en sí.
 
 Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicaciones:
 {"tema":"...","pregunta":"...","objetivo":"...","obj_esp1":"...","obj_esp2":"...","obj_esp3":"...","hipotesis":"...","planteamiento":"..."}`;
@@ -3884,6 +3892,28 @@ async function downloadDoc() {
       ${getRefsFiltradas().map(r => refItem(r.cita, r.nota)).join('')}
       ${aiRefsSection}`;
 
+    // ── Logo PNG para encabezado ────────────────────────────────────
+    let headerLogoBase64 = '';
+    let headerLogoRel = '';
+    let headerLogoXml = '';
+    try {
+      const svgStr = '<svg viewBox="0 0 32 50" xmlns="http://www.w3.org/2000/svg" width="64" height="100"><rect width="32" height="50" rx="8" fill="#4F46E5"/><path d="M16 3 C11 3,5 6,3 12 C1 17,2 22,5 26 C7 28,8 30,8 33 L16 36 Z" fill="white"/><path d="M16 3 C21 3,27 6,29 12 C31 17,30 22,27 26 C25 28,24 30,24 33 L16 36 Z" fill="white"/><line x1="16" y1="4" x2="16" y2="34" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/><circle cx="16" cy="22" r="2.8" fill="#4F46E5"/><path d="M15 34 Q12 37,11 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M17 34 Q20 37,21 40" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/><ellipse cx="16" cy="43" rx="3.5" ry="4.5" fill="white"/><circle cx="16" cy="42" r="1.4" fill="#4F46E5"/></svg>';
+      const blob = new Blob([svgStr], {type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload=res; img.onerror=rej; img.src=url; });
+      const canvas = document.createElement('canvas');
+      canvas.width = 40; canvas.height = 62;
+      canvas.getContext('2d').drawImage(img, 0, 0, 40, 62);
+      URL.revokeObjectURL(url);
+      headerLogoBase64 = canvas.toDataURL('image/png').split(',')[1];
+      headerLogoRel = '<Relationship Id="rId98" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/header_logo.png"/>';
+      // EMU: 40px * 9144 = 365760 wide, 62px * 9144 = 566928 tall
+      headerLogoXml = '<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="228600" cy="342900"/><wp:docPr id="98" name="hlogo"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="98" name="hlogo"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId98" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="228600" cy="342900"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>';
+    } catch(e) {
+      console.warn('Header logo generation failed:', e.message);
+    }
+
     // ── document.xml ─────────────────────────────────────────────
     const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -3991,28 +4021,28 @@ async function downloadDoc() {
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   ${imageRels}
   <Relationship Id="rId99" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
+  ${headerLogoRel}
 </Relationships>`,
       'word/header1.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+       xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
   <w:p>
     <w:pPr>
       <w:pBdr><w:bottom w:val="single" w:sz="4" w:space="4" w:color="E5E7EB"/></w:pBdr>
-      <w:tabs>
-        <w:tab w:val="right" w:pos="9350"/>
-      </w:tabs>
+      <w:tabs><w:tab w:val="right" w:pos="9350"/></w:tabs>
     </w:pPr>
-    <w:r>
-      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/></w:rPr>
-      <w:t>TesisProLab</w:t>
+    ${headerLogoBase64 ? '<w:r>' + headerLogoXml + '</w:r>' : ''}
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:b/><w:sz w:val="20"/><w:color w:val="4F46E5"/><w:vertAlign w:val="baseline"/></w:rPr>
+      <w:t xml:space="preserve"> TesisProLab</w:t>
     </w:r>
-    <w:r>
-      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="18"/><w:color w:val="C7D2FE"/></w:rPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="18"/><w:color w:val="C7D2FE"/></w:rPr>
       <w:t xml:space="preserve">  ·  Asistente IA para investigación</w:t>
     </w:r>
     <w:r><w:tab/></w:r>
-    <w:r>
-      <w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="9CA3AF"/></w:rPr>
+    <w:r><w:rPr><w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/><w:sz w:val="17"/><w:color w:val="9CA3AF"/></w:rPr>
       <w:t>Desarrollado por Alan A. Vega Jacome</w:t>
     </w:r>
   </w:p>
@@ -4022,7 +4052,7 @@ async function downloadDoc() {
     };
 
     // Añadir imagen PNG si existe
-    const zip = await buildZip(files, imageBytes);
+    const zip = await buildZip(files, imageBytes, headerLogoBase64);
     const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -4039,7 +4069,7 @@ async function downloadDoc() {
 }
 
 // ── ZIP builder (sin librerías) ───────────────────────────────────
-async function buildZip(files, pngBytes) {
+async function buildZip(files, pngBytes, headerLogoPng) {
   // Use fflate if available, otherwise simple store-only ZIP
   const entries = [];
   const enc = new TextEncoder();
@@ -4067,6 +4097,15 @@ async function buildZip(files, pngBytes) {
     const nameBytes = enc.encode('word/media/diagram.png');
     const data = new Uint8Array(pngBytes);
     const crc  = crc32(data);
+    entries.push({name:nameBytes, data, crc, size:data.length});
+  }
+  // Add header logo PNG if provided
+  if(headerLogoPng){
+    const nameBytes = enc.encode('word/media/header_logo.png');
+    const bin = atob(headerLogoPng);
+    const data = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) data[i]=bin.charCodeAt(i);
+    const crc = crc32(data);
     entries.push({name:nameBytes, data, crc, size:data.length});
   }
 
