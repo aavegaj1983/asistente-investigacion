@@ -345,6 +345,7 @@ textarea{min-height:70px;resize:vertical}
 /* ── GENERATE BOX ────────────────────────────────────────────────── */
 .generate-box{text-align:center;padding:36px 0}
 .generate-box p{margin-bottom:28px;font-size:15px;color:var(--gray-500);line-height:1.65}
+
 .btn-generate{
   padding:15px 40px;border-radius:var(--radius-md);
   background:var(--brand);
@@ -2064,7 +2065,7 @@ function renderContent(){
         ${warnHtml}
         ${validationHtml}
         <p>Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
-        <span style="font-size:13px;color:#9CA3AF">Revisa advertencias y validación arriba si las hay.</span></p>
+        <span style="font-size:13px;color:#9CA3AF">Revisa el diagnóstico arriba. Si hay alertas, usa ← Atrás para ajustar.</span></p>
         <button class="btn-generate" onclick="generate()">Generar propuesta</button>
       </div>`;
       return;
@@ -2269,6 +2270,14 @@ function updateNav(){
   const nb=document.getElementById("btn-next");
   nb.disabled=!canNext();
   nb.style.display=state.step===4?"none":"block";
+  // En paso 4 (Metodología): "Verificar y continuar" si hubo alertas previas
+  if(state.step===3) {
+    const tieneAlertas = state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0;
+    const coherenciaBaja = state.aiValidation && state.aiValidation.nivel_coherencia !== 'alta';
+    nb.textContent = (tieneAlertas || coherenciaBaja) ? 'Verificar y continuar →' : 'Siguiente →';
+  } else {
+    nb.textContent = 'Siguiente →';
+  }
 }
 
 function render(){
@@ -2282,9 +2291,17 @@ function nextStep(){
     state.step++;
     render();
     saveState();
-    // Validate at step 4 (pre-generate)
-    if(state.step===4 && !state.aiValidation && !state.aiValidationLoading){
-      validateCoherence();
+    // Validate at step 4: always re-run if coming from step 3 with prior alerts
+    if(state.step===4) {
+      const tieneAlertasPrevias = state.aiValidation && (
+        state.aiValidation.alertas?.length > 0 ||
+        state.aiValidation.nivel_coherencia !== 'alta'
+      );
+      // Re-validar si: nunca se validó, o si había alertas (usuario pudo haber cambiado algo)
+      if(!state.aiValidation || tieneAlertasPrevias) {
+        state.aiValidation = null;
+        validateCoherence();
+      }
     }
     // AI poblaciones: disabled auto-trigger to reduce API calls
     // If user arrives at step 4 with context filled → refresh AI poblaciones if not done yet
@@ -2822,7 +2839,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
   "titulo": "frase corta de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza 1 específica al proyecto","fortaleza 2"],
   "alertas": ["alerta SOLO si hay error metodológico real y grave — si el perfil cualitativo es coherente, usa []"],
-  "sugerencia_clave": "Una sugerencia concreta y accionable para mejorar el proyecto antes de generar"
+  "sugerencia_clave": "Una sugerencia concreta y accionable. Si el problema está en variables o problema, indica 'Regresa al Paso 3'. Si está en nivel/diseño/técnica, indica 'Ajusta en el Paso 4'. Máximo 20 palabras."
 }`;
 
   try {
