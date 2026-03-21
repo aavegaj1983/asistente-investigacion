@@ -2306,8 +2306,29 @@ function renderContent(){
           </div>`;
         }
         if(nv>0){
-          // Enfoque aún no definido en este paso — hint neutro según número de variables
-          h+=`<div class="hint">${NIVEL_HINT[nv] || '💡 Con '+nv+' aspectos tienes un perfil sólido. Define el enfoque en el siguiente paso para ver las opciones metodológicas.'}</div>`;
+          // Detección de multicolinealidad en tiempo real en paso 3
+          const varsSelStep3 = state.variables.filter(v => v !== 'otro');
+          const conflictosStep3 = detectarMulticolinealidad(varsSelStep3);
+          const hayConflictosStep3 = Object.keys(conflictosStep3).length > 0;
+
+          if(hayConflictosStep3) {
+            const paresConflicto = [];
+            const vistos = new Set();
+            varsSelStep3.forEach(v => {
+              if(conflictosStep3[v]) {
+                conflictosStep3[v].forEach(v2 => {
+                  const par = [v,v2].sort().join('|');
+                  if(!vistos.has(par)) { vistos.add(par); paresConflicto.push([v,v2]); }
+                });
+              }
+            });
+            h+=`<div class="hint warning" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E">
+              ⚠️ <strong>Posible multicolinealidad:</strong> ${paresConflicto.map(([a,b]) => `<em>${a}</em> y <em>${b}</em>`).join('; ')} miden aspectos muy similares. Considera conservar solo una o elegir constructos más distintos.
+            </div>`;
+          } else {
+            // Hint neutro de cantidad
+            h+=`<div class="hint">${NIVEL_HINT[nv] || '💡 Con '+nv+' aspectos tienes un perfil sólido. Define el enfoque en el siguiente paso para ver las opciones metodológicas.'}</div>`;
+          }
         }
         if(state.variables.includes('otro')){
           // Enfoque aún no definido en este paso — placeholder neutro
@@ -2841,7 +2862,7 @@ function renderContent(){
     // PDF activo solo cuando: referencias y instrumentos/técnicas ya cargaron
     const refsListas  = !state.aiReferenciasLoading && state.aiReferencias !== null;
     const stepsListas = state.aiNextSteps !== null;
-    const defsListas  = state.aiVarDefinitions !== null;
+    const defsListas  = state.aiVarDefinitions !== null;  // null=loading, []=failed(ok), [...]= ready
     const pdfListo    = refsListas && stepsListas && defsListas;
     if(pdfListo) {
       h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
@@ -4671,7 +4692,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
 // ── PDF GENERATOR ──────────────────────────────────────────────────
 async function downloadPDF() {
   // Guard: if AI sections not ready, wait up to 30s before proceeding
-  if(!state.aiNextSteps || !state.aiReferencias || !state.aiVarDefinitions) {
+  if(!state.aiNextSteps || !state.aiReferencias || state.aiVarDefinitions === null) {
     const btn = document.querySelector('.btn-download');
     if(btn){ btn.innerHTML='⏳ Esperando contenido IA...'; }
     let waited = 0;
@@ -5131,11 +5152,37 @@ async function downloadDoc() {
     const secInstr  = hasInstruments ? (++secN) : 0;
     const secRefs   = ++secN;
 
+    // Build summary table: variable → instrument name (static + AI)
+    const allInstrRows = vars.map(v => {
+      const staticI = findInstrumento(v);
+      if(staticI) return tableRow(xe(v), xe(staticI.nombre));
+      const aiI = aiInstrList.find(i => i.variable && i.variable.toLowerCase().trim() === v.toLowerCase().trim());
+      if(aiI) return tableRow(xe(v), xe(aiI.instrumento||''));
+      return null;
+    }).filter(Boolean);
+    const instrResumenTable = allInstrRows.length > 0 ? `
+      <w:tbl>
+        <w:tblPr><w:tblW w:w="7000" w:type="dxa"/>
+          <w:tblBorders>
+            <w:top w:val="single" w:sz="4" w:color="DDD6FE"/>
+            <w:left w:val="single" w:sz="4" w:color="DDD6FE"/>
+            <w:bottom w:val="single" w:sz="4" w:color="DDD6FE"/>
+            <w:right w:val="single" w:sz="4" w:color="DDD6FE"/>
+            <w:insideH w:val="single" w:sz="4" w:color="DDD6FE"/>
+            <w:insideV w:val="single" w:sz="4" w:color="DDD6FE"/>
+          </w:tblBorders>
+        </w:tblPr>
+        ${tableRow(state.enfoque==='Cualitativo'?'Categoría':'Variable', 'Instrumento / Técnica')}
+        ${allInstrRows.join('')}
+      </w:tbl>
+      ${emptyPara(80)}` : '';
+
     const instrSectionXml = hasInstruments ? `
       ${heading(secInstr+'. TÉCNICAS E INSTRUMENTOS DE RECOLECCIÓN','7C3AED')}
       <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
           <w:t>Los siguientes instrumentos han sido identificados para las variables del proyecto. Verifique disponibilidad y propiedades psicométricas para su contexto específico antes de aplicar.</w:t></w:r></w:p>
+      ${instrResumenTable}
       ${instrDetailXml}` : '';
     const nextN = secPasos;
 
@@ -5277,11 +5324,11 @@ async function downloadDoc() {
     const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
       ? state.aiNextSteps.map(s => String(s).replace(/<[^>]+>/g,'').trim())
       : [
-          'Busqueda bibliografica: Consulta SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc usando palabras clave de tus variables en espanol e ingles, filtrando por los ultimos 5 anos. Revisa al menos 15-20 articulos sobre el problema y la poblacion de tu proyecto.',
-          'Instrumentos de recoleccion: Verifica la disponibilidad de los instrumentos identificados para tu poblacion especifica. Si falta alguno, busca en PsycTESTS o Mental Measurements Yearbook. Para disenos cualitativos, disenha el guion de entrevista o grupo focal basado en tus categorias de analisis.',
-          'Aspectos eticos y acceso a la poblacion: Tramita los permisos ante la institucion donde recolectaras datos, elabora el consentimiento informado y, si corresponde, solicita aval de un comite de etica universitario.',
-          'Analisis de datos: Ejecuta el analisis con el software adecuado segun tu tecnica (SPSS/R para cuantitativo, ATLAS.ti o NVivo para cualitativo, AMOS/Mplus para SEM). Reporta los estadisticos o categorias emergentes segun normas APA 7.',
-          'Difusion de resultados: Prepara los resultados en formato de articulo cientifico para presentar en un congreso nacional de psicologia o publicar en una revista indexada peruana o latinoamericana.'
+          'Búsqueda bibliográfica: Consulta SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc usando palabras clave de tus variables en español e inglés, filtrando por los últimos 5 años. Revisa al menos 15-20 artículos sobre el problema y la población de tu proyecto.',
+          'Instrumentos de recolección: Verifica la disponibilidad de los instrumentos identificados para tu población específica. Si falta alguno, busca en PsycTESTS o Mental Measurements Yearbook. Para diseños cualitativos, diseña el guion de entrevista o grupo focal basado en tus categorías de análisis.',
+          'Aspectos éticos y acceso a la población: Tramita los permisos ante la institución donde recolectarás datos, elabora el consentimiento informado y, si corresponde, solicita aval de un comité de ética universitario.',
+          'Análisis de datos: Ejecuta el análisis con el software adecuado según tu técnica (SPSS/R para cuantitativo, ATLAS.ti o NVivo para cualitativo, AMOS/Mplus para SEM). Reporta los estadísticos o categorías emergentes según normas APA 7.',
+          'Difusión de resultados: Prepara los resultados en formato de artículo científico para presentar en un congreso nacional de psicología o publicar en una revista indexada peruana o latinoamericana.'
         ];
     return steps.map((s, i) => stepItem(i+1, s)).join('\n  ');
   })()}
