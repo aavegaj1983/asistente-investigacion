@@ -1918,8 +1918,10 @@ function canNext(){
     if(state.variables.includes('otro')) {
       return state.variables.length>0 && state.variablesOtro.trim()!=="";
     }
-    // Caso normal: problema seleccionado y al menos una variable
-    return state.problema!=="" && state.variables.length>0;
+    // Caso normal: problema seleccionado y al menos una variable seleccionada
+    // También válido si hay variables de texto libre
+    const tieneVarsTexto = state.variablesOtro && state.variablesOtro.trim().length > 0;
+    return state.problema!=="" && (state.variables.length>0 || tieneVarsTexto);
   }
   if(s===3){
     // Cualitativo: solo necesita diseño (no nivel)
@@ -2239,6 +2241,11 @@ function renderContent(){
         h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
         h+=`</div>`;
         const nv=state.variables.filter(v => v !== 'otro').length;
+        if(nv===0 && vars.length>0){
+          h+=`<div class="hint" style="color:#DC2626;background:#FEF2F2;border-color:#FECACA">
+            👆 Selecciona al menos un aspecto para poder continuar
+          </div>`;
+        }
         if(nv>0){
           // Enfoque aún no definido en este paso — hint neutro según número de variables
           h+=`<div class="hint">${NIVEL_HINT[nv] || '💡 Con '+nv+' aspectos tienes un perfil sólido. Define el enfoque en el siguiente paso para ver las opciones metodológicas.'}</div>`;
