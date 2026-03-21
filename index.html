@@ -2740,7 +2740,7 @@ function renderContent(){
     if(pdfListo) {
       h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
     } else {
-      const pdfMsg = !stepsListasas
+      const pdfMsg = !stepsListas
         ? 'Generando instrumentos y técnicas...'
         : !refsListas
           ? 'Generando referencias...'
