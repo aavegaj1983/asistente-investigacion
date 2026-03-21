@@ -2060,8 +2060,17 @@ function renderContent(){
             d.id === 'no-experimental-transversal' || d.id === 'no-experimental-longitudinal'
           );
           notaNivel = `<div class="hint">📌 En nivel <strong>descriptivo</strong> se usan diseños observacionales: <strong>transversal</strong> (un momento en el tiempo) o <strong>longitudinal</strong> (seguimiento de cambios). Los diseños experimentales no aplican porque describir un fenómeno no requiere manipular variables ni probar relaciones causales (Ato et al., 2013).</div>`;
+        } else if(state.nivel === 'correlacional') {
+          // Correlacional → solo no-experimental (transversal o longitudinal)
+          // El nivel correlacional es OBSERVACIONAL por definición (Ato et al., 2013)
+          // Experimental/cuasi-experimental son estrategias MANIPULATIVAS — incompatibles
+          // con medir relaciones naturales entre variables sin intervención
+          disenosDisponibles = disenosTodos.filter(d =>
+            d.id === 'no-experimental-transversal' || d.id === 'no-experimental-longitudinal'
+          );
+          notaNivel = `<div class="hint">📌 El nivel <strong>correlacional / predictivo</strong> es observacional: se miden las relaciones entre variables sin manipularlas. Los diseños experimental y cuasi-experimental implican manipulación activa de la variable independiente, lo cual es incompatible con este nivel (Ato et al., 2013; DCS/DPT/DPL).</div>`;
         }
-        // Correlacional y Explicativo: todos los diseños disponibles (sin filtro)
+        // Explicativo: todos los diseños disponibles (puede usar manipulación para establecer causalidad)
 
         if(notaNivel) h += notaNivel;
         h+=`<div class="options">`;
@@ -2229,71 +2238,46 @@ function renderContent(){
       let cambiosPanelHtml = '';
       if(state._showCambiosPanel && tieneAlertas) {
         const enfoqueKey5 = state.enfoque.toLowerCase();
-        const alertas5 = state.aiValidation.alertas || [];
-        const sugerencia5 = state.aiValidation.sugerencia_clave || '';
-
-        // Detectar qué tipo de cambio necesita según las alertas
+        const alertas5 = (state.aiValidation && state.aiValidation.alertas) || [];
+        const sugerencia5 = (state.aiValidation && state.aiValidation.sugerencia_clave) || '';
         const alertaTexto = alertas5.join(' ').toLowerCase();
-        const necesitaVariables = alertaTexto.includes('variable') || alertaTexto.includes('categoría') || alertaTexto.includes('aspecto') || alertaTexto.includes('multicolineal') || alertaTexto.includes('número');
-        const necesitaNivel = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional') || alertaTexto.includes('descriptivo');
-        const necesitaDiseno = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal') || alertaTexto.includes('experimental');
-        const necesitaTecnica = alertaTexto.includes('técnica') || alertaTexto.includes('regresión') || alertaTexto.includes('mediación') || alertaTexto.includes('moderación') || alertaTexto.includes('sem');
-        // Si no detecta nada específico, muestra todo
-        const mostrarTodo = !necesitaVariables && !necesitaNivel && !necesitaDiseno && !necesitaTecnica;
 
-        // Header con las alertas como guía
-        const alertasGuiaHtml = '<div style="margin-bottom:12px">' +
-          alertas5.map(a => '<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:4px;display:flex;gap:6px"><span>⚠️</span><span>' + a + '</span></div>').join('') +
-          (sugerencia5 ? '<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:6px 10px;border-radius:6px;margin-top:4px;border-left:3px solid #3B82F6">💡 ' + sugerencia5 + '</div>' : '') +
-          '</div>';
+        // Detectar qué secciones mostrar según alertas
+        const necesitaVariables = alertaTexto.includes('variable') || alertaTexto.includes('categoría') || alertaTexto.includes('multicolineal') || alertaTexto.includes('número');
+        const necesitaNivel    = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional');
+        const necesitaDiseno   = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal');
+        const mostrarTodo = !necesitaVariables && !necesitaNivel && !necesitaDiseno;
 
-        // Variables — mostrar solo las seleccionadas actualmente para quitar/agregar
+        // ── Guía de alertas ──────────────────────────────────────
+        const guiaHtml = '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">' +
+          '<strong>¿Qué ajustar?</strong><ul style="margin:4px 0 0 16px;padding:0">' +
+          alertas5.map(a => '<li style="margin-bottom:3px">' + a + '</li>').join('') +
+          (sugerencia5 ? '<li style="color:#1D4ED8;margin-top:4px">💡 ' + sugerencia5 + '</li>' : '') +
+          '</ul></div>';
+
+        // ── Variables ─────────────────────────────────────────────
         let varsHtml5 = '';
         if(necesitaVariables || mostrarTodo) {
           const staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
           const aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(v => typeof v === 'object' ? v.nombre : v) : [];
           const allVars5 = [...new Set([...staticVars5, ...aiVars5])].filter(Boolean);
-        // Extract variables mentioned in alerts for highlighting
-        const alertasTxt = (state.aiValidation && state.aiValidation.alertas || []).join(' ').toLowerCase();
-        const varsMencionadas = allVars5.filter(v => alertasTxt.includes(v.toLowerCase()));
+          const varsMencionadas = allVars5.filter(v => alertaTexto.includes(v.toLowerCase()));
+          if(allVars5.length > 0) {
+            varsHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' +
+              (varsMencionadas.length > 0 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← revisa las marcadas</span>' : '') +
+              '</div><div class="cambios-chip-group">' +
+              allVars5.map(v => {
+                const sel = state.variables.includes(v);
+                const men = varsMencionadas.includes(v);
+                const ve  = v.replace(/'/g, "\\'");
+                const sty = men && sel ? ' style="border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important"' : '';
+                return '<button class="cambios-chip ' + (sel?'sel':'') + '"' + sty + ' onclick="toggleVar(\'' + ve + '\');renderContent()">' + (men&&sel?'⚠️ ':'') + v + (sel?' ✓':'') + '</button>';
+              }).join('') +
+              '</div></div>';
+          }
+        }
 
-        // Guidance from alerts
-        const guiaHtml = (state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0)
-          ? '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">' +
-            '<strong>¿Qué cambiar?</strong><ul style="margin:4px 0 0 16px;padding:0">' +
-            state.aiValidation.alertas.map(a => '<li style="margin-bottom:3px">' + a + '</li>').join('') +
-            (state.aiValidation.sugerencia_clave ? '<li style="color:#1D4ED8;margin-top:4px">💡 ' + state.aiValidation.sugerencia_clave + '</li>' : '') +
-            '</ul></div>'
-          : '';
-
-        // Variables with alert highlighting
-        const varsHtml5guiada = allVars5.length > 0
-          ? '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' +
-            (varsMencionadas.length > 0 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← revisa las marcadas</span>' : '') +
-            '</div><div class="cambios-chip-group">' +
-            allVars5.map(v => {
-              const sel = state.variables.includes(v);
-              const mencionada = varsMencionadas.includes(v);
-              const vesc = v.replace(/'/g, String.fromCharCode(92) + "'");
-              const extraStyle = mencionada && sel ? 'border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important' : '';
-              return '<button class="cambios-chip ' + (sel?'sel':'') + '" ' +
-                (extraStyle ? 'style="' + extraStyle + '"':'') +
-                ' onclick="toggleVar(\'' + vesc + '\');renderContent()">' +
-                (mencionada && sel ? '⚠️ ' : '') + v + (sel?' ✓':'') + '</button>';
-            }).join('') + '</div></div>'
-          : '';
-
-        cambiosPanelHtml = '<div class="cambios-panel">' +
-          '<div class="cambios-panel-title">✏️ Ajusta tu metodología</div>' +
-          guiaHtml +
-          varsHtml5guiada + nivelHtml5 + disenoHtml5 +
-          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
-            '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
-            '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cancelar</button>' +
-          '</div></div>';
-      }
-
-        // Nivel (solo cuantitativo/mixto)
+        // ── Nivel ─────────────────────────────────────────────────
         let nivelHtml5 = '';
         if((necesitaNivel || mostrarTodo) && state.enfoque !== 'Cualitativo') {
           nivelHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
@@ -2301,26 +2285,26 @@ function renderContent(){
             '</div></div>';
         }
 
-        // Diseño
+        // ── Diseño ────────────────────────────────────────────────
         let disenoHtml5 = '';
         if(necesitaDiseno || mostrarTodo) {
           const disenos5 = DISENOS[enfoqueKey5] || [];
           if(disenos5.length > 0) {
-            disenoHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Diseño de investigación</div><div class="cambios-chip-group">' +
-              disenos5.map(d => { const desc = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + desc + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
+            disenoHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Diseño</div><div class="cambios-chip-group">' +
+              disenos5.map(d => { const de = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + de + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
               '</div></div>';
           }
         }
 
         cambiosPanelHtml = '<div class="cambios-panel">' +
           '<div class="cambios-panel-title">✏️ ¿Qué puedes ajustar?</div>' +
-          alertasGuiaHtml +
-          varsHtml5 + nivelHtml5 + disenoHtml5 +
+          guiaHtml + varsHtml5 + nivelHtml5 + disenoHtml5 +
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
             '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cerrar</button>' +
           '</div></div>';
       }
+
 
       el.innerHTML=`<div class="generate-box">
         ${warnHtml}
