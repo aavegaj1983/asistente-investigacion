@@ -161,6 +161,8 @@ h2 span{color:var(--brand)}
   color:var(--brand-dark);font-weight:600;
   box-shadow:0 0 0 3px rgba(79,70,229,.12),var(--shadow-md);
 }
+.badge-priority{border-color:#A7F3D0;background:#F0FDF4}
+.badge-priority:hover{border-color:#059669;background:#ECFDF5;color:#065F46}
 .badge-title{font-weight:600;margin-bottom:2px;color:inherit}
 .badge-desc{font-size:12px;color:var(--gray-500);margin-top:3px;line-height:1.4}
 .badge-hint{
@@ -679,24 +681,46 @@ const POBLACIONES = {
 };
 
 const PROBLEMAS = {
-  clinica:["Ansiedad y estrés","Depresión","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia"],
-  educativa:["Rendimiento académico","Motivación y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Deserción escolar","Estilos de aprendizaje"],
-  organizacional:["Estrés laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfacción y compromiso laboral","Desempeño","Bienestar en el trabajo"],
-  social:["Exclusión e identidad social","Convivencia y cohesión comunitaria","Violencia de género","Resiliencia comunitaria","Prejuicios y discriminación","Participación ciudadana"],
-  deporte:["Ansiedad competitiva","Motivación deportiva","Cohesión de equipo","Lesiones y recuperación","Rendimiento bajo presión","Burnout deportivo"],
-  consumidor:["Decisión de compra","Lealtad a marcas","Publicidad y persuasión","Consumo impulsivo","Influencia de redes sociales","Satisfacción del cliente"],
-  juridica:["Testimonio y memoria","Victimización","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilación criminal"],
-  ambiental:["Conducta proambiental","Estrés por hacinamiento","Apego al lugar","Contaminación acústica","Espacios verdes y bienestar","Comportamiento sostenible"],
-  positiva:["Felicidad y bienestar","Gratitud","Optimismo","Fortalezas personales","Sentido de vida","Resiliencia"],
-  "pareja-familia":["Comunicación de pareja","Conflicto familiar","Satisfacción marital","Crianza positiva","Divorcio y separación","Violencia intrafamiliar"],
-  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor crónico","Estilos de vida saludables","Ansiedad ante procedimientos"],
-  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transición a la adultez","Envejecimiento exitoso","Desarrollo moral"],
-  neuropsicologia:["Funciones ejecutivas","Memoria","Atención y concentración","Rehabilitación cognitiva","Deterioro cognitivo","Lenguaje"],
-  adicciones:["Trastorno por uso de sustancias","Trastorno por uso de videojuegos","Recaída","Craving","Comorbilidad psiquiátrica","Uso problemático de redes sociales"],
-  digital:["Uso problemático de redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Dependencia al smartphone","Identidad digital","Relaciones online"],
-  emergencias:["Estrés postraumático","Resiliencia post-desastre","Primeros auxilios psicológicos","Duelo traumático","Pánico y evacuación","Intervención en crisis"],
-  transcultural:["Aculturación","Choque cultural","Identidad étnica","Discriminación percibida","Estrés de aculturación","Integración social"],
+  clinica:["Ansiedad y estrés","Depresión","Autoestima y bienestar","Adicciones","Trauma y violencia","Salud mental post-pandemia","Soledad y aislamiento social","Duelo y pérdidas","Trastornos del sueño","Regulación emocional"],
+  educativa:["Rendimiento académico","Motivación y aprendizaje","Acoso escolar (bullying)","Habilidades socioemocionales","Deserción escolar","Estilos de aprendizaje","Ansiedad ante exámenes","Procrastinación académica","Autoeficacia académica","Bienestar estudiantil"],
+  organizacional:["Estrés laboral y burnout","Clima y cultura organizacional","Liderazgo","Satisfacción y compromiso laboral","Desempeño","Bienestar en el trabajo","Inteligencia emocional en el trabajo","Acoso laboral (mobbing)","Trabajo remoto y salud mental","Gestión del cambio organizacional"],
+  social:["Exclusión e identidad social","Convivencia y cohesión comunitaria","Violencia de género","Resiliencia comunitaria","Prejuicios y discriminación","Participación ciudadana","Pobreza y salud mental","Migración y bienestar","Redes de apoyo social","Estigma social"],
+  deporte:["Ansiedad competitiva","Motivación deportiva","Cohesión de equipo","Lesiones y recuperación","Rendimiento bajo presión","Burnout deportivo","Fortaleza mental","Autoconfianza deportiva","Concentración y atención deportiva","Comunicación entrenador-deportista"],
+  consumidor:["Decisión de compra","Lealtad a marcas","Publicidad y persuasión","Consumo impulsivo","Influencia de redes sociales","Satisfacción del cliente","Bienestar del consumidor","Comportamiento de compra online","Experiencia de usuario","Identidad del consumidor"],
+  juridica:["Testimonio y memoria","Victimización","Reincidencia delictiva","Credibilidad del testigo","Violencia intrafamiliar","Perfilación criminal","Evaluación de daño psicológico","Mediación y resolución de conflictos","Psicología penitenciaria","Toma de decisiones judiciales"],
+  ambiental:["Conducta proambiental","Estrés por hacinamiento","Apego al lugar","Contaminación acústica","Espacios verdes y bienestar","Comportamiento sostenible","Percepción de riesgo ambiental","Identidad de lugar","Movilidad urbana y bienestar","Diseño urbano y salud mental"],
+  positiva:["Felicidad y bienestar","Gratitud","Optimismo","Fortalezas personales","Sentido de vida","Resiliencia","Autocompasión","Flow (experiencia óptima)","Mindfulness y bienestar","Crecimiento postraumático"],
+  "pareja-familia":["Comunicación de pareja","Conflicto familiar","Satisfacción marital","Crianza positiva","Divorcio y separación","Violencia intrafamiliar","Apego adulto","Coparentalidad","Funcionamiento familiar","Vínculos intergeneracionales"],
+  salud:["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Dolor crónico","Estilos de vida saludables","Ansiedad ante procedimientos","Autopercepción de salud","Miedo a la muerte","Bienestar en enfermedades crónicas","Comunicación médico-paciente"],
+  desarrollo:["Apego temprano","Desarrollo cognitivo","Identidad en adolescencia","Transición a la adultez","Envejecimiento exitoso","Desarrollo moral","Identidad en la vejez","Duelo en el ciclo vital","Adaptación a la jubilación","Bienestar en la tercera edad"],
+  neuropsicologia:["Funciones ejecutivas","Memoria","Atención y concentración","Rehabilitación cognitiva","Deterioro cognitivo","Lenguaje","Velocidad de procesamiento","Percepción y cognición social","Neuropsicología del envejecimiento","Evaluación neuropsicológica"],
+  adicciones:["Trastorno por uso de sustancias","Trastorno por uso de videojuegos","Recaída","Craving","Comorbilidad psiquiátrica","Uso problemático de redes sociales","Adicción al trabajo","Juego patológico","Prevención de recaídas","Motivación para el cambio"],
+  digital:["Uso problemático de redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Dependencia al smartphone","Identidad digital","Relaciones online","Desinformación y salud mental","Bienestar digital","Tecnología y soledad","Brecha digital y exclusión"],
+  emergencias:["Estrés postraumático","Resiliencia post-desastre","Primeros auxilios psicológicos","Duelo traumático","Pánico y evacuación","Intervención en crisis","Fatiga por compasión","Apoyo psicosocial comunitario","Memoria traumática","Recuperación post-crisis"],
+  transcultural:["Aculturación","Choque cultural","Identidad étnica","Discriminación percibida","Estrés de aculturación","Integración social","Bilingüismo y cognición","Identidad bicultural","Racismo y salud mental","Nostalgia cultural"],
   otro:[],
+};
+
+// Problemas prioritarios por población (van primero y con estrella)
+// Basado en prevalencia epidemiológica en cada grupo etario/poblacional
+const PROBLEMAS_PRIORITARIOS = {
+  // Clínica
+  "Adultos mayores":        ["Depresión","Soledad y aislamiento social","Duelo y pérdidas","Trastornos del sueño","Ansiedad y estrés","Salud mental post-pandemia"],
+  "Niños y adolescentes":   ["Ansiedad y estrés","Autoestima y bienestar","Trauma y violencia","Regulación emocional","Depresión"],
+  "Adultos en general":     ["Ansiedad y estrés","Depresión","Adicciones","Trauma y violencia","Regulación emocional"],
+  "Personas con diagnóstico de trastornos específicos": ["Regulación emocional","Autoestima y bienestar","Trastornos del sueño","Salud mental post-pandemia"],
+  "Cuidadores y familias":  ["Burnout del cuidador","Ansiedad y estrés","Duelo y pérdidas","Salud mental post-pandemia"],
+  // Educativa
+  "Estudiantes universitarios": ["Ansiedad ante exámenes","Procrastinación académica","Autoeficacia académica","Bienestar estudiantil","Motivación y aprendizaje"],
+  "Estudiantes de secundaria":  ["Acoso escolar (bullying)","Identidad en adolescencia","Ansiedad ante exámenes","Motivación y aprendizaje"],
+  "Docentes":                   ["Estrés laboral y burnout","Bienestar estudiantil","Acoso escolar (bullying)","Clima escolar"],
+  // Organizacional
+  "Trabajadores del sector público": ["Estrés laboral y burnout","Satisfacción y compromiso laboral","Acoso laboral (mobbing)","Bienestar en el trabajo"],
+  "Personal de salud":               ["Burnout deportivo","Estrés laboral y burnout","Fatiga por compasión","Acoso laboral (mobbing)"],
+  // Desarrollo
+  "Adultos mayores (desarrollo)":    ["Envejecimiento exitoso","Identidad en la vejez","Adaptación a la jubilación","Bienestar en la tercera edad","Duelo en el ciclo vital"],
+  // Neuropsicología
+  "Adultos mayores (neuro)":         ["Deterioro cognitivo","Neuropsicología del envejecimiento","Memoria","Funciones ejecutivas","Atención y concentración"],
 };
 
 const VARIABLES = {
@@ -1631,8 +1655,9 @@ function canNext(){
   return true;
 }
 
-function badge(label, active, click){
-  return `<button class="badge ${active?'active':''}" onclick="${click}">${label}</button>`;
+function badge(label, active, click, priority=false){
+  const starHtml = priority && !active ? '<span style="color:#059669;font-size:10px;margin-right:3px">⭐</span>' : '';
+  return `<button class="badge ${active?'active':''} ${priority&&!active?'badge-priority':''}" onclick="${click}">${starHtml}${label}</button>`;
 }
 
 function badgeWithDesc(title, desc, hint, active, click, recommended=false){
@@ -1831,10 +1856,22 @@ function renderContent(){
     let h=sectionLabel("¿Qué problema o fenómeno quieres investigar?");
     const probs=state.area&&state.area!=="otro"?PROBLEMAS[state.area]:[];
     if(probs.length>0){
+      // Determinar prioritarios según la población seleccionada
+      const pobActual = state.poblacion === 'otro' ? state.poblacionOtro : state.poblacion;
+      const prioritarios = (PROBLEMAS_PRIORITARIOS[pobActual] || []).filter(p => probs.includes(p));
+      const otros = probs.filter(p => !prioritarios.includes(p));
+      const probsOrdenados = [...prioritarios, ...otros];
+
+      if(prioritarios.length > 0) {
+        h+=`<div style="font-size:11px;color:#059669;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:4px">
+          ⭐ Los primeros son más relevantes para <strong>${pobActual}</strong>
+        </div>`;
+      }
       h+=`<div class="options">`;
-      probs.forEach(p=>{
+      probsOrdenados.forEach(p=>{
         const esc=p.replace(/'/g,"\\'");
-        h+=badge(p, state.problema===p, `selectProblema('${esc}')`);
+        const esPrioritario = prioritarios.includes(p);
+        h+=badge(p, state.problema===p, `selectProblema('${esc}')`, esPrioritario);
       });
       h+=badge("Otro", state.problema==="otro", `selectProblema('otro')`);
       h+=`</div>`;
@@ -2188,40 +2225,100 @@ function renderContent(){
           </button>`
         : '';
 
-      // Panel de cambios inline
+      // Panel de cambios inline — guiado por las alertas específicas
       let cambiosPanelHtml = '';
       if(state._showCambiosPanel && tieneAlertas) {
         const enfoqueKey5 = state.enfoque.toLowerCase();
+        const alertas5 = state.aiValidation.alertas || [];
+        const sugerencia5 = state.aiValidation.sugerencia_clave || '';
 
-        // Variables disponibles
-        const staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
-        const aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(v => typeof v === 'object' ? v.nombre : v) : [];
-        const allVars5 = [...new Set([...staticVars5, ...aiVars5])].filter(Boolean);
+        // Detectar qué tipo de cambio necesita según las alertas
+        const alertaTexto = alertas5.join(' ').toLowerCase();
+        const necesitaVariables = alertaTexto.includes('variable') || alertaTexto.includes('categoría') || alertaTexto.includes('aspecto') || alertaTexto.includes('multicolineal') || alertaTexto.includes('número');
+        const necesitaNivel = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional') || alertaTexto.includes('descriptivo');
+        const necesitaDiseno = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal') || alertaTexto.includes('experimental');
+        const necesitaTecnica = alertaTexto.includes('técnica') || alertaTexto.includes('regresión') || alertaTexto.includes('mediación') || alertaTexto.includes('moderación') || alertaTexto.includes('sem');
+        // Si no detecta nada específico, muestra todo
+        const mostrarTodo = !necesitaVariables && !necesitaNivel && !necesitaDiseno && !necesitaTecnica;
 
-        const varsHtml5 = allVars5.length > 0 ? '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables</div><div class="cambios-chip-group">' +
-          allVars5.map(v => {
-            const sel = state.variables.includes(v);
-            const vesc = v.replace(/'/g, "\\'");
-            return '<button class="cambios-chip ' + (sel?'sel':'') + '" onclick="toggleVar(\'' + vesc + '\');renderContent()">' + v + (sel?' ✓':'') + '</button>';
-          }).join('') + '</div></div>' : '';
+        // Header con las alertas como guía
+        const alertasGuiaHtml = '<div style="margin-bottom:12px">' +
+          alertas5.map(a => '<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:4px;display:flex;gap:6px"><span>⚠️</span><span>' + a + '</span></div>').join('') +
+          (sugerencia5 ? '<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:6px 10px;border-radius:6px;margin-top:4px;border-left:3px solid #3B82F6">💡 ' + sugerencia5 + '</div>' : '') +
+          '</div>';
 
-        // Nivel (no aplica en cualitativo)
-        const nivelHtml5 = state.enfoque !== 'Cualitativo' ? '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
-          NIVELES.map(n => '<button class="cambios-chip ' + (state.nivel===n.id?'sel':'') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id?' ✓':'') + '</button>').join('') +
-          '</div></div>' : '';
+        // Variables — mostrar solo las seleccionadas actualmente para quitar/agregar
+        let varsHtml5 = '';
+        if(necesitaVariables || mostrarTodo) {
+          const staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
+          const aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(v => typeof v === 'object' ? v.nombre : v) : [];
+          const allVars5 = [...new Set([...staticVars5, ...aiVars5])].filter(Boolean);
+        // Extract variables mentioned in alerts for highlighting
+        const alertasTxt = (state.aiValidation && state.aiValidation.alertas || []).join(' ').toLowerCase();
+        const varsMencionadas = allVars5.filter(v => alertasTxt.includes(v.toLowerCase()));
 
-        // Diseño
-        const disenos5 = DISENOS[enfoqueKey5] || [];
-        const disenoHtml5 = disenos5.length > 0 ? '<div class="cambios-section"><div class="cambios-section-label">Diseño</div><div class="cambios-chip-group">' +
-          disenos5.map(d => { const desc = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + desc + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
-          '</div></div>' : '';
+        // Guidance from alerts
+        const guiaHtml = (state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0)
+          ? '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">' +
+            '<strong>¿Qué cambiar?</strong><ul style="margin:4px 0 0 16px;padding:0">' +
+            state.aiValidation.alertas.map(a => '<li style="margin-bottom:3px">' + a + '</li>').join('') +
+            (state.aiValidation.sugerencia_clave ? '<li style="color:#1D4ED8;margin-top:4px">💡 ' + state.aiValidation.sugerencia_clave + '</li>' : '') +
+            '</ul></div>'
+          : '';
+
+        // Variables with alert highlighting
+        const varsHtml5guiada = allVars5.length > 0
+          ? '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' +
+            (varsMencionadas.length > 0 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← revisa las marcadas</span>' : '') +
+            '</div><div class="cambios-chip-group">' +
+            allVars5.map(v => {
+              const sel = state.variables.includes(v);
+              const mencionada = varsMencionadas.includes(v);
+              const vesc = v.replace(/'/g, String.fromCharCode(92) + "'");
+              const extraStyle = mencionada && sel ? 'border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important' : '';
+              return '<button class="cambios-chip ' + (sel?'sel':'') + '" ' +
+                (extraStyle ? 'style="' + extraStyle + '"':'') +
+                ' onclick="toggleVar(\'' + vesc + '\');renderContent()">' +
+                (mencionada && sel ? '⚠️ ' : '') + v + (sel?' ✓':'') + '</button>';
+            }).join('') + '</div></div>'
+          : '';
 
         cambiosPanelHtml = '<div class="cambios-panel">' +
-          '<div class="cambios-panel-title">✏️ Ajusta tu metodología según el diagnóstico</div>' +
-          varsHtml5 + nivelHtml5 + disenoHtml5 +
+          '<div class="cambios-panel-title">✏️ Ajusta tu metodología</div>' +
+          guiaHtml +
+          varsHtml5guiada + nivelHtml5 + disenoHtml5 +
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
             '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cancelar</button>' +
+          '</div></div>';
+      }
+
+        // Nivel (solo cuantitativo/mixto)
+        let nivelHtml5 = '';
+        if((necesitaNivel || mostrarTodo) && state.enfoque !== 'Cualitativo') {
+          nivelHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
+            NIVELES.map(n => '<button class="cambios-chip ' + (state.nivel===n.id?'sel':'') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id?' ✓':'') + '</button>').join('') +
+            '</div></div>';
+        }
+
+        // Diseño
+        let disenoHtml5 = '';
+        if(necesitaDiseno || mostrarTodo) {
+          const disenos5 = DISENOS[enfoqueKey5] || [];
+          if(disenos5.length > 0) {
+            disenoHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Diseño de investigación</div><div class="cambios-chip-group">' +
+              disenos5.map(d => { const desc = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + desc + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
+              '</div></div>';
+          }
+        }
+
+        cambiosPanelHtml = '<div class="cambios-panel">' +
+          '<div class="cambios-panel-title">✏️ ¿Qué puedes ajustar?</div>' +
+          alertasGuiaHtml +
+          varsHtml5 + nivelHtml5 + disenoHtml5 +
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
+            '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cerrar</button>' +
           '</div></div>';
       }
 
@@ -3162,7 +3259,7 @@ Responde SOLO con JSON:
   "titulo": "frase de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza concreta 1","fortaleza concreta 2"],
   "alertas": ["alerta SOLO si hay error real — si todo es coherente devuelve []"],
-  "sugerencia_clave": "Sugerencia de máximo 20 palabras. Indica Regresa al Paso 3 si es de variables/categorías, o Ajusta en el Paso 4 si es de diseño."
+  "sugerencia_clave": "Sugerencia específica de máximo 20 palabras indicando exactamente qué cambiar (ej: qué variable eliminar, qué diseño usar). NO menciones pasos — el usuario puede ajustar directamente."
 }`;
 
   try {
