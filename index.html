@@ -223,6 +223,11 @@ input[type=text]:focus,textarea:focus{
 }
 textarea{min-height:70px;resize:vertical}
 .otro-input{border-color:var(--brand)!important;background:#fff!important}
+.var-validation{margin-top:8px;font-size:12px;line-height:1.7}
+.var-ok{color:#065F46;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
+.var-warn{color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
+.var-error{color:#991B1B;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
+.var-validating{color:#6B7280;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:6px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:8px}
 
 /* ── NAV BUTTONS ─────────────────────────────────────────────────── */
 .nav{
@@ -699,7 +704,7 @@ const VARIABLES = {
   "Cohesión de equipo":["Cohesión grupal","Comunicación","Liderazgo deportivo","Confianza","Rendimiento colectivo"],
   "Lesiones y recuperación":["Bienestar psicológico","Adherencia a rehabilitación","Miedo a re-lesión","Autoeficacia","Apoyo social"],
   "Rendimiento bajo presión":["Ansiedad","Autoeficacia","Concentración","Estrés","Rendimiento deportivo"],
-  "Burnout deportivo":["Burnout","Agotamiento","Despersonalización","Motivación","Satisfacción deportiva"],
+  "Burnout deportivo":["Burnout","Agotamiento","Devaluación del deporte","Motivación","Satisfacción deportiva"],
   "Decisión de compra":["Intención de compra","Actitud hacia marca","Precio percibido","Confianza","Influencia social"],
   "Lealtad a marcas":["Lealtad","Satisfacción","Confianza en marca","Valor percibido","Engagement"],
   "Publicidad y persuasión":["Actitud hacia publicidad","Credibilidad","Persuasión","Atención","Intención de compra"],
@@ -1397,9 +1402,9 @@ Responde SOLO con JSON sin texto adicional:
 }
 
 const NIVEL_HINT = {
-  1:"Con 1 variable se recomienda nivel descriptivo.",
-  2:"Con 2 variables puedes optar por descriptivo o correlacional.",
-  3:"Con 3 o más variables puedes optar por correlacional o explicativo.",
+  1:"Con 1 aspecto del fenómeno el estudio suele ser <strong>descriptivo</strong>. Puedes agregar más para ampliar el alcance.",
+  2:"Con 2 aspectos puedes explorar relaciones entre ellos o profundizar cualitativamente en cada uno.",
+  3:"Con 3 o más aspectos tienes opciones para estudios correlacionales, explicativos o cualitativos en profundidad.",
 };
 
 // CARGAR ESTADO DESDE LOCALSTORAGE
@@ -1502,6 +1507,8 @@ let state = savedState || {
   problemaOtro:"",
   variables:[],
   variablesOtro:"",
+  otroVarsValidation: null,
+  otroVarsValidating: false,
   enfoque:"",
   nivel:"",
   epistemologia:"",
@@ -1819,10 +1826,12 @@ function renderContent(){
     const mostrarVariables = (state.problema && state.problema !== "otro") || problemaConfirmado;
     
     if(mostrarVariables){
-      const labelCategorias = state.enfoque === 'Cualitativo'
-        ? "¿Qué categorías de análisis o ejes temáticos te interesan?"
-        : "¿Qué variables quieres estudiar?";
-      h+=sectionLabel(labelCategorias);
+      // En este paso el enfoque aún no está definido → lenguaje neutro
+      // CHIP-PUCP (2017); Hernández & Mendoza (2018, cap. 3)
+      h+=sectionLabel(
+        "¿Qué aspectos del fenómeno quieres estudiar?",
+        "Según el enfoque que elijas en el siguiente paso serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
+      );
       // Merge static vars with AI-generated vars (AI vars take priority if available)
       const staticVars = state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
       const vars = state.aiVars.length > 0 ? state.aiVars : staticVars;
@@ -1867,14 +1876,33 @@ function renderContent(){
         h+=`</div>`;
         const nv=state.variables.filter(v => v !== 'otro').length;
         if(nv>0){
-          if(state.enfoque === 'Cualitativo') {
-            h+=`<div class="hint success">💡 En investigación cualitativa se trabaja con <strong>categorías de análisis</strong> (ejes temáticos). Selecciona los fenómenos que deseas comprender en profundidad.</div>`;
-          } else if(NIVEL_HINT[nv]) {
-            h+=`<div class="hint">${NIVEL_HINT[nv]}</div>`;
-          }
+          // Enfoque aún no definido en este paso — hint neutro según número de variables
+          h+=`<div class="hint">${NIVEL_HINT[nv] || '💡 Con '+nv+' aspectos tienes un perfil sólido. Define el enfoque en el siguiente paso para ver las opciones metodológicas.'}</div>`;
         }
         if(state.variables.includes('otro')){
-          h+=`<input type="text" class="otro-input" placeholder="Especifica tus variables separadas por comas" value="${state.variablesOtro}" oninput="state.variablesOtro=this.value;updateNav();saveState()"/>`;
+          // Enfoque aún no definido en este paso — placeholder neutro
+          const placeholderOtro = 'Especifica los aspectos que quieres estudiar, separados por comas';
+          h+=`<input type="text" class="otro-input" placeholder="${placeholderOtro}"
+            value="${state.variablesOtro}"
+            oninput="state.variablesOtro=this.value;state.otroVarsValidation=null;state.otroVarsValidating=false;updateNav();saveState()"
+            onblur="validateOtroVars()"
+            onkeypress="if(event.key==='Enter'){this.blur()}"/>`;
+          // Show validation feedback
+          if(state.otroVarsValidating) {
+            h+=`<div class="var-validating"><span style="animation:spin 1s linear infinite;display:inline-block">⏳</span> Verificando ${isQualOtro ? 'categorías' : 'variables'}...</div>`;
+          } else if(state.otroVarsValidation && state.otroVarsValidation.length > 0) {
+            h+=`<div class="var-validation">`;
+            state.otroVarsValidation.forEach(v => {
+              if(v.estado === 'ok') {
+                h+=`<div class="var-ok">✅ <span><strong>${v.nombre}</strong> — ${v.nota}</span></div>`;
+              } else if(v.estado === 'warn') {
+                h+='<div class="var-warn">⚠️ <span><strong>'+v.nombre+'</strong> — '+v.nota+(v.sugerencia ? ' ¿Quisiste decir <strong>'+v.sugerencia+'</strong>?' : '')+'</span></div>';
+              } else {
+                h+='<div class="var-error">❌ <span><strong>'+v.nombre+'</strong> — '+v.nota+(v.sugerencia ? ' Considera usar <strong>'+v.sugerencia+'</strong>.' : '')+'</span></div>';
+              }
+            });
+            h+=`</div>`;
+          }
         }
       } else {
         const placeholderTxt = state.enfoque === 'Cualitativo'
@@ -2312,7 +2340,7 @@ function prevStep(){if(state.step>0){state.step--;render();saveState();}}
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
@@ -2321,7 +2349,16 @@ function selectTecnica(v){state.tecnica=v;state.aiValidation=null;updateNav();re
 
 function toggleVar(v){
   const i=state.variables.indexOf(v);
-  if(i>-1) state.variables.splice(i,1); else state.variables.push(v);
+  if(i>-1) {
+    state.variables.splice(i,1);
+    if(v === 'otro') {
+      state.otroVarsValidation = null;
+      state.otroVarsValidating = false;
+      state.variablesOtro = '';
+    }
+  } else {
+    state.variables.push(v);
+  }
   updateNav();renderContent();saveState();
 }
 function getAIVarName(item){ return typeof item === 'object' ? (item.nombre||'') : String(item||''); }
@@ -2701,6 +2738,69 @@ Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiqu
   }
 }
 
+async function validateOtroVars() {
+  const raw = state.variablesOtro.trim();
+  if(!raw || raw.length < 3) return;
+  const vars = raw.split(',').map(v => v.trim()).filter(Boolean);
+  if(vars.length === 0) return;
+
+  state.otroVarsValidating = true;
+  state.otroVarsValidation = null;
+  if(state.step === 2) renderContent();
+
+  const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
+  const area = efectiveArea() || 'Psicología';
+
+  const prompt = `Eres un metodólogo experto en psicología con dominio de la literatura hispanohablante (Redalyc, SciELO, Psicothema, Revista Iberoamericana).
+
+El estudiante está diseñando una tesis de pregrado en ${area} sobre: "${problema}".
+Nota: el estudiante aún no ha definido el enfoque metodológico. Evalúa cada aspecto/dimensión del fenómeno como constructo psicológico — si es un concepto estudiable, medible o explorable en investigación psicológica.
+
+Evalúa cada aspecto que escribió:
+${vars.map((v,i) => (i+1)+'. "'+v+'"'  ).join('\n')}
+
+
+Para cada una determina:
+- "ok": constructo o dimensión establecida en psicología — medible como variable O explorable como categoría cualitativa
+- "warn": el concepto existe pero el nombre es impreciso o traducción literal del inglés — hay un término canónico en español
+- "error": no es un constructo psicológico reconocido, es demasiado vago, coloquial o no estudiable en pregrado
+
+Responde SOLO con JSON:
+[
+  {
+    "nombre": "nombre exacto como lo escribió el estudiante",
+    "estado": "ok|warn|error",
+    "nota": "explicación breve de máximo 10 palabras — si es ok confirma brevemente su validez",
+    "sugerencia": "nombre canónico en español si estado es warn o error (null si no aplica)"
+  }
+]`;
+
+  try {
+    const res = await AIQueue.fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 500,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = safeParseJSON(text);
+    if(Array.isArray(parsed) && parsed.length > 0) {
+      state.otroVarsValidation = parsed;
+    }
+  } catch(e) {
+    // Silent fail — no bloquear al usuario
+  } finally {
+    state.otroVarsValidating = false;
+    if(state.step === 2) renderContent();
+    saveState();
+  }
+}
+
 async function prefetchAIVars(manualRegen = false) {
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
   if(!problema || state.aiVarsLoading) return;
@@ -2727,15 +2827,25 @@ Perfil del proyecto:
 
 Genera exactamente 8 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan OBLIGATORIAMENTE los 3 criterios siguientes:
 
-CRITERIO 1 — NOMBRE CANÓNICO: debe ser el nombre establecido en la literatura psicológica, no una paráfrasis inventada.
+CRITERIO 1 — NOMBRE CANÓNICO EN ESPAÑOL: debe ser el nombre establecido en la literatura psicológica hispanohablante (Redalyc, SciELO, Psicothema, Rev. Iberoamericana de Psicología del Ejercicio y el Deporte).
   ✅ "Autoeficacia general" (Bandura, 1977; Schwarzer & Jerusalem, 1995)
   ✅ "Locus de control en salud" (Wallston et al., 1978)
+  ✅ "Fortaleza mental" — traducción consolidada de Mental Toughness (Clough et al., 2002) en español
+  ✅ "Rumiación" — no "rumination"
+  ✅ "Regulación emocional" — no "emotion regulation"
+  ✅ "Bienestar psicológico" — no "psychological well-being"
+  ❌ "Dureza mental" — traducción incorrecta, usar "Fortaleza mental"
+  ❌ "Tenacidad" — no es el constructo establecido para Mental Toughness
   ❌ "Control percibido sobre la salud" — paráfrasis sin constructo propio
   ❌ "Motivación intrínseca para el cuidado" — no es un constructo establecido
+  REGLA: Si el constructo tiene traducción consolidada al español en la literatura latinoamericana o española, SIEMPRE usa esa traducción. NUNCA uses calcos literales del inglés si existe término propio en español.
 
-CRITERIO 2 — INSTRUMENTO VALIDADO: debe existir al menos una escala con alpha ≥ .70 en población hispanohablante.
-  ✅ Escala de Autoeficacia General (EAG, Baessler & Schwarzer, 1996)
-  ❌ Variables sin escala propia conocida
+CRITERIO 2 — INSTRUMENTO VALIDADO EN ESPAÑOL: debe existir al menos una escala con alpha ≥ .70 validada en población hispanohablante.
+  ✅ Escala de Autoeficacia General (EAG, Baessler & Schwarzer, 1996; adaptación Sanjuán et al., 2000)
+  ✅ Inventario de Ansiedad Competitiva (CSAI-2, adaptación española Martínez-Santos et al.)
+  ✅ Escala de Fortaleza Mental (MTQ48, adaptación Zurita-Ortega et al., 2018) — NO "Dureza Mental"
+  ✅ ABQ-E — Cuestionario de Burnout del Deportista (Garcés de los Fayos, 1999)
+  ❌ Variables sin escala validada en español conocida
 
 CRITERIO 3 — ANTECEDENTE DIRECTO: debe haber estudios publicados que relacionen esta variable con el problema "${problema}" en poblaciones similares.
 
@@ -2745,6 +2855,9 @@ Para cada variable devuelve un objeto JSON con:
 - "antecedente": 1 frase sobre el antecedente empírico que justifica su relación con "${problema}"
 
 REGLA FINAL: Si no puedes garantizar los 3 criterios para una variable, NO la incluyas. Es mejor devolver 6 variables sólidas que 8 con relleno.
+REGLA ANTI-FANTASMA: NUNCA inventes constructos. Si no recuerdas el nombre exacto en español y su instrumento validado, omite la variable. Una variable inventada o mal traducida perjudica al estudiante.
+REGLA DE IDIOMA: El nombre de la variable SIEMPRE debe ser como aparece en las publicaciones en español. Ejemplos de correcciones obligatorias:
+  "Dureza mental" → "Fortaleza mental" | "Resiliencia de carrera" → "Resiliencia" | "Autocompasión" ✅ es correcto | "Mindfulness" ✅ es aceptado como préstamo | "Engagement" ✅ es aceptado en contexto organizacional
 
 Responde SOLO con JSON sin texto adicional ni markdown:
 [{"nombre":"...","referencia":"...","antecedente":"..."}]`;
@@ -2813,8 +2926,8 @@ async function validateCoherence() {
         ? `Análisis mixto (${disenoLabel})`
         : 'Estadística descriptiva / Sin técnica avanzada';
 
-  const isQual = state.enfoque === 'Cualitativo';
-  const valPrompt = `Eres un metodólogo experto en investigación en psicología que conoce a fondo la taxonomía de Ato, López y Benavente (2013) y el marco CHIP-PUCP (2017) para investigación cualitativa.
+  const isMixto = state.enfoque === 'Mixto';
+  const valPrompt = `Eres un metodólogo experto en investigación en psicología que conoce a fondo la taxonomía de Ato et al. (2013), el marco CHIP-PUCP (2017) y Creswell & Plano Clark (2017).
 
 PERFIL A EVALUAR:
 - Área: ${efectiveArea()}
@@ -2826,41 +2939,52 @@ PERFIL A EVALUAR:
 - Diseño: ${disenoLabel}
 - Técnica: ${tecnicaLabel}
 
-${isQual ? `MARCO TEÓRICO CUALITATIVO OBLIGATORIO (CHIP-PUCP, 2017; Pistrang & Barker, 2012) — estas combinaciones son VÁLIDAS Y COHERENTES:
-• Fenomenológico = entrevistas semi-estructuradas + análisis IPA o Giorgi ✅
-• Análisis temático = entrevistas o grupos focales + Braun & Clarke (2006) ✅
-• Etnográfico = observación participante + entrevistas + documentos ✅
-• Teoría Fundamentada = entrevistas con muestreo teórico + Strauss & Corbin ✅
-• Estudio de Caso = triangulación de fuentes + Yin (2018) ✅
-• Narrativo = entrevistas narrativas + análisis narrativo ✅
-• Investigación-Acción = técnicas participativas + ciclos reflexivos ✅
-
-REGLAS OBLIGATORIAS PARA ENFOQUE CUALITATIVO:
-- Las categorías de análisis NO son variables cuantitativas. NUNCA penalices por número de categorías.
-- La ausencia de hipótesis estadística es CORRECTA — se usan supuestos flexibles (CHIP-PUCP, 2017).
-- No usar estadística es CORRECTO en cualitativo.
-- Contexto geográfico no especificado NO es un error — no es campo de este formulario.
-- Etnografía, Teoría Fundamentada e Investigación-Acción son diseños válidos aunque demanden más recursos.
-  Si el estudiante los eligió conscientemente, son coherentes. Solo menciona su exigencia como fortaleza/desafío, NO como alerta.
-` : `MARCO TEÓRICO CUANTITATIVO OBLIGATORIO (Ato et al., 2013) — estas combinaciones son VÁLIDAS:
+${isQual ? `MARCO TEÓRICO CUALITATIVO (CHIP-PUCP, 2017; Pistrang & Barker, 2012) — combinaciones VÁLIDAS:
+• Fenomenológico + entrevistas semi-estructuradas + análisis IPA o Giorgi ✅
+• Análisis temático + entrevistas/grupos focales + Braun & Clarke (2006) ✅
+• Etnográfico + observación participante + entrevistas + documentos ✅
+• Teoría Fundamentada + entrevistas con muestreo teórico + Strauss & Corbin ✅
+• Estudio de Caso + triangulación de fuentes + Yin (2018) ✅
+• Narrativo + entrevistas narrativas + análisis narrativo ✅
+• Investigación-Acción + técnicas participativas + ciclos reflexivos ✅
+REGLAS OBLIGATORIAS PARA CUALITATIVO:
+- Las categorías NO son variables cuantitativas — NUNCA penalices por número de categorías.
+- Ausencia de hipótesis estadística es CORRECTO — se usan supuestos flexibles.
+- Ausencia de estadística es CORRECTO en cualitativo.
+- Contexto geográfico no especificado NO es error.
+- Etnografía, TF e Investigación-Acción son válidos aunque sean exigentes para pregrado.` :
+isMixto ? `MARCO TEÓRICO MIXTO (Creswell & Plano Clark, 2017) — combinaciones VÁLIDAS:
+• Secuencial Explicativo (CUAN → cual): datos cuant. primero, luego cual. para explicar resultados ✅
+• Secuencial Exploratorio (CUAL → cuan): datos cual. primero, luego cuan. para generalizar ✅
+• Convergente Paralelo (CUAN + CUAL): recolección simultánea, triangulación al final ✅
+• Transformativo: marco crítico guía ambos métodos hacia el cambio social ✅
+• Anidado/Incrustado: un método domina, el otro es secundario dentro del mismo estudio ✅
+REGLAS OBLIGATORIAS PARA MIXTO:
+- El perfil mixto SIEMPRE tiene variables cuantitativas Y puede tener categorías cualitativas — es correcto.
+- El componente cualitativo del diseño mixto NO requiere técnica estadística — es correcto.
+- El nivel (correlacional/explicativo) aplica SOLO al componente cuantitativo del diseño.
+- Contexto geográfico no especificado NO es error.
+- Transformativo e Incrustado son diseños válidos aunque menos comunes.` :
+`MARCO TEÓRICO CUANTITATIVO (Ato et al., 2013) — combinaciones VÁLIDAS:
 • Correlacional + No-exp. transversal + Correlación/Regresión simple = DCS/DPT ✅
 • Explicativo/Causal + No-exp. transversal + Regresión múltiple = DPT ✅
 • Explicativo/Causal + No-exp. transversal + Mediación/Moderación/Path/SEM = DVO/DVL ✅
 • Explicativo/Causal + No-exp. longitudinal + Regresión/Path/SEM = DPL/DLEP ✅
-`}
+REGLAS: Contexto geográfico no especificado NO es error.`}
 
 EVALÚA SOLO ESTOS PROBLEMAS REALES:
-${isQual ? `1. Categorías claramente incoherentes con el problema declarado
-2. Uso de lenguaje cuantitativo en un perfil cualitativo (ej: "medir la relación entre variables")
-3. Mezcla incoherente de paradigmas (ej: fenomenológico + análisis estadístico)` : `1. Variables claramente incoherentes con el problema declarado
+${isQual ? `1. Categorías claramente incoherentes con el problema
+2. Lenguaje cuantitativo en perfil cualitativo (ej: "medir la relación entre variables")
+3. Mezcla incoherente de paradigmas` :
+isMixto ? `1. Variables/categorías incoherentes con el problema
+2. Diseño mixto que no integra realmente ambos enfoques
+3. Inviabilidad clara para pregrado (ej: Transformativo sin marco crítico definido)` :
+`1. Variables incoherentes con el problema
 2. Número de variables inadecuado para la técnica (ej: mediación con 1 variable)
 3. Riesgo de multicolinealidad entre variables muy similares
 4. Inviabilidad clara para pregrado (SEM completo sin justificación)`}
 
-NO alertes por:
-- Contexto geográfico no especificado
-- Cualquier combinación válida del marco teórico listado
-- Cosas que ya están bien elegidas
+NO alertes por: contexto geográfico no especificado, combinaciones válidas del marco teórico, ni cosas que ya están bien.
 
 Responde SOLO con JSON:
 {
@@ -2869,7 +2993,7 @@ Responde SOLO con JSON:
   "titulo": "frase de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza concreta 1","fortaleza concreta 2"],
   "alertas": ["alerta SOLO si hay error real — si todo es coherente devuelve []"],
-  "sugerencia_clave": "Sugerencia de máximo 20 palabras. Si el problema es de categorías/variables indica Regresa al Paso 3. Si es de diseño indica Ajusta en el Paso 4."
+  "sugerencia_clave": "Sugerencia de máximo 20 palabras. Indica Regresa al Paso 3 si es de variables/categorías, o Ajusta en el Paso 4 si es de diseño."
 }`;
 
   try {
