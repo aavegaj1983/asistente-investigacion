@@ -777,6 +777,60 @@ const PARES_MULTICOLINEAL = [
   // Adicciones
   ["Craving","Dependencia"],
   ["Trastorno por uso de sustancias","Dependencia"],
+  // Digital — alta correlación documentada en literatura
+  ["Comparación social","Autoestima"],
+  ["Comparación social online","Autoestima"],
+  ["Identidad digital","Autoconcepto"],
+  ["Identidad online","Autoestima"],
+  ["FOMO (miedo a perderse algo)","Ansiedad"],
+  ["FOMO (miedo a perderse algo)","Autoestima"],
+  ["Uso problemático de redes sociales","Dependencia al smartphone"],
+  ["Ciberacoso","Cyberbullying"],
+  ["Bienestar digital","Bienestar psicológico"],
+  ["Soledad","Aislamiento social"],
+  ["Tecnología y soledad","Soledad"],
+  // Jurídica
+  ["Credibilidad del testigo","Confianza en el testimonio"],
+  ["Exactitud del testimonio","Memoria de testigos oculares"],
+  ["Memoria de fuente","Memoria de testigos oculares"],
+  ["Daño psicológico","Estrés postraumático"],
+  ["Victimización","Estrés postraumático"],
+  // Deporte
+  ["Ansiedad competitiva","Estrés precompetitivo"],
+  ["Autoconfianza deportiva","Autoeficacia"],
+  ["Burnout deportivo","Agotamiento"],
+  ["Rendimiento deportivo","Rendimiento bajo presión"],
+  ["Fortaleza mental","Resiliencia"],
+  // Organizacional
+  ["Burnout","Estrés laboral"],
+  ["Engagement","Satisfacción laboral"],
+  ["Clima organizacional","Cultura organizacional"],
+  ["Desempeño laboral","Rendimiento laboral"],
+  ["Acoso laboral (mobbing)","Estrés laboral"],
+  // Salud
+  ["Calidad de vida","Bienestar psicológico"],
+  ["Adherencia al tratamiento","Autoeficacia en salud"],
+  ["Dolor crónico","Catastrofización"],
+  ["Ansiedad ante la muerte","Miedo a la muerte"],
+  // Positiva
+  ["Optimismo","Esperanza"],
+  ["Gratitud","Bienestar subjetivo"],
+  ["Autocompasión","Autoestima"],
+  ["Flow (experiencia óptima)","Engagement"],
+  ["Crecimiento postraumático","Resiliencia"],
+  // Familia
+  ["Satisfacción marital","Ajuste diádico"],
+  ["Cohesión familiar","Funcionamiento familiar"],
+  ["Comunicación de pareja","Satisfacción marital"],
+  // Ambiental
+  ["Apego al lugar","Identidad de lugar"],
+  ["Conducta proambiental","Comportamiento sostenible"],
+  ["Estrés","Estrés por hacinamiento"],
+  // Neuropsicología
+  ["Atención","Concentración"],
+  ["Memoria","Aprendizaje"],
+  ["Deterioro cognitivo","Demencia"],
+  ["Velocidad de procesamiento","Atención sostenida"],
 ];
 
 // Detecta qué variables seleccionadas colisionan entre sí
@@ -1820,9 +1874,11 @@ const stateDefaults = {
   edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
   aiValidation:null, aiValidationLoading:false, _validationAttempted:false,
+  aiVarDefinitions:null, aiVarDefinitionsLoading:false,
   regenCountPob:0,
   _showCambiosPanel:false, _cambiosPendientes:{nivel:null,diseno:null,tecnica:null,variables:null},
-  aiNextSteps:null, editValidation:null, editValidating:false,
+  aiNextSteps:null,
+  aiVarDefinitions:null, aiVarDefinitionsLoading:false, editValidation:null, editValidating:false,
   aiInstruments:null, aiInstrumentsLoading:false,
   aiPoblaciones:[], aiPoblacionesLoading:false,
   aiReferencias:null, aiReferenciasLoading:false,
@@ -2225,7 +2281,10 @@ function renderContent(){
         </div>`;
       }
 
-      if(vars.length>0 && !state.aiVarsLoading){
+      if(state.aiVarsLoading){
+        // Already showing loading indicator above — just add "Otro" chip below once loaded
+        h+=`<div style="margin-top:8px"><button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button></div>`;
+      } else if(vars.length>0){
         h+=`<div class="chips">`;
         vars.forEach(v=>{
           const nombre = typeof v === 'object' ? (v.nombre||'') : String(v);
@@ -2275,7 +2334,8 @@ function renderContent(){
             h+=`</div>`;
           }
         }
-      } else {
+      } else if(!state.aiVarsLoading) {
+        // No vars and not loading — show free-text fallback
         const placeholderTxt = state.enfoque === 'Cualitativo'
           ? 'Escribe las categorías de análisis separadas por comas (Ej: Identidad cultural, Cohesión grupal, Resignificación)'
           : 'Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)';
@@ -2618,9 +2678,47 @@ function renderContent(){
           }
         }
 
+        // ── Campo "Otro" con verificación en tiempo real ─────────────
+        var currentVarsForCheck = state.variables.filter(function(v){ return v !== 'otro'; });
+        var otroConflictos = {};
+        if(state.variablesOtro && state.variablesOtro.trim()) {
+          var otroVarsList = state.variablesOtro.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
+          // Check each manually entered var against selected vars + other manual vars
+          var allForCheck = currentVarsForCheck.concat(otroVarsList);
+          var allConflictos = detectarMulticolinealidad(allForCheck);
+          otroVarsList.forEach(function(v) {
+            if(allConflictos[v]) otroConflictos[v] = allConflictos[v];
+          });
+        }
+
+        var otroFieldHtml = '<div class="cambios-section">' +
+          '<div class="cambios-section-label">Agregar variable/categoría manualmente</div>' +
+          '<div style="font-size:11px;color:#6B7280;margin-bottom:6px">Escribe separadas por comas. Se verificará multicolinealidad en tiempo real.</div>' +
+          '<input type="text" class="otro-input" style="width:100%;box-sizing:border-box" ' +
+            'placeholder="Ej: Satisfacción con la vida, Bienestar subjetivo" ' +
+            'value="' + (state.variablesOtro||'') + '" ' +
+            'oninput="cambiosOtroInput(this.value)" />';
+
+        if(state.variablesOtro && state.variablesOtro.trim()) {
+          var otroVarsList2 = state.variablesOtro.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
+          if(otroVarsList2.length > 0) {
+            otroFieldHtml += '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">';
+            otroVarsList2.forEach(function(v) {
+              var tieneConflicto = otroConflictos[v] && otroConflictos[v].length > 0;
+              var styOtro = tieneConflicto
+                ? 'background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:12px;padding:3px 10px;font-size:11px'
+                : 'background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:12px;padding:3px 10px;font-size:11px';
+              var tipOtro = tieneConflicto ? ' title="Colisiona con: ' + otroConflictos[v].join(', ') + '"' : '';
+              otroFieldHtml += '<span style="' + styOtro + '"' + tipOtro + '>' + (tieneConflicto ? '🔴 ' : '🟢 ') + v + '</span>';
+            });
+            otroFieldHtml += '</div>';
+          }
+        }
+        otroFieldHtml += '</div>';
+
         cambiosPanelHtml = '<div class="cambios-panel">' +
           '<div class="cambios-panel-title">✏️ ¿Qué puedes ajustar?</div>' +
-          guiaHtml + varsHtml5 + nivelHtml5 + disenoHtml5 +
+          guiaHtml + varsHtml5 + otroFieldHtml + nivelHtml5 + disenoHtml5 +
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
             '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cerrar</button>' +
@@ -2664,6 +2762,7 @@ function renderContent(){
     const fields=[
       {key:"tema",         label:"Título de la investigación", color:"#534AB7", bg:"#EEEDFE"},
       {key:"pregunta",     label:"Pregunta de investigación",color:"#0F6E56", bg:"#E1F5EE"},
+      {key:"__var_definitions__", label:"Definición conceptual de variables", color:"#0369A1", bg:"#F0F9FF"},
       {key:"objetivo",     label:"Objetivo general",          color:"#993C1D", bg:"#FAECE7"},
       {key:"obj_esp1",     label:"Objetivo específico 1",     color:"#B45309", bg:"#FFFBEB"},
       {key:"obj_esp2",     label:"Objetivo específico 2",     color:"#B45309", bg:"#FFFBEB"},
@@ -2740,17 +2839,17 @@ function renderContent(){
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
 
     // PDF activo solo cuando: referencias y instrumentos/técnicas ya cargaron
-    const refsListas = !state.aiReferenciasLoading && state.aiReferencias !== null;
-    const stepsListas  = state.aiNextSteps !== null;
-    const pdfListo   = refsListas && stepsListas;
-
+    const refsListas  = !state.aiReferenciasLoading && state.aiReferencias !== null;
+    const stepsListas = state.aiNextSteps !== null;
+    const defsListas  = state.aiVarDefinitions !== null;
+    const pdfListo    = refsListas && stepsListas && defsListas;
     if(pdfListo) {
       h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
     } else {
-      const pdfMsg = !stepsListas
-        ? 'Generando instrumentos y técnicas...'
-        : !refsListas
-          ? 'Generando referencias...'
+      const pdfMsg = !defsListas
+        ? 'Generando definiciones de variables...'
+        : !stepsListas
+          ? 'Generando instrumentos y técnicas...'
           : 'Preparando PDF...';
       h+=`<button class="btn-sm btn-download" disabled
         style="opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;pointer-events:none"
@@ -2765,6 +2864,28 @@ function renderContent(){
     h+=`<button class="btn-sm btn-nuevo" onclick="nuevoProyecto()" style="border-color:#dc2626;color:#dc2626">🔄 Nuevo proyecto</button>`;
     h+=`</div></div>`;
     fields.forEach(f=>{
+      // Special rendering for variable definitions
+      if(f.key === '__var_definitions__') {
+        if(state.aiVarDefinitionsLoading) {
+          h+=`<div class="result-block" style="background:#F0F9FF;border-left:3px solid #0369A1">
+            <p class="result-block-label" style="color:#0369A1">${f.label}</p>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6B7280">
+              <span style="animation:pulse 1s infinite">🤖</span> Generando definiciones conceptuales...
+            </div>
+          </div>`;
+        } else if(state.aiVarDefinitions && state.aiVarDefinitions.length > 0) {
+          h+=`<div class="result-block" style="background:#F0F9FF;border-left:3px solid #0369A1">
+            <p class="result-block-label" style="color:#0369A1">${f.label}</p>`;
+          state.aiVarDefinitions.forEach(d => {
+            h+=`<div style="margin-bottom:12px;padding:10px 14px;background:#fff;border-radius:8px;border:1px solid #BAE6FD">
+              <p style="font-size:12px;font-weight:700;color:#0369A1;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px">${d.variable}</p>
+              <p style="font-size:13px;color:#111827;margin:0 0 4px;line-height:1.6">${d.definicion} <span style="color:#6B7280;font-style:italic">${d.cita||''}</span></p>
+            </div>`;
+          });
+          h+=`</div>`;
+        }
+        return;
+      }
       h+=`<div class="result-block" style="background:${f.bg}">`;
       h+=`<p class="result-block-label" style="color:${f.color}">${f.label}</p>`;
       if(state.editMode){
@@ -2839,6 +2960,8 @@ function renderContent(){
       </div>`;
       // Trigger async next steps generation
       if(!state.aiNextSteps) generateNextSteps();
+      // Trigger variable definitions generation
+      if(!state.aiVarDefinitions && !state.aiVarDefinitionsLoading) generateVarDefinitions();
     }
 
     // Auto-trigger instruments (qualitative always, quantitative if vars have no static instrument)
@@ -2904,6 +3027,12 @@ function nextStep(){
     // setTimeout(() => prefetchAIPoblaciones(), 1000); // on-demand only via button
   }
 }
+function cambiosOtroInput(val) {
+  state.variablesOtro = val;
+  if(!state.variables.includes('otro')) state.variables.push('otro');
+  renderContent();
+}
+
 function abrirCambiosPanel() {
   state._showCambiosPanel = true;
   state._cambiosPendientes = {nivel: state.nivel, diseno: state.diseno, tecnica: state.tecnica};
@@ -3208,6 +3337,69 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
 }
 
 // ── INTERVENCIÓN 1: Próximos pasos personalizados ──────────────────
+async function generateVarDefinitions() {
+  if(state.aiVarDefinitionsLoading || state.aiVarDefinitions) return;
+  let vars = state.variables.filter(v => v !== 'otro');
+  if(state.variables.includes('otro') && state.variablesOtro.trim())
+    vars = vars.concat(state.variablesOtro.split(',').map(v => v.trim()).filter(Boolean));
+  if(vars.length === 0) return;
+
+  state.aiVarDefinitionsLoading = true;
+  if(state.step === 4 && state.result) renderContent();
+
+  const isQual = state.enfoque === 'Cualitativo';
+  const area = efectiveArea() || 'Psicología';
+
+  const defPrompt = `Eres un psicólogo experto en metodología de la investigación con dominio de la literatura hispanohablante.
+
+Para el proyecto en ${area}, proporciona una definición conceptual BREVE (máximo 2 oraciones) de cada ${isQual ? 'categoría de análisis' : 'variable'}, con su cita principal en formato APA 7.
+
+${isQual ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
+
+REGLAS:
+- Definición en español, máximo 2 oraciones, lenguaje académico accesible
+- Cita el autor/año más reconocido para ese constructo en la literatura hispanohablante o internacional
+- Si es una variable del área ${area}, usa autores específicos de esa área
+- NO inventes citas — si no conoces la referencia exacta, usa el autor seminal del constructo
+- Formato de cita: (Apellido, año) o (Apellido & Apellido, año)
+
+Responde SOLO con JSON:
+[
+  {
+    "variable": "nombre exacto",
+    "definicion": "Definición conceptual breve en español.",
+    "cita": "(Autor, año)",
+    "autor_completo": "Apellido, N. (año). Título breve. Editorial/Revista."
+  }
+]`;
+
+  try {
+    const res = await AIQueue.fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1200,
+        messages: [{role: 'user', content: defPrompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const parsed = safeParseJSON(text);
+    if(Array.isArray(parsed) && parsed.length > 0) {
+      state.aiVarDefinitions = parsed;
+    }
+  } catch(e) {
+    state.aiVarDefinitions = [];
+    console.error('generateVarDefinitions error:', e);
+  } finally {
+    state.aiVarDefinitionsLoading = false;
+    if(state.step === 4 && state.result) renderContent();
+    saveState();
+  }
+}
+
 async function generateNextSteps() {
   if(!state.result || !state.edited) return;
   const enfoqueKey = state.enfoque.toLowerCase();
@@ -4479,7 +4671,7 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
 // ── PDF GENERATOR ──────────────────────────────────────────────────
 async function downloadPDF() {
   // Guard: if AI sections not ready, wait up to 30s before proceeding
-  if(!state.aiNextSteps || !state.aiReferencias) {
+  if(!state.aiNextSteps || !state.aiReferencias || !state.aiVarDefinitions) {
     const btn = document.querySelector('.btn-download');
     if(btn){ btn.innerHTML='⏳ Esperando contenido IA...'; }
     let waited = 0;
@@ -4907,39 +5099,45 @@ async function downloadDoc() {
         <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
           <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Ejemplo: "${xe(instr.ejemplo)}"</w:t></w:r></w:p>`;
       }
-      // Try AI-generated instruments
-      const aiInstr = aiInstrList.find(i => i.variable && i.variable.toLowerCase().trim() === v.toLowerCase().trim());
-      if(aiInstr) {
-        return `
-        ${fieldLabel((state.enfoque==='Cualitativo'?'Categoría: ':'Variable: ')+v)}
+      // Try AI-generated instruments — include ALL instruments for this variable
+      const aiInstrs = aiInstrList.filter(i => i.variable && i.variable.toLowerCase().trim() === v.toLowerCase().trim());
+      if(aiInstrs.length > 0) {
+        const varLabel = state.enfoque==='Cualitativo' ? 'Categoría: ' : 'Variable: ';
+        const instrLabel = state.enfoque==='Cualitativo' ? 'Técnica/Guion: ' : 'Instrumento: ';
+        return fieldLabel(varLabel+v) +
+          aiInstrs.map((aiInstr, idx) => {
+            const optLabel = aiInstrs.length > 1 ? ' (Opción '+(idx+1)+')' : '';
+            return `
         <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
-          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>${state.enfoque==='Cualitativo'?'Técnica/Instrumento: ':'Instrumento: '}</w:t></w:r>
+          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>${xe(instrLabel+optLabel+' ')}</w:t></w:r>
           <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="111827"/></w:rPr><w:t>${xe(aiInstr.instrumento||'')}</w:t></w:r></w:p>
         ${aiInstr.autores ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
           <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Autores: ${xe(aiInstr.autores)}</w:t></w:r></w:p>` : ''}
         ${aiInstr.descripcion ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
           <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>${xe(aiInstr.descripcion)}</w:t></w:r></w:p>` : ''}
         ${aiInstr.nota_peru ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
-          <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="059669"/></w:rPr><w:t>Perú/Latinoamérica: ${xe(aiInstr.nota_peru)}</w:t></w:r></w:p>` : '<w:p><w:pPr><w:spacing w:after="120"/></w:pPr></w:p>'}`;
+          <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="059669"/></w:rPr><w:t>🇵🇪 ${xe(aiInstr.nota_peru)}</w:t></w:r></w:p>` : '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'}`;
+          }).join('');
       }
       return '';
     }).join('');
 
     const hasInstruments = instrDetailXml.trim().length > 0;
 
-    // ── Section numbers (imageXml is now fully set) ───────────────
-    const secModelo = imageXml ? 3 : 0;
-    const secPasos  = imageXml ? 4 : 3;
-    const secInstr  = hasInstruments ? (imageXml ? 5 : 4) : 0;
+    // ── Section numbers — always sequential, no gaps ─────────────
+    let secN = 2;
+    const secModelo = imageXml ? (++secN) : 0;
+    const secPasos  = ++secN;
+    const secInstr  = hasInstruments ? (++secN) : 0;
+    const secRefs   = ++secN;
+
     const instrSectionXml = hasInstruments ? `
       ${heading(secInstr+'. TÉCNICAS E INSTRUMENTOS DE RECOLECCIÓN','7C3AED')}
       <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
-          <w:t>Los siguientes instrumentos han sido validados en población hispanohablante y son coherentes con las variables seleccionadas. Verifique la validez y confiabilidad para su contexto específico.</w:t></w:r></w:p>
+          <w:t>Los siguientes instrumentos han sido identificados para las variables del proyecto. Verifique disponibilidad y propiedades psicométricas para su contexto específico antes de aplicar.</w:t></w:r></w:p>
       ${instrDetailXml}` : '';
     const nextN = secPasos;
-
-    const secRefs  = secInstr ? secInstr + 1 : (imageXml ? 4 : 3);
 
     // ── Referencias bibliográficas XML ──────────────────────────
     const refItem = (cita, nota) => {
@@ -5020,6 +5218,19 @@ async function downloadDoc() {
   ${heading('1. ELEMENTOS DE LA INVESTIGACIÓN')}
   ${fieldLabel('Título de la Investigación')}${fieldValue(state.edited.tema)}
   ${fieldLabel('Pregunta de Investigación')}${fieldValue(state.edited.pregunta)}
+  ${(() => {
+    const defs = state.aiVarDefinitions;
+    if(!defs || defs.length === 0) return '';
+    const isQual = state.enfoque === 'Cualitativo';
+    const defLabel = isQual ? 'Definición de Categorías de Análisis' : 'Definición Conceptual de Variables';
+    return fieldLabel(defLabel) +
+      defs.map(d =>
+        `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="60"/></w:pPr>
+          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="0369A1"/></w:rPr><w:t xml:space="preserve">${xe(d.variable)}: </w:t></w:r>
+          <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="374151"/></w:rPr><w:t xml:space="preserve">${xe(d.definicion||'')} </w:t></w:r>
+          <w:r><w:rPr><w:i/><w:sz w:val="19"/><w:color w:val="6B7280"/></w:rPr><w:t>${xe(d.cita||'')}</w:t></w:r></w:p>`
+      ).join('');
+  })()}
   ${fieldLabel('Objetivo General')}${fieldValue(state.edited.objetivo)}
   ${state.edited.obj_esp1?fieldLabel('Objetivo Específico 1')+fieldValue(state.edited.obj_esp1):''}
   ${state.edited.obj_esp2?fieldLabel('Objetivo Específico 2')+fieldValue(state.edited.obj_esp2):''}
