@@ -4396,6 +4396,17 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
 
 // ── PDF GENERATOR ──────────────────────────────────────────────────
 async function downloadPDF() {
+  // Guard: if AI sections not ready, wait up to 30s before proceeding
+  if(!state.aiNextSteps || !state.aiReferencias) {
+    const btn = document.querySelector('.btn-download');
+    if(btn){ btn.innerHTML='⏳ Esperando contenido IA...'; }
+    let waited = 0;
+    while((!state.aiNextSteps || !state.aiReferencias) && waited < 30000) {
+      await new Promise(r => setTimeout(r, 500));
+      waited += 500;
+    }
+  }
+
   const btn = document.querySelector('.btn-download');
   if(btn){ btn.classList.add('loading'); btn.innerHTML='⏳ Generando PDF...'; }
 
