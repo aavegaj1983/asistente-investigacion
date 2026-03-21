@@ -238,6 +238,17 @@ input[type=text]:focus,textarea:focus{
 textarea{min-height:70px;resize:vertical}
 .otro-input{border-color:var(--brand)!important;background:#fff!important}
 .var-validation{margin-top:8px;font-size:12px;line-height:1.7}
+.cambios-panel{background:#F8FAFF;border:1.5px solid #C7D2FE;border-radius:12px;padding:16px;margin-top:12px}
+.cambios-panel-title{font-size:13px;font-weight:700;color:#3730A3;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.cambios-section{margin-bottom:14px}
+.cambios-section-label{font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.cambios-chip-group{display:flex;flex-wrap:wrap;gap:6px}
+.cambios-chip{padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1.5px solid #E5E7EB;background:#fff;color:#374151;font-family:inherit;font-weight:500;transition:all .15s}
+.cambios-chip:hover{border-color:#6366F1;color:#4F46E5;background:#EEF2FF}
+.cambios-chip.sel{border-color:#4F46E5;background:#EEF2FF;color:#3730A3;font-weight:600}
+.btn-aplicar{background:#4F46E5;color:#fff;border:none;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;transition:all .2s}
+.btn-aplicar:hover{background:#3730A3}
+.btn-cancelar-cambios{background:none;border:1px solid #E5E7EB;color:#6B7280;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px;margin-left:8px}
 .var-ok{color:#065F46;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .var-warn{color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .var-error{color:#991B1B;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
@@ -1235,7 +1246,7 @@ function renderInstrumentosHtml(varsList) {
     if(staticFound.length > 0 && !isQual) {
       h += `<div style="font-size:11px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">✨ Sugeridos por IA para tu proyecto</div>`;
     } else {
-      h += `<p style="font-size:12px;color:#6B7280;margin-bottom:10px">✨ Generados por IA según tu población y variables específicas.</p>`;
+      h += `<p style="font-size:12px;color:#6B7280;margin-bottom:10px">✨ Generados por IA según tu población y aspectos del fenómeno.</p>`;
     }
     state.aiInstruments.forEach(item => {
       const isQualItem = item.tipo === 'cualitativo';
@@ -1498,6 +1509,7 @@ const stateDefaults = {
   edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
   aiValidation:null, aiValidationLoading:false, _validationAttempted:false,
+  _showCambiosPanel:false, _cambiosPendientes:{nivel:null,diseno:null,tecnica:null,variables:null},
   aiNextSteps:null, editValidation:null, editValidating:false,
   aiInstruments:null, aiInstrumentsLoading:false,
   aiPoblaciones:[], aiPoblacionesLoading:false,
@@ -1856,13 +1868,13 @@ function renderContent(){
       if(state.aiVarsLoading){
         h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;padding:10px 14px">
           <span style="animation:pulse 1s infinite;font-size:16px">🤖</span>
-          <span>Generando variables personalizadas para tu proyecto...</span>
+          <span>Generando variables / categorías personalizadas para tu proyecto...</span>
         </div>`;
       } else if(state.aiVars.length > 0){
         const regenLeft = REGEN_MAX - (state.regenCount||0);
         const varBtnDisabled = regenLeft <= 0;
         h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <span>✨ <strong>Variables generadas por IA</strong> para tu proyecto específico</span>
+          <span>✨ <strong>Variables / categorías generadas por IA</strong> para tu proyecto específico</span>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
             ${varBtnDisabled
               ? `<span style="font-size:11px;color:#DC2626;font-weight:600;background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;padding:3px 8px">🚫 Límite alcanzado</span>`
@@ -1994,13 +2006,40 @@ function renderContent(){
       if(state.nivel){
         h+=sectionLabel("¿Qué diseño de investigación utilizarás?", "El diseño es la estrategia de recolección: cómo y cuándo obtendrás los datos. Según Ato, López y Benavente (2013), los diseños se agrupan en tres estrategias: manipulativa, asociativa y descriptiva.");
         const enfoqueKey = state.enfoque.toLowerCase();
-        const disenosDisponibles = DISENOS[enfoqueKey] || [];
+        const disenosTodos = DISENOS[enfoqueKey] || [];
+
+        // Filtrar diseños según nivel (Ato et al., 2013; Hernández & Mendoza, 2018)
+        let disenosDisponibles = disenosTodos;
+        let notaNivel = '';
+        if(state.nivel === 'exploratorio') {
+          // Exploratorio → solo no-experimental transversal
+          // Experimental/cuasi requieren hipótesis previas desarrolladas — opuesto de exploratorio
+          disenosDisponibles = disenosTodos.filter(d => d.id === 'no-experimental-transversal');
+          notaNivel = `<div class="hint">📌 En nivel <strong>exploratorio</strong> el diseño coherente es el <strong>no experimental transversal</strong> — se observa el fenómeno sin manipularlo ni hacer seguimiento temporal. Los diseños experimentales requieren hipótesis previamente desarrolladas, lo opuesto del propósito exploratorio (Hernández & Mendoza, 2018; Ato et al., 2013).</div>`;
+        } else if(state.nivel === 'descriptivo') {
+          // Descriptivo → no-experimental transversal y longitudinal
+          // Experimental/cuasi no aplican: describir no implica probar causalidad
+          disenosDisponibles = disenosTodos.filter(d =>
+            d.id === 'no-experimental-transversal' || d.id === 'no-experimental-longitudinal'
+          );
+          notaNivel = `<div class="hint">📌 En nivel <strong>descriptivo</strong> se usan diseños observacionales: <strong>transversal</strong> (un momento en el tiempo) o <strong>longitudinal</strong> (seguimiento de cambios). Los diseños experimentales no aplican porque describir un fenómeno no requiere manipular variables ni probar relaciones causales (Ato et al., 2013).</div>`;
+        }
+        // Correlacional y Explicativo: todos los diseños disponibles (sin filtro)
+
+        if(notaNivel) h += notaNivel;
         h+=`<div class="options">`;
         disenosDisponibles.forEach(d=>{
           const esc=d.id.replace(/'/g,"\'");
           h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
         });
         h+=`</div>`;
+
+        // Si el diseño seleccionado ya no está disponible para este nivel → resetear
+        if(state.diseno && !disenosDisponibles.find(d => d.id === state.diseno)) {
+          state.diseno = '';
+          state.tecnica = '';
+          saveState();
+        }
       }
     }
 
@@ -2133,17 +2172,69 @@ function renderContent(){
         state.aiValidation !== null ||
         state._validationAttempted === true
       );
+      const tieneAlertas = state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0;
+
       const btnGenerar = validacionLista
         ? `<button class="btn-generate" onclick="generate()">Generar propuesta</button>`
         : `<button class="btn-generate" disabled style="opacity:.45;cursor:not-allowed;transform:none;box-shadow:none">
             Esperando diagnóstico...
            </button>`;
 
+      // Botón "Realizar cambios" — solo si hay alertas
+      const btnCambios = (validacionLista && tieneAlertas && !state._showCambiosPanel)
+        ? `<br><button onclick="state._showCambiosPanel=true;state._cambiosPendientes={nivel:state.nivel,diseno:state.diseno,tecnica:state.tecnica};renderContent()"
+            style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#FFFBEB;border:1.5px solid #F59E0B;color:#92400E;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+            ✏️ Realizar cambios antes de generar
+          </button>`
+        : '';
+
+      // Panel de cambios inline
+      let cambiosPanelHtml = '';
+      if(state._showCambiosPanel && tieneAlertas) {
+        const enfoqueKey5 = state.enfoque.toLowerCase();
+
+        // Variables disponibles
+        const staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
+        const aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(v => typeof v === 'object' ? v.nombre : v) : [];
+        const allVars5 = [...new Set([...staticVars5, ...aiVars5])].filter(Boolean);
+
+        const varsHtml5 = allVars5.length > 0 ? '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables</div><div class="cambios-chip-group">' +
+          allVars5.map(v => {
+            const sel = state.variables.includes(v);
+            const vesc = v.replace(/'/g, "\\'");
+            return '<button class="cambios-chip ' + (sel?'sel':'') + '" onclick="toggleVar(\'' + vesc + '\');renderContent()">' + v + (sel?' ✓':'') + '</button>';
+          }).join('') + '</div></div>' : '';
+
+        // Nivel (no aplica en cualitativo)
+        const nivelHtml5 = state.enfoque !== 'Cualitativo' ? '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
+          NIVELES.map(n => '<button class="cambios-chip ' + (state.nivel===n.id?'sel':'') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id?' ✓':'') + '</button>').join('') +
+          '</div></div>' : '';
+
+        // Diseño
+        const disenos5 = DISENOS[enfoqueKey5] || [];
+        const disenoHtml5 = disenos5.length > 0 ? '<div class="cambios-section"><div class="cambios-section-label">Diseño</div><div class="cambios-chip-group">' +
+          disenos5.map(d => { const desc = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + desc + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
+          '</div></div>' : '';
+
+        cambiosPanelHtml = '<div class="cambios-panel">' +
+          '<div class="cambios-panel-title">✏️ Ajusta tu metodología según el diagnóstico</div>' +
+          varsHtml5 + nivelHtml5 + disenoHtml5 +
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
+            '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cancelar</button>' +
+          '</div></div>';
+      }
+
       el.innerHTML=`<div class="generate-box">
         ${warnHtml}
         ${validationHtml}
-        <p>Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
-        <span style="font-size:13px;color:#9CA3AF">Revisa el diagnóstico arriba. Si hay alertas, usa ← Atrás para ajustar.</span></p>
+        ${cambiosPanelHtml}
+        <p style="margin-top:${cambiosPanelHtml?'16px':'0'}">Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
+        ${tieneAlertas
+          ? '<span style="font-size:13px;color:#92400E">Hay alertas. Usa <strong>✏️ Realizar cambios</strong> o <strong>← Atrás</strong> para ajustar.</span>'
+          : '<span style="font-size:13px;color:#9CA3AF">Diagnóstico completado. Puedes generar tu propuesta.</span>'
+        }</p>
+        ${btnCambios}
         ${btnGenerar}
       </div>`;
       return;
@@ -2403,7 +2494,17 @@ function nextStep(){
     // setTimeout(() => prefetchAIPoblaciones(), 1000); // on-demand only via button
   }
 }
-function prevStep(){if(state.step>0){state.step--;render();saveState();}}
+function prevStep(){
+  if(state.step>0){
+    if(state.step===4) {
+      // Coming back from step 5 — reset panel
+      state._showCambiosPanel=false;
+    }
+    state.step--;
+    render();
+    saveState();
+  }
+}
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
@@ -2993,6 +3094,7 @@ async function validateCoherence() {
         ? `Análisis mixto (${disenoLabel})`
         : 'Estadística descriptiva / Sin técnica avanzada';
 
+  const isQual = state.enfoque === 'Cualitativo';
   const isMixto = state.enfoque === 'Mixto';
   const valPrompt = `Eres un metodólogo experto en investigación en psicología que conoce a fondo la taxonomía de Ato et al. (2013), el marco CHIP-PUCP (2017) y Creswell & Plano Clark (2017).
 
