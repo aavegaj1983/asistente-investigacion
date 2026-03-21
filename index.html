@@ -241,6 +241,10 @@ textarea{min-height:70px;resize:vertical}
 .otro-input{border-color:var(--brand)!important;background:#fff!important}
 .var-validation{margin-top:8px;font-size:12px;line-height:1.7}
 .cambios-panel{background:#F8FAFF;border:1.5px solid #C7D2FE;border-radius:12px;padding:16px;margin-top:12px}
+.alerta-termino{border-bottom:1.5px dashed #D97706;cursor:help;font-weight:600;position:relative;display:inline}
+.alerta-termino-tooltip{display:none;position:absolute;bottom:130%;left:0;width:260px;background:#1F2937;color:#fff;font-size:11px;line-height:1.6;padding:10px 12px;border-radius:8px;z-index:999;font-weight:400;box-shadow:0 4px 16px rgba(0,0,0,.3);font-style:normal}
+.alerta-termino-tooltip::after{content:"";position:absolute;top:100%;left:16px;border:5px solid transparent;border-top-color:#1F2937}
+.alerta-termino:hover .alerta-termino-tooltip{display:block}
 .cambios-panel-title{font-size:13px;font-weight:700;color:#3730A3;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .cambios-section{margin-bottom:14px}
 .cambios-section-label{font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
@@ -660,23 +664,23 @@ const AREAS = [
 ];
 
 const POBLACIONES = {
-  clinica:["Niños y adolescentes","Adultos en general","Adultos mayores","Personas con diagnóstico de trastornos específicos","Cuidadores y familias"],
-  educativa:["Niños de educación inicial","Estudiantes de primaria","Estudiantes de secundaria","Estudiantes universitarios","Docentes"],
-  organizacional:["Trabajadores de empresas privadas","Trabajadores del sector público","Líderes y jefes","Emprendedores","Personal de salud"],
-  social:["Comunidades rurales","Comunidades urbanas periféricas","Personas en situación de vulnerabilidad (migrantes, personas en situación de calle)","Jóvenes en situación de riesgo","Población general"],
-  deporte:["Deportistas amateurs","Deportistas profesionales","Entrenadores","Estudiantes deportistas","Equipos deportivos"],
-  consumidor:["Consumidores jóvenes","Consumidores adultos","Compradores online","Clientes de retail","Usuarios de servicios"],
-  juridica:["Personas víctimas de delitos","Testigos","Adolescentes en conflicto con la ley","Personas privadas de libertad","Personal policial o jurídico"],
-  ambiental:["Residentes urbanos","Estudiantes","Trabajadores de oficina","Comunidades locales","Población general"],
-  positiva:["Estudiantes universitarios","Adultos en general","Profesionales","Jóvenes","Adultos mayores"],
-  "pareja-familia":["Parejas","Familias con hijos","Padres","Adolescentes en familias","Parejas en conflicto"],
-  salud:["Pacientes crónicos","Pacientes oncológicos","Personal de salud","Cuidadores","Pacientes ambulatorios"],
-  desarrollo:["Niños (0-5 años)","Niños (6-11 años)","Adolescentes","Adultos emergentes (18-25)","Adultos mayores"],
-  neuropsicologia:["Pacientes con daño cerebral","Adultos mayores","Niños con dificultades del neurodesarrollo","Pacientes neurológicos","Estudiantes"],
-  adicciones:["Personas en proceso de rehabilitación","Personas en consumo activo","Familias de personas con trastorno por uso de sustancias","Jóvenes en situación de riesgo","Adultos con adicciones conductuales"],
-  digital:["Adolescentes usuarios de redes","Jóvenes gamers","Usuarios de apps","Estudiantes","Trabajadores remotos"],
-  emergencias:["Sobrevivientes de desastres","Primeros respondientes","Personas víctimas de violencia","Comunidades afectadas","Personal de emergencias"],
-  transcultural:["Personas migrantes","Estudiantes internacionales","Comunidades indígenas","Grupos étnicos","Familias multiculturales"],
+  clinica:["Niños y adolescentes (6-17 años)","Adultos jóvenes (18-35 años)","Adultos (36-59 años)","Adultos mayores (60+)","Personas con trastornos de ansiedad","Personas con depresión diagnosticada","Personas con trastornos del estado de ánimo","Cuidadores informales de personas dependientes","Pacientes en atención psicológica ambulatoria","Personas en proceso de duelo"],
+  educativa:["Niños de educación inicial (3-5 años)","Niños de primaria (6-11 años)","Adolescentes de secundaria (12-17 años)","Estudiantes preuniversitarios","Estudiantes universitarios de primeros ciclos","Estudiantes universitarios de últimos ciclos","Docentes de educación básica","Docentes universitarios","Tutores y orientadores educativos","Padres de familia en contexto escolar"],
+  organizacional:["Trabajadores operativos de empresas privadas","Trabajadores administrativos del sector público","Gerentes y líderes de equipo","Personal de salud en hospitales","Personal de atención al cliente","Docentes como trabajadores","Emprendedores y dueños de negocio","Trabajadores remotos o híbridos","Personal en período de cambio organizacional","Trabajadores en contextos de alta demanda"],
+  social:["Adolescentes en situación de riesgo social","Jóvenes en zonas urbano-marginales","Comunidades rurales andinas o amazónicas","Personas migrantes internas","Personas en situación de calle","Mujeres víctimas de violencia de género","Personas privadas de libertad","Comunidades afectadas por conflicto social","Adultos mayores en situación de abandono","Población en pobreza extrema"],
+  deporte:["Deportistas escolares (12-17 años)","Deportistas universitarios","Deportistas amateurs de clubes","Deportistas de alto rendimiento","Atletas en proceso de rehabilitación","Entrenadores y técnicos deportivos","Árbitros y jueces deportivos","Deportistas en etapa de retiro","Equipos deportivos colectivos","Padres de deportistas jóvenes"],
+  consumidor:["Adolescentes consumidores (15-25 años)","Adultos jóvenes compradores online","Adultos mayores como consumidores","Consumidores de productos de salud","Usuarios de plataformas de streaming","Compradores en centros comerciales","Clientes de servicios financieros","Usuarios de apps de delivery","Consumidores de marcas de lujo","Consumidores en contextos de crisis económica"],
+  juridica:["Personas víctimas de delitos violentos","Testigos en procesos judiciales","Adolescentes en conflicto con la ley","Personas privadas de libertad","Personal policial y de seguridad","Operadores de justicia (fiscales, jueces)","Víctimas de violencia intrafamiliar","Personas en proceso de reinserción social","Menores víctimas de abuso","Personal penitenciario"],
+  ambiental:["Residentes de zonas contaminadas","Comunidades en zonas de riesgo ambiental","Niños en entornos urbanos densos","Trabajadores en espacios sin ventilación natural","Pobladores cerca de industrias extractivas","Residentes de espacios sin áreas verdes","Comunidades rurales con acceso a recursos naturales","Adolescentes en entornos urbanos","Adultos mayores en espacios urbanos","Activistas y defensores ambientales"],
+  positiva:["Adolescentes en transición escolar","Adultos jóvenes en búsqueda de sentido","Adultos en etapa de consolidación vital","Adultos mayores activos","Profesionales con alta demanda laboral","Personas en recuperación de adversidades","Personas en proceso de crecimiento personal","Voluntarios y personas prosociales","Docentes y educadores","Personas con enfermedades crónicas"],
+  "pareja-familia":["Parejas en convivencia temprana (0-3 años)","Parejas con hijos pequeños","Parejas en crisis o conflicto","Familias monoparentales","Padres de adolescentes","Familias reconstituidas o ensambladas","Parejas en proceso de separación","Adultos mayores en pareja","Cuidadores familiares de personas dependientes","Parejas con diferencias culturales"],
+  salud:["Pacientes con diabetes","Pacientes oncológicos en tratamiento","Pacientes con enfermedades cardiovasculares","Pacientes con dolor crónico","Personas con VIH/SIDA","Pacientes en hemodiálisis","Cuidadores de pacientes crónicos","Pacientes en rehabilitación física","Personal de salud de primera línea","Pacientes con enfermedades raras"],
+  desarrollo:["Infantes (0-2 años) y sus cuidadores","Niños en etapa preescolar (3-5 años)","Niños en etapa escolar (6-11 años)","Preadolescentes (10-12 años)","Adolescentes (13-17 años)","Adultos emergentes (18-25 años)","Adultos en crisis de la mediana edad","Adultos mayores jóvenes (60-74 años)","Adultos mayores tardíos (75+)","Personas en transiciones vitales críticas"],
+  neuropsicologia:["Adultos mayores con deterioro cognitivo leve","Pacientes con demencia tipo Alzheimer","Pacientes con daño cerebral adquirido","Niños con TDAH","Niños con dificultades de aprendizaje","Pacientes con epilepsia","Personas con secuelas de ACV","Pacientes con esclerosis múltiple","Niños con trastorno del espectro autista","Adultos con lesión cerebral traumática"],
+  adicciones:["Personas en rehabilitación de alcohol","Personas en rehabilitación de drogas ilícitas","Adolescentes con consumo problemático","Adultos con adicción conductual (juego, internet)","Personas en recaída o post-recaída","Familias de personas con trastornos adictivos","Personas con consumo dual (sustancias + trastorno mental)","Jóvenes universitarios con consumo de riesgo","Personas en tratamiento ambulatorio","Personas en comunidades terapéuticas"],
+  digital:["Adolescentes usuarios intensivos de redes sociales","Jóvenes gamers (18-30 años)","Niños con acceso temprano a dispositivos","Adultos mayores con brecha digital","Trabajadores con hiperconectividad laboral","Estudiantes universitarios y redes sociales","Influencers y creadores de contenido","Personas con uso problemático de pornografía online","Usuarios de apps de citas","Comunidades virtuales y fandoms"],
+  emergencias:["Sobrevivientes de desastres naturales","Primeros respondientes (bomberos, policía, paramédicos)","Personal de salud en emergencias","Personas desplazadas por violencia","Comunidades post-conflicto","Personas que perdieron seres queridos súbitamente","Sobrevivientes de accidentes de tránsito","Personas afectadas por desastres tecnológicos","Niños y adolescentes expuestos a emergencias","Voluntarios en zonas de desastre"],
+  transcultural:["Migrantes latinoamericanos en el exterior","Migrantes venezolanos en Perú","Comunidades indígenas amazónicas","Comunidades indígenas andinas","Estudiantes internacionales en universidades","Hijos de migrantes (segunda generación)","Personas afroperuanas","Refugiados y solicitantes de asilo","Familias interculturales","Profesionales en contextos multiculturales"],
   otro:[],
 };
 
@@ -1523,7 +1527,7 @@ const AIQueue = {
   }
 };
 
-const REGEN_MAX = 3;
+const REGEN_MAX = 5;  // 5 intentos para variables IA
 const stateDefaults = {
   step:0, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
   problema:"", problemaOtro:"", variables:[], variablesOtro:"",
@@ -1853,7 +1857,15 @@ function renderContent(){
   }
 
   else if(s===2){
-    let h=sectionLabel("¿Qué problema o fenómeno quieres investigar?");
+    // Recordatorio de población elegida
+    const pobRecordatorio = getPoblacionCompleta();
+    const pobBadge = pobRecordatorio
+      ? `<div style="display:inline-flex;align-items:center;gap:6px;background:#F0FDF4;border:1px solid #A7F3D0;border-radius:20px;padding:4px 12px;font-size:12px;color:#065F46;font-weight:500;margin-bottom:12px">
+          <span>👥</span><span>Trabajando con: <strong>${pobRecordatorio}</strong></span>
+        </div>`
+      : '';
+    let h = pobBadge + '';
+    h += sectionLabel("¿Qué problema o fenómeno quieres investigar?");
     const probs=state.area&&state.area!=="otro"?PROBLEMAS[state.area]:[];
     if(probs.length>0){
       // Determinar prioritarios según la población seleccionada
@@ -1910,11 +1922,16 @@ function renderContent(){
       } else if(state.aiVars.length > 0){
         const regenLeft = REGEN_MAX - (state.regenCount||0);
         const varBtnDisabled = regenLeft <= 0;
+        const intentoActual = state._varsHistorial ? state._varsHistorial.length : 1;
         h+=`<div class="hint success" style="font-size:12px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <span>✨ <strong>Variables / categorías generadas por IA</strong> para tu proyecto específico</span>
+          <span>✨ <strong>Variables / categorías generadas por IA</strong> para tu proyecto específico
+            <span style="font-size:10px;color:#059669;opacity:.8"> — Sugerencia ${intentoActual} de ${REGEN_MAX}</span>
+          </span>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
             ${varBtnDisabled
-              ? `<span style="font-size:11px;color:#DC2626;font-weight:600;background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;padding:3px 8px">🚫 Límite alcanzado</span>`
+              ? `<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border:1px solid #E5E7EB;border-radius:4px;padding:3px 8px">
+                  ✓ Has visto todas las sugerencias disponibles
+                </span>`
               : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.variables=[];prefetchAIVars(true)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
             }
             <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
@@ -2191,9 +2208,25 @@ function renderContent(){
           </div>`;
         }
         if(val.alertas && val.alertas.length > 0) {
-          validationHtml += val.alertas.map(a =>
-            `<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:4px">⚠️ ${a}</div>`
-          ).join('');
+          // Glosario de términos técnicos con explicaciones para tesistas
+          const glosario = {
+            'multicolinealidad': '<span class="alerta-termino">multicolinealidad<span class="alerta-termino-tooltip">Ocurre cuando dos o más variables miden casi lo mismo (están muy correlacionadas entre sí). Esto genera problemas en el análisis estadístico porque el modelo no puede distinguir el efecto de cada variable por separado. Solución: eliminar una de las variables muy similares o combinarlas en una sola.</span></span>',
+            'multicolineal': '<span class="alerta-termino">multicolineal<span class="alerta-termino-tooltip">Ocurre cuando dos o más variables miden casi lo mismo (están muy correlacionadas entre sí). Esto genera problemas en el análisis estadístico porque el modelo no puede distinguir el efecto de cada variable por separado. Solución: eliminar una de las variables muy similares o combinarlas en una sola.</span></span>',
+            'variable latente': '<span class="alerta-termino">variable latente<span class="alerta-termino-tooltip">Un constructo que no se mide directamente sino a través de indicadores observables. Por ejemplo, la "inteligencia" no se ve, pero se mide con ítems de un test. Los modelos SEM trabajan con variables latentes.</span></span>',
+            'sem': '<span class="alerta-termino">SEM<span class="alerta-termino-tooltip">Structural Equation Modeling (Modelos de Ecuaciones Estructurales). Técnica estadística avanzada que permite analizar múltiples relaciones entre variables al mismo tiempo, incluyendo variables que no se miden directamente. Requiere muestras grandes (200+).</span></span>',
+            'mediación': '<span class="alerta-termino">mediación<span class="alerta-termino-tooltip">Ocurre cuando una variable M explica el mecanismo por el que X afecta a Y. Por ejemplo: estrés (X) → rumiación (M) → depresión (Y). Se analiza con Hayes PROCESS Modelo 4.</span></span>',
+            'moderación': '<span class="alerta-termino">moderación<span class="alerta-termino-tooltip">Ocurre cuando una variable W cambia la fuerza o dirección del efecto de X sobre Y. Por ejemplo: el efecto del estrés sobre la depresión es mayor en personas con baja autoestima. Se analiza con Hayes PROCESS Modelo 1.</span></span>',
+          };
+          validationHtml += val.alertas.map(a => {
+            let aEnriquecida = a;
+            Object.keys(glosario).forEach(term => {
+              const regex = new RegExp(term, 'gi');
+              if(regex.test(aEnriquecida)) {
+                aEnriquecida = aEnriquecida.replace(regex, glosario[term]);
+              }
+            });
+            return `<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:4px">⚠️ ${aEnriquecida}</div>`;
+          }).join('');
         }
         if(val.sugerencia_clave) {
           validationHtml += `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:8px 10px;border-radius:6px;margin-top:6px;border-left:3px solid #3B82F6">
@@ -2589,7 +2622,7 @@ function prevStep(){
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
@@ -3066,6 +3099,12 @@ async function prefetchAIVars(manualRegen = false) {
   const poblacion = getPoblacionCompleta() || efectivePoblacion() || 'No especificada';
   const isQual = enfoque === 'Cualitativo';
 
+  // Variables ya mostradas en intentos anteriores (para no repetir)
+  const yaUsadas = state._varsHistorial ? state._varsHistorial.flat().map(v => typeof v==='object'?v.nombre:v) : [];
+  const excluirStr = yaUsadas.length > 0
+    ? `\nEXCLUYE OBLIGATORIAMENTE estas variables ya sugeridas en intentos anteriores: ${yaUsadas.join(', ')}`
+    : '';
+
   const varPrompt = `Eres un metodólogo experto en psicología con dominio de la literatura psicológica internacional y latinoamericana.
 
 Perfil del proyecto:
@@ -3074,7 +3113,10 @@ Perfil del proyecto:
 - Problema/fenómeno: ${problema}
 - Enfoque: ${enfoque}
 
-Genera exactamente 8 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan OBLIGATORIAMENTE los 3 criterios siguientes:
+IMPORTANTE: Las sugerencias deben ser MUY ESPECÍFICAS para la población "${poblacion}" y el fenómeno "${problema}". No sugieras variables genéricas que apliquen a cualquier población — prioriza constructos estudiados específicamente en este grupo y contexto.
+${excluirStr}
+
+Genera exactamente 10 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan OBLIGATORIAMENTE los 3 criterios siguientes:
 
 CRITERIO 1 — NOMBRE CANÓNICO EN ESPAÑOL: debe ser el nombre establecido en la literatura psicológica hispanohablante (Redalyc, SciELO, Psicothema, Rev. Iberoamericana de Psicología del Ejercicio y el Deporte).
   ✅ "Autoeficacia general" (Bandura, 1977; Schwarzer & Jerusalem, 1995)
@@ -3117,7 +3159,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 900,
+        max_tokens: 1200,
         messages: [{role: 'user', content: varPrompt}]
       })
     });
@@ -3141,6 +3183,9 @@ Responde SOLO con JSON sin texto adicional ni markdown:
         if(typeof v === 'string') return {nombre: v.trim(), referencia: '', antecedente: ''};
         return {nombre: String(v.nombre||'').trim(), referencia: String(v.referencia||''), antecedente: String(v.antecedente||'')};
       }).filter(v => v.nombre);
+      // Guardar en historial para no repetir en siguientes intentos
+      if(!state._varsHistorial) state._varsHistorial = [];
+      state._varsHistorial.push(state.aiVars.map(v => v.nombre));
     }
   } catch(e) {
     state.aiVarsError = true;
