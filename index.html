@@ -3387,6 +3387,80 @@ Responde SOLO con JSON:
   }
 }
 
+
+// ── Marco de constructos canónicos por área ──────────────────────
+// Proporciona al LLM el contexto teórico del área ANTES de pedir variables
+// Esto evita que LLaMA ancle en constructos de otras áreas
+const AREA_CONSTRUCTOS = {
+  clinica: `ÁREA: Psicología clínica y salud mental
+Constructos canónicos: Ansiedad (Beck/Spielberger), Depresión (Beck), Regulación emocional (Gross), Afrontamiento (Lazarus/Folkman), Alexitimia (TAS-20), Rumiación (Nolen-Hoeksema), Autoeficacia (Bandura), Bienestar psicológico (Ryff), Sintomatología somática, Disociación (DES), Apego adulto (Bartholomew), Esquemas desadaptativos (Young), Desesperanza (Beck), Autolesión no suicida, Ideación suicida (Columbia Scale).
+Instrumentos validados en español: BDI-II, BAI, PHQ-9, GAD-7, DASS-21, PANAS, ERQ, PSS-10, SCL-90-R, AAQ-II, TAS-20, RRS.`,
+
+  educativa: `ÁREA: Psicología educativa
+Constructos canónicos: Autoeficacia académica (Bandura), Motivación intrínseca/extrínseca (Deci & Ryan SDT), Metas de logro (Elliot), Procrastinación académica (Steel), Engagement académico (Schaufeli/UWES-S), Autorregulación del aprendizaje (Zimmerman), Autoconcepto académico, Ansiedad ante exámenes (Spielberger TAI), Hábitos de estudio, Burnout académico (MBI-SS), Clima de aula, Estilos de aprendizaje (VARK/Kolb).
+Instrumentos validados en español: UWES-S, PHQ-9, CEAM, ESCABAS, SBI-U, MSLQ.`,
+
+  organizacional: `ÁREA: Psicología organizacional y del trabajo
+Constructos canónicos: Burnout (Maslach MBI), Engagement laboral (UWES), Satisfacción laboral (JDI/Warr), Compromiso organizacional (Meyer & Allen), Liderazgo transformacional/transaccional (Bass MLQ), Clima organizacional (Litwin & Stringer), Justicia organizacional (Colquitt), Acoso laboral (NAQ-R), Estrés laboral (Karasek/Siegrist), Autoeficacia profesional, Conflicto trabajo-familia, Desempeño laboral, Inteligencia emocional en el trabajo (MSCEIT/WLEIS).
+Instrumentos validados en español: MBI-GS, UWES, NAQ-R, MLQ, JDI, COPSOQ.`,
+
+  social: `ÁREA: Psicología social y comunitaria
+Constructos canónicos: Identidad social (Tajfel), Exclusión social percibida, Prejuicio y discriminación (Modern Racism Scale/Allport), Cohesión social, Resiliencia comunitaria, Capital social, Participación ciudadana, Sentido de comunidad (McMillan), Apoyo social percibido (MOS), Normas subjetivas, Actitudes (Ajzen TPB), Empoderamiento comunitario, Estigma social.
+Instrumentos validados en español: MOS-SSS, RSES, SCS, EBS.`,
+
+  deporte: `ÁREA: Psicología del deporte y actividad física
+Constructos canónicos: Ansiedad competitiva (CSAI-2 — Martens), Motivación deportiva (SMS — Pelletier), Cohesión grupal (GEQ — Carron), Autoconfianza deportiva (TSCI — Vealey), Fortaleza mental (MTQ48 — Clough), Burnout deportivo (ABQ — Raedeke), Concentración/atención deportiva (TAIS), Metas de logro deportivas (TEOSQ), Pasión deportiva (Vallerand Passion Scale), Flow deportivo (FSS-2 — Jackson), Percepción de competencia (Harter), Liderazgo del entrenador (LSS — Chelladurai), Comunicación entrenador-deportista.
+Instrumentos validados en español: CSAI-2R, SMS-II, GEQ, ABQ-E, MTQ48-esp.`,
+
+  juridica: `ÁREA: Psicología jurídica y forense
+Constructos canónicos: Exactitud del testimonio (eyewitness accuracy — Loftus 1979), Sugestionabilidad interrogativa (GSS — Gudjonsson 1984), Confianza en el testimonio (confidence-accuracy — Wells), Memoria de fuente (source monitoring — Johnson 1993), Credibilidad del testimonio (CBCA/SVA — Steller & Köhnken), Sesgo de elección en ruedas de reconocimiento (lineup bias — Wells), Memoria de estrés (Deffenbacher 2004), Daño psicológico forense (evaluación pericial), Simulación/disimulación (SIRS, MMPI-2-RF), Psicopatía (PCL-R — Hare), Capacidad para testificar, Victimización secundaria.
+Instrumentos validados en español: GSS, SIRS-2, PCL-R, MMPI-2, CBCA protocolo.`,
+
+  ambiental: `ÁREA: Psicología ambiental
+Constructos canónicos: Apego al lugar (Place Attachment — Lewicka), Identidad de lugar (Place Identity — Proshansky), Estrés ambiental (Crowding/Noise stress), Restauración atencional (ART — Kaplan), Conducta proambiental (Stern VBN), Percepción de riesgo ambiental, Satisfacción residencial, Hacinamiento percibido, Biofilia (Kellert), Conectividad con la naturaleza (CNS — Nisbet), Comportamiento sostenible, Normas pro-ambientales.
+Instrumentos validados en español: CNS-E, NEP-R, GEB.`,
+
+  positiva: `ÁREA: Psicología positiva
+Constructos canónicos: Bienestar psicológico (Ryff PWBS), Bienestar subjetivo (Diener SWLS/PANAS), Fortalezas del carácter (VIA-IS — Peterson & Seligman), Resiliencia (RS/CD-RISC — Connor & Davidson), Autocompasión (SCS — Neff 2003), Flow/experiencia óptima (Csikszentmihalyi FSS), Gratitud (GQ-6 — McCullough), Optimismo (LOT-R — Scheier), Esperanza (Snyder Hope Scale), Sentido de vida (MLQ — Steger), Mindfulness (MAAS/FFMQ), Crecimiento postraumático (PTGI — Tedeschi).
+Instrumentos validados en español: PWBS, SWLS, SCS-SV, CD-RISC, VIA-IS, LOT-R-esp.`,
+
+  "pareja-familia": `ÁREA: Psicología de pareja y familia
+Constructos canónicos: Satisfacción marital (DAS — Spanier / EMS), Comunicación de pareja (Olson FACES), Apego adulto (ECR — Brennan), Conflicto de pareja (CTS2 — Straus), Cohesión y adaptabilidad familiar (FACES-IV), Estilos de crianza (APQ / PSDQ), Coparentalidad (Feinberg CPQ), Violencia de pareja íntima (VPI — AAS), Ajuste diádico, Funcionamiento familiar (FAD — Epstein), Intimidad (MIS), Compromiso (Investment Model — Rusbult).
+Instrumentos validados en español: DAS, FACES-IV, ECR-S, CTS2, VPI.`,
+
+  salud: `ÁREA: Psicología de la salud
+Constructos canónicos: Calidad de vida relacionada con salud (SF-36/SF-12), Adherencia al tratamiento (MMAS/MAQ), Afrontamiento de enfermedad (COPE/CAE), Catastrofización del dolor (PCS — Sullivan), Percepción de enfermedad (IPQ-R — Moss-Morris), Autoeficacia en salud (GSES), Miedo a la muerte (DAS — Templer), Estrés percibido (PSS — Cohen), Fatiga (MFI/FACIT), Comunicación médico-paciente, Bienestar en enfermedad crónica (PGWBS), Apoyo social en enfermedad (ESSI).
+Instrumentos validados en español: SF-36, PCS-sp, IPQ-R-sp, COPE-28, PSS-14.`,
+
+  desarrollo: `ÁREA: Psicología del desarrollo
+Constructos canónicos: Apego (Ainsworth SSP / ECR adulto), Funciones ejecutivas en desarrollo (BRIEF), Identidad del yo (Marcia EOM-EIS), Autoconcepto (SDQ — Marsh), Teoría de la mente (TOM — Wimmer & Perner), Regulación emocional en infancia (DERS), Desarrollo moral (Kohlberg DIT), Madurez psicológica (Arnett IDEA), Crisis del desarrollo (Erikson), Envejecimiento exitoso (SOC — Baltes), Identidad en la vejez, Sabiduría (Berlin Wisdom Model).
+Instrumentos validados en español: SDQ-II, BRIEF, DERS, DIT, IDEA.`,
+
+  neuropsicologia: `ÁREA: Neuropsicología
+Constructos canónicos: Funciones ejecutivas (BRIEF/FrSBe/FAB), Memoria de trabajo (Digit Span WAIS), Memoria episódica/semántica (RAVLT, WMS), Atención sostenida/selectiva/dividida (CPT, TMT), Velocidad de procesamiento (SDMT, TMT-A), Inhibición (Stroop, Go-NoGo), Flexibilidad cognitiva (WCST/TMT-B), Fluencia verbal (FAS, animales), Funciones visuoespaciales (Rey Figure), Lenguaje (Boston Naming Test), Deterioro cognitivo (MoCA, MMSE), Evaluación de daño cerebral (Luria).
+Instrumentos validados en español: MoCA-sp, MMSE, RAVLT-sp, SDMT-sp, TMT-sp, Stroop Victoria, WAIS-IV.`,
+
+  adicciones: `ÁREA: Psicología de las adicciones
+Constructos canónicos: Craving/deseo de consumo (CCQ — Tiffany / OCDS), Dependencia a sustancias (DSM-5 / AUDIT / DAST-20), Motivación para el cambio (URICA — DiClemente, SOCRATES), Autoeficacia para la abstinencia (AASE/SCSES), Impulsividad (BIS-11 — Barratt), Expectativas de consumo (AEQ), Sintomatología de abstinencia, Apoyo social en recuperación, Recaída (RP — Marlatt), Estilos de afrontamiento en adicciones, Alexitimia en adicciones, Comorbilidad psiquiátrica (CIDI/MINI).
+Instrumentos validados en español: AUDIT, DAST-20, BIS-11, URICA, MINI.`,
+
+  digital: `ÁREA: Psicología digital y tecnología
+Constructos canónicos: Uso problemático de internet (IAT — Young / GPIUS), Adicción a redes sociales (BSMAS — Bergen), FOMO/miedo a perderse algo (FoMOs — Przybylski), Nomofobia (NMP-Q), Cyberbullying (ECIPQ), Identidad digital/online (ODIS), Comparación social online (INCOM), Bienestar digital (Twenge), Soledad mediada por tecnología (UCLA-online), Dependencia al smartphone (SAS — Kwon), Autoestima y redes sociales.
+Instrumentos validados en español: IAT-sp, BSMAS-sp, SAS-SV-sp, NMP-Q-sp.`,
+
+  emergencias: `ÁREA: Psicología de emergencias y trauma
+Constructos canónicos: Estrés postraumático/TEPT (PCL-5 — Weathers / CAPS-5), Resiliencia post-trauma (CD-RISC — Connor), Crecimiento postraumático (PTGI — Tedeschi), Fatiga por compasión (ProQOL — Stamm), Duelo traumático (ITQ — Shear), Memoria traumática (TSC-40), Disociación peritraumática (PDEQ), Percepción de amenaza, Apoyo psicosocial comunitario, Afrontamiento en crisis, Burnout en primeros respondientes, Estrés agudo (ASI-3).
+Instrumentos validados en español: PCL-5-sp, CD-RISC-10-sp, PTGI-sp, ProQOL-sp.`,
+
+  transcultural: `ÁREA: Psicología transcultural y migración
+Constructos canónicos: Aculturación (BACCI/ARSMA — Cuéllar), Estrés de aculturación (SAFE — Mena), Identidad étnica/racial (MEIM — Phinney), Discriminación percibida (EDIS/SOES), Identidad bicultural (BII), Nostalgia cultural (Surrey Nostalgia Scale), Bilingüismo y cognición, Apoyo social en migración, Ajuste psicológico intercultural, Choque cultural (Oberg), Integración social (Berry model), Racismo y salud mental (EDS).
+Instrumentos validados en español: MEIM-R, SAFE-sp, ARSMA-II.`,
+};
+
+function getAreaContext(area) {
+  return AREA_CONSTRUCTOS[area] || '';
+}
+
 async function prefetchAIVars(manualRegen = false) {
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
   if(!problema || state.aiVarsLoading) return;
@@ -3409,38 +3483,38 @@ async function prefetchAIVars(manualRegen = false) {
     ? `\nEXCLUYE OBLIGATORIAMENTE estas variables ya sugeridas en intentos anteriores: ${yaUsadas.join(', ')}`
     : '';
 
-  const varPrompt = `Eres un metodólogo experto en psicología con dominio de la literatura psicológica internacional y latinoamericana.
+  const areaCtx = getAreaContext(state.area || '');
 
-Perfil del proyecto:
+  const varPrompt = `Eres un metodólogo experto en psicología con profundo dominio de la literatura psicológica internacional y latinoamericana, especialmente del área de ${area}.
+
+${areaCtx ? `MARCO TEÓRICO DEL ÁREA — usa estos constructos como referencia de dominio:
+${areaCtx}
+
+` : ''}Perfil del proyecto:
 - Área: ${area}
 - Población: ${poblacion}
 - Problema/fenómeno: ${problema}
 - Enfoque: ${enfoque}
 
-IMPORTANTE: Las sugerencias deben ser MUY ESPECÍFICAS para la población "${poblacion}" y el fenómeno "${problema}". No sugieras variables genéricas que apliquen a cualquier población — prioriza constructos estudiados específicamente en este grupo y contexto.
+INSTRUCCIÓN CRÍTICA: Genera variables/categorías del ÁREA "${area}" y específicas para "${problema}" en "${poblacion}". NO generes constructos clínicos generales (ansiedad, depresión, autoestima, bienestar psicológico) a menos que el área sea psicología clínica. Las variables deben ser reconocidas en la literatura especializada de "${area}".
 ${excluirStr}
 
-Genera exactamente 10 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan OBLIGATORIAMENTE los 3 criterios siguientes:
+Genera exactamente 10 ${isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas'} que cumplan los 3 criterios:
 
-CRITERIO 1 — NOMBRE CANÓNICO EN ESPAÑOL: debe ser el nombre establecido en la literatura psicológica hispanohablante (Redalyc, SciELO, Psicothema, Rev. Iberoamericana de Psicología del Ejercicio y el Deporte).
-  ✅ "Autoeficacia general" (Bandura, 1977; Schwarzer & Jerusalem, 1995)
-  ✅ "Locus de control en salud" (Wallston et al., 1978)
-  ✅ "Fortaleza mental" — traducción consolidada de Mental Toughness (Clough et al., 2002) en español
-  ✅ "Rumiación" — no "rumination"
-  ✅ "Regulación emocional" — no "emotion regulation"
-  ✅ "Bienestar psicológico" — no "psychological well-being"
-  ❌ "Dureza mental" — traducción incorrecta, usar "Fortaleza mental"
-  ❌ "Tenacidad" — no es el constructo establecido para Mental Toughness
-  ❌ "Control percibido sobre la salud" — paráfrasis sin constructo propio
-  ❌ "Motivación intrínseca para el cuidado" — no es un constructo establecido
-  REGLA: Si el constructo tiene traducción consolidada al español en la literatura latinoamericana o española, SIEMPRE usa esa traducción. NUNCA uses calcos literales del inglés si existe término propio en español.
+CRITERIO 1 — NOMBRE CANÓNICO EN ESPAÑOL: nombre establecido en la literatura hispanohablante del área ${area}.
+  REGLA: Los ejemplos de abajo son solo de FORMATO — el CONTENIDO debe ser del área "${area}".
+  Formato correcto: "Nombre del constructo" (Autor principal, año)
+  ✅ "Sugestionabilidad interrogativa" (Gudjonsson, 1984) — si el área es jurídica
+  ✅ "Exactitud del testimonio" (Loftus, 1979) — si el área es jurídica
+  ✅ "Apego al lugar" (Lewicka, 2011) — si el área es ambiental
+  ✅ "Burnout deportivo" (Raedeke & Smith, 2001) — si el área es deporte
+  ✅ "Craving" (Tiffany, 1990) — si el área es adicciones
+  ❌ NUNCA: "Autoeficacia general", "Regulación emocional", "Bienestar psicológico" en áreas no clínicas
+  REGLA DE IDIOMA: usa el nombre como aparece en publicaciones en español. No uses calcos del inglés si existe término propio.
 
-CRITERIO 2 — INSTRUMENTO VALIDADO EN ESPAÑOL: debe existir al menos una escala con alpha ≥ .70 validada en población hispanohablante.
-  ✅ Escala de Autoeficacia General (EAG, Baessler & Schwarzer, 1996; adaptación Sanjuán et al., 2000)
-  ✅ Inventario de Ansiedad Competitiva (CSAI-2, adaptación española Martínez-Santos et al.)
-  ✅ Escala de Fortaleza Mental (MTQ48, adaptación Zurita-Ortega et al., 2018) — NO "Dureza Mental"
-  ✅ ABQ-E — Cuestionario de Burnout del Deportista (Garcés de los Fayos, 1999)
-  ❌ Variables sin escala validada en español conocida
+CRITERIO 2 — INSTRUMENTO VALIDADO EN ESPAÑOL del área ${area}: escala con alpha ≥ .70 en población hispanohablante.
+  Los instrumentos deben ser del área "${area}", no de otras áreas. Consulta los instrumentos listados en el marco teórico del área arriba.
+  ❌ Variables sin escala validada en el área específica
 
 CRITERIO 3 — ANTECEDENTE DIRECTO: debe haber estudios publicados que relacionen esta variable con el problema "${problema}" en poblaciones similares.
 
@@ -3449,12 +3523,13 @@ Para cada variable devuelve un objeto JSON con:
 - "referencia": autor(es) principales y año del constructo o escala más usada
 - "antecedente": 1 frase sobre el antecedente empírico que justifica su relación con "${problema}"
 
-REGLA DE DIVERSIDAD: Las 10 variables/categorías deben ser CONCEPTUALMENTE DISTINTAS entre sí. Evita incluir variables que midan aspectos muy similares o solapados — eso genera multicolinealidad en el análisis estadístico. Por ejemplo, NO incluir simultáneamente "Ansiedad" y "Ansiedad rasgo" y "Ansiedad estado" — elige la más pertinente. NO incluir "Bienestar" y "Bienestar subjetivo" y "Bienestar psicológico" juntas. Cada variable debe aportar información distinta.
+REGLA DE DIVERSIDAD: Las 10 variables/categorías deben ser CONCEPTUALMENTE DISTINTAS entre sí — cada una debe aportar información diferente. Evita constructos solapados (ej: no incluir "Memoria" + "Memoria de trabajo" + "Memoria episódica" juntas en neuropsicología; no "Ansiedad" + "Ansiedad rasgo" + "Ansiedad estado" en clínica).
+
+REGLA DE ÁREA: Al menos 7 de las 10 variables deben ser constructos ESPECÍFICOS del área "${area}". Solo incluye constructos transversales (autoeficacia, regulación emocional) si tienen aplicación directa documentada en "${problema}" dentro del área "${area}".
 
 REGLA FINAL: Si no puedes garantizar los 3 criterios para una variable, NO la incluyas. Es mejor devolver 6 variables sólidas que 8 con relleno.
-REGLA ANTI-FANTASMA: NUNCA inventes constructos. Si no recuerdas el nombre exacto en español y su instrumento validado, omite la variable. Una variable inventada o mal traducida perjudica al estudiante.
-REGLA DE IDIOMA: El nombre de la variable SIEMPRE debe ser como aparece en las publicaciones en español. Ejemplos de correcciones obligatorias:
-  "Dureza mental" → "Fortaleza mental" | "Resiliencia de carrera" → "Resiliencia" | "Autocompasión" ✅ es correcto | "Mindfulness" ✅ es aceptado como préstamo | "Engagement" ✅ es aceptado en contexto organizacional
+REGLA ANTI-FANTASMA: NUNCA inventes constructos. Si no recuerdas el nombre exacto en español y su instrumento validado en el área ${area}, omite la variable.
+REGLA DE IDIOMA: Usa el nombre como aparece en publicaciones en español. "Fortaleza mental" no "Dureza mental". "Craving" y "Mindfulness" son préstamos aceptados. "Engagement" es aceptado en organizacional.
 
 Responde SOLO con JSON sin texto adicional ni markdown:
 [{"nombre":"...","referencia":"...","antecedente":"..."}]`;
