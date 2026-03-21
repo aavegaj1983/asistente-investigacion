@@ -705,26 +705,309 @@ const PROBLEMAS = {
   otro:[],
 };
 
+// Pares de variables con alto riesgo de multicolinealidad
+// Basado en literatura psicométrica (correlaciones típicas r > .60)
+const PARES_MULTICOLINEAL = [
+  // Bienestar y constructos muy similares
+  ["Bienestar psicológico","Bienestar subjetivo"],
+  ["Bienestar psicológico","Calidad de vida"],
+  ["Bienestar subjetivo","Felicidad"],
+  ["Bienestar subjetivo","Satisfacción con la vida"],
+  ["Satisfacción con la vida","Felicidad"],
+  ["Bienestar","Bienestar psicológico"],
+  ["Bienestar","Bienestar subjetivo"],
+  ["Bienestar","Calidad de vida"],
+  ["Bienestar","Satisfacción"],
+  // Ansiedad y constructos solapados
+  ["Ansiedad","Ansiedad rasgo"],
+  ["Ansiedad","Ansiedad estado"],
+  ["Ansiedad rasgo","Ansiedad estado"],
+  ["Ansiedad y estrés","Estrés percibido"],
+  ["Ansiedad","Estrés percibido"],
+  ["Ansiedad social","Ansiedad"],
+  ["Ansiedad competitiva","Ansiedad"],
+  // Depresión y afines
+  ["Depresión","Desesperanza aprendida"],
+  ["Depresión","Ansiedad"],
+  ["Depresión","Afecto negativo"],
+  ["Desesperanza aprendida","Afecto negativo"],
+  // Autoeficacia y constructos relacionados
+  ["Autoeficacia","Autoeficacia general"],
+  ["Autoeficacia","Autoconfianza"],
+  ["Autoeficacia académica","Autoeficacia"],
+  ["Autoconfianza deportiva","Autoeficacia"],
+  // Motivación
+  ["Motivación intrínseca","Motivación"],
+  ["Motivación extrínseca","Motivación"],
+  ["Motivación intrínseca","Motivación extrínseca"],
+  // Estrés y burnout
+  ["Estrés laboral","Burnout"],
+  ["Estrés laboral y burnout","Agotamiento"],
+  ["Burnout","Agotamiento"],
+  ["Estrés","Burnout"],
+  // Apoyo social y constructos relacionados
+  ["Apoyo social","Cohesión social"],
+  ["Apoyo social","Redes de apoyo social"],
+  ["Apoyo familiar","Apoyo social"],
+  // Autoestima y afines
+  ["Autoestima","Autoconcepto"],
+  ["Autoestima","Autoeficacia"],
+  ["Autoestima","Autocompasión"],
+  // Regulación emocional y afines
+  ["Regulación emocional","Inteligencia emocional"],
+  ["Regulación emocional","Autocontrol"],
+  ["Inteligencia emocional","Empatía"],
+  // Resiliencia y afines
+  ["Resiliencia","Fortaleza mental"],
+  ["Resiliencia","Crecimiento postraumático"],
+  ["Resiliencia","Afrontamiento"],
+  // Satisfacción laboral y compromiso
+  ["Satisfacción laboral","Compromiso organizacional"],
+  ["Satisfacción laboral","Bienestar laboral"],
+  ["Compromiso organizacional","Engagement"],
+  // Funciones ejecutivas
+  ["Funciones ejecutivas","Memoria de trabajo"],
+  ["Funciones ejecutivas","Atención"],
+  ["Funciones ejecutivas","Inhibición"],
+  ["Atención","Concentración"],
+  ["Memoria","Memoria de trabajo"],
+  // Impulsividad y autocontrol
+  ["Impulsividad","Autocontrol"],
+  ["Impulsividad","Regulación emocional"],
+  // Adicciones
+  ["Craving","Dependencia"],
+  ["Trastorno por uso de sustancias","Dependencia"],
+];
+
+// Detecta qué variables seleccionadas colisionan entre sí
+function detectarMulticolinealidad(varsSeleccionadas) {
+  const conflictos = {}; // varName → [lista de vars con las que colisiona]
+  const vsLower = varsSeleccionadas.map(v => v.toLowerCase().trim());
+
+  PARES_MULTICOLINEAL.forEach(([a, b]) => {
+    const aL = a.toLowerCase(), bL = b.toLowerCase();
+    // Check exact or partial match
+    const idxA = vsLower.findIndex(v => v === aL || v.includes(aL) || aL.includes(v));
+    const idxB = vsLower.findIndex(v => v === bL || v.includes(bL) || bL.includes(v));
+    if(idxA >= 0 && idxB >= 0 && idxA !== idxB) {
+      const va = varsSeleccionadas[idxA];
+      const vb = varsSeleccionadas[idxB];
+      if(!conflictos[va]) conflictos[va] = [];
+      if(!conflictos[vb]) conflictos[vb] = [];
+      if(!conflictos[va].includes(vb)) conflictos[va].push(vb);
+      if(!conflictos[vb].includes(va)) conflictos[vb].push(va);
+    }
+  });
+  return conflictos;
+}
+
 // Problemas prioritarios por población (van primero y con estrella)
 // Basado en prevalencia epidemiológica en cada grupo etario/poblacional
 const PROBLEMAS_PRIORITARIOS = {
-  // Clínica
-  "Adultos mayores":        ["Depresión","Soledad y aislamiento social","Duelo y pérdidas","Trastornos del sueño","Ansiedad y estrés","Salud mental post-pandemia"],
-  "Niños y adolescentes":   ["Ansiedad y estrés","Autoestima y bienestar","Trauma y violencia","Regulación emocional","Depresión"],
-  "Adultos en general":     ["Ansiedad y estrés","Depresión","Adicciones","Trauma y violencia","Regulación emocional"],
-  "Personas con diagnóstico de trastornos específicos": ["Regulación emocional","Autoestima y bienestar","Trastornos del sueño","Salud mental post-pandemia"],
-  "Cuidadores y familias":  ["Burnout del cuidador","Ansiedad y estrés","Duelo y pérdidas","Salud mental post-pandemia"],
-  // Educativa
-  "Estudiantes universitarios": ["Ansiedad ante exámenes","Procrastinación académica","Autoeficacia académica","Bienestar estudiantil","Motivación y aprendizaje"],
-  "Estudiantes de secundaria":  ["Acoso escolar (bullying)","Identidad en adolescencia","Ansiedad ante exámenes","Motivación y aprendizaje"],
-  "Docentes":                   ["Estrés laboral y burnout","Bienestar estudiantil","Acoso escolar (bullying)","Clima escolar"],
-  // Organizacional
-  "Trabajadores del sector público": ["Estrés laboral y burnout","Satisfacción y compromiso laboral","Acoso laboral (mobbing)","Bienestar en el trabajo"],
-  "Personal de salud":               ["Burnout deportivo","Estrés laboral y burnout","Fatiga por compasión","Acoso laboral (mobbing)"],
-  // Desarrollo
-  "Adultos mayores (desarrollo)":    ["Envejecimiento exitoso","Identidad en la vejez","Adaptación a la jubilación","Bienestar en la tercera edad","Duelo en el ciclo vital"],
-  // Neuropsicología
-  "Adultos mayores (neuro)":         ["Deterioro cognitivo","Neuropsicología del envejecimiento","Memoria","Funciones ejecutivas","Atención y concentración"],
+
+  // ── CLÍNICA ───────────────────────────────────────────────────
+  "Niños y adolescentes (6-17 años)":["Ansiedad y estrés","Depresión","Autoestima y bienestar","Trauma y violencia","Regulación emocional","Trastornos del sueño"],
+  "Adultos jóvenes (18-35 años)":    ["Ansiedad y estrés","Depresión","Adicciones","Regulación emocional","Autoestima y bienestar","Salud mental post-pandemia"],
+  "Adultos (36-59 años)":            ["Ansiedad y estrés","Depresión","Soledad y aislamiento social","Regulación emocional","Trauma y violencia","Adicciones"],
+  "Adultos mayores (60+)":           ["Depresión","Soledad y aislamiento social","Duelo y pérdidas","Trastornos del sueño","Ansiedad y estrés","Regulación emocional"],
+  "Personas con trastornos de ansiedad":["Ansiedad y estrés","Regulación emocional","Trastornos del sueño","Autoestima y bienestar","Trauma y violencia","Salud mental post-pandemia"],
+  "Personas con depresión diagnosticada":["Depresión","Autoestima y bienestar","Regulación emocional","Soledad y aislamiento social","Trastornos del sueño","Duelo y pérdidas"],
+  "Personas con trastornos del estado de ánimo":["Depresión","Regulación emocional","Autoestima y bienestar","Trastornos del sueño","Ansiedad y estrés","Soledad y aislamiento social"],
+  "Cuidadores informales de personas dependientes":["Ansiedad y estrés","Depresión","Duelo y pérdidas","Soledad y aislamiento social","Regulación emocional","Trauma y violencia"],
+  "Pacientes en atención psicológica ambulatoria":["Ansiedad y estrés","Depresión","Regulación emocional","Autoestima y bienestar","Trauma y violencia","Trastornos del sueño"],
+  "Personas en proceso de duelo":    ["Duelo y pérdidas","Depresión","Ansiedad y estrés","Regulación emocional","Soledad y aislamiento social","Trastornos del sueño"],
+
+  // ── EDUCATIVA ─────────────────────────────────────────────────
+  "Niños de educación inicial (3-5 años)":["Habilidades socioemocionales","Rendimiento académico","Estilos de aprendizaje","Motivación y aprendizaje","Bienestar estudiantil"],
+  "Niños de primaria (6-11 años)":        ["Rendimiento académico","Habilidades socioemocionales","Acoso escolar (bullying)","Motivación y aprendizaje","Estilos de aprendizaje"],
+  "Adolescentes de secundaria (12-17 años)":["Acoso escolar (bullying)","Rendimiento académico","Motivación y aprendizaje","Ansiedad ante exámenes","Habilidades socioemocionales","Deserción escolar"],
+  "Estudiantes preuniversitarios":        ["Ansiedad ante exámenes","Rendimiento académico","Motivación y aprendizaje","Procrastinación académica","Autoeficacia académica"],
+  "Estudiantes universitarios de primeros ciclos":["Ansiedad ante exámenes","Procrastinación académica","Motivación y aprendizaje","Bienestar estudiantil","Autoeficacia académica"],
+  "Estudiantes universitarios de últimos ciclos": ["Autoeficacia académica","Procrastinación académica","Bienestar estudiantil","Rendimiento académico","Ansiedad ante exámenes"],
+  "Docentes de educación básica":         ["Estrés laboral y burnout","Acoso escolar (bullying)","Habilidades socioemocionales","Bienestar estudiantil","Clima escolar"],
+  "Docentes universitarios":              ["Estrés laboral y burnout","Bienestar estudiantil","Motivación y aprendizaje","Rendimiento académico","Autoeficacia académica"],
+  "Tutores y orientadores educativos":    ["Habilidades socioemocionales","Acoso escolar (bullying)","Deserción escolar","Bienestar estudiantil","Motivación y aprendizaje"],
+  "Padres de familia en contexto escolar":["Rendimiento académico","Acoso escolar (bullying)","Habilidades socioemocionales","Deserción escolar","Motivación y aprendizaje"],
+
+  // ── ORGANIZACIONAL ────────────────────────────────────────────
+  "Trabajadores operativos de empresas privadas":["Estrés laboral y burnout","Satisfacción y compromiso laboral","Bienestar en el trabajo","Acoso laboral (mobbing)","Desempeño"],
+  "Trabajadores administrativos del sector público":["Estrés laboral y burnout","Satisfacción y compromiso laboral","Acoso laboral (mobbing)","Clima y cultura organizacional","Bienestar en el trabajo"],
+  "Gerentes y líderes de equipo":         ["Liderazgo","Clima y cultura organizacional","Satisfacción y compromiso laboral","Desempeño","Gestión del cambio organizacional"],
+  "Personal de salud en hospitales":      ["Estrés laboral y burnout","Acoso laboral (mobbing)","Bienestar en el trabajo","Satisfacción y compromiso laboral","Clima y cultura organizacional"],
+  "Personal de atención al cliente":      ["Estrés laboral y burnout","Satisfacción y compromiso laboral","Bienestar en el trabajo","Acoso laboral (mobbing)","Desempeño"],
+  "Docentes como trabajadores":           ["Estrés laboral y burnout","Satisfacción y compromiso laboral","Bienestar en el trabajo","Acoso laboral (mobbing)","Liderazgo"],
+  "Emprendedores y dueños de negocio":    ["Estrés laboral y burnout","Satisfacción y compromiso laboral","Bienestar en el trabajo","Liderazgo","Desempeño"],
+  "Trabajadores remotos o híbridos":      ["Trabajo remoto y salud mental","Estrés laboral y burnout","Bienestar en el trabajo","Satisfacción y compromiso laboral","Clima y cultura organizacional"],
+  "Personal en período de cambio organizacional":["Gestión del cambio organizacional","Estrés laboral y burnout","Clima y cultura organizacional","Satisfacción y compromiso laboral","Bienestar en el trabajo"],
+  "Trabajadores en contextos de alta demanda":["Estrés laboral y burnout","Bienestar en el trabajo","Acoso laboral (mobbing)","Satisfacción y compromiso laboral","Desempeño"],
+
+  // ── SOCIAL ────────────────────────────────────────────────────
+  "Adolescentes en situación de riesgo social":["Violencia de género","Exclusión e identidad social","Resiliencia comunitaria","Pobreza y salud mental","Convivencia y cohesión comunitaria"],
+  "Jóvenes en zonas urbano-marginales":   ["Pobreza y salud mental","Exclusión e identidad social","Resiliencia comunitaria","Convivencia y cohesión comunitaria","Violencia de género"],
+  "Comunidades rurales andinas o amazónicas":["Convivencia y cohesión comunitaria","Resiliencia comunitaria","Exclusión e identidad social","Pobreza y salud mental","Migración y bienestar"],
+  "Personas migrantes internas":          ["Migración y bienestar","Exclusión e identidad social","Resiliencia comunitaria","Prejuicios y discriminación","Redes de apoyo social"],
+  "Personas en situación de calle":       ["Exclusión e identidad social","Pobreza y salud mental","Redes de apoyo social","Estigma social","Resiliencia comunitaria"],
+  "Mujeres víctimas de violencia de género":["Violencia de género","Resiliencia comunitaria","Redes de apoyo social","Exclusión e identidad social","Estigma social"],
+  "Personas privadas de libertad (social)":["Exclusión e identidad social","Resiliencia comunitaria","Estigma social","Redes de apoyo social","Convivencia y cohesión comunitaria"],
+  "Comunidades afectadas por conflicto social":["Resiliencia comunitaria","Convivencia y cohesión comunitaria","Pobreza y salud mental","Redes de apoyo social","Exclusión e identidad social"],
+  "Adultos mayores en situación de abandono":["Exclusión e identidad social","Soledad y aislamiento social","Redes de apoyo social","Estigma social","Resiliencia comunitaria"],
+  "Población en pobreza extrema":         ["Pobreza y salud mental","Resiliencia comunitaria","Redes de apoyo social","Exclusión e identidad social","Convivencia y cohesión comunitaria"],
+
+  // ── DEPORTE ───────────────────────────────────────────────────
+  "Deportistas escolares (12-17 años)":   ["Ansiedad competitiva","Motivación deportiva","Autoconfianza deportiva","Rendimiento bajo presión","Fortaleza mental"],
+  "Deportistas universitarios":           ["Ansiedad competitiva","Motivación deportiva","Rendimiento bajo presión","Burnout deportivo","Fortaleza mental"],
+  "Deportistas amateurs de clubes":       ["Motivación deportiva","Ansiedad competitiva","Cohesión de equipo","Rendimiento bajo presión","Autoconfianza deportiva"],
+  "Deportistas de alto rendimiento":      ["Rendimiento bajo presión","Fortaleza mental","Burnout deportivo","Ansiedad competitiva","Concentración y atención deportiva"],
+  "Atletas en proceso de rehabilitación": ["Lesiones y recuperación","Ansiedad competitiva","Motivación deportiva","Fortaleza mental","Autoconfianza deportiva"],
+  "Entrenadores y técnicos deportivos":   ["Comunicación entrenador-deportista","Liderazgo","Burnout deportivo","Cohesión de equipo","Motivación deportiva"],
+  "Árbitros y jueces deportivos":         ["Rendimiento bajo presión","Ansiedad competitiva","Fortaleza mental","Concentración y atención deportiva","Autoconfianza deportiva"],
+  "Deportistas en etapa de retiro":       ["Burnout deportivo","Motivación deportiva","Fortaleza mental","Ansiedad competitiva","Lesiones y recuperación"],
+  "Equipos deportivos colectivos":        ["Cohesión de equipo","Comunicación entrenador-deportista","Motivación deportiva","Rendimiento bajo presión","Ansiedad competitiva"],
+  "Padres de deportistas jóvenes":        ["Motivación deportiva","Ansiedad competitiva","Comunicación entrenador-deportista","Rendimiento bajo presión","Burnout deportivo"],
+
+  // ── CONSUMIDOR ────────────────────────────────────────────────
+  "Adolescentes consumidores (15-25 años)":["Influencia de redes sociales","Consumo impulsivo","Decisión de compra","Publicidad y persuasión","Identidad del consumidor"],
+  "Adultos jóvenes compradores online":    ["Decisión de compra","Comportamiento de compra online","Influencia de redes sociales","Satisfacción del cliente","Experiencia de usuario"],
+  "Adultos mayores como consumidores":     ["Satisfacción del cliente","Decisión de compra","Lealtad a marcas","Bienestar del consumidor","Experiencia de usuario"],
+  "Consumidores de productos de salud":   ["Decisión de compra","Satisfacción del cliente","Lealtad a marcas","Bienestar del consumidor","Publicidad y persuasión"],
+  "Usuarios de plataformas de streaming": ["Experiencia de usuario","Lealtad a marcas","Influencia de redes sociales","Satisfacción del cliente","Comportamiento de compra online"],
+  "Compradores en centros comerciales":   ["Consumo impulsivo","Decisión de compra","Publicidad y persuasión","Satisfacción del cliente","Lealtad a marcas"],
+  "Clientes de servicios financieros":    ["Satisfacción del cliente","Lealtad a marcas","Decisión de compra","Bienestar del consumidor","Experiencia de usuario"],
+  "Usuarios de apps de delivery":         ["Satisfacción del cliente","Experiencia de usuario","Lealtad a marcas","Comportamiento de compra online","Influencia de redes sociales"],
+  "Consumidores de marcas de lujo":       ["Lealtad a marcas","Identidad del consumidor","Decisión de compra","Publicidad y persuasión","Bienestar del consumidor"],
+  "Consumidores en contextos de crisis económica":["Consumo impulsivo","Decisión de compra","Satisfacción del cliente","Bienestar del consumidor","Lealtad a marcas"],
+
+  // ── JURÍDICA ──────────────────────────────────────────────────
+  "Personas víctimas de delitos violentos":["Victimización","Violencia intrafamiliar","Evaluación de daño psicológico","Testimonio y memoria","Estrés postraumático"],
+  "Testigos en procesos judiciales":      ["Testimonio y memoria","Credibilidad del testigo","Evaluación de daño psicológico","Toma de decisiones judiciales","Victimización"],
+  "Adolescentes en conflicto con la ley": ["Reincidencia delictiva","Perfilación criminal","Evaluación de daño psicológico","Mediación y resolución de conflictos","Psicología penitenciaria"],
+  "Personas privadas de libertad":        ["Psicología penitenciaria","Reincidencia delictiva","Perfilación criminal","Mediación y resolución de conflictos","Evaluación de daño psicológico"],
+  "Personal policial y de seguridad":     ["Toma de decisiones judiciales","Perfilación criminal","Credibilidad del testigo","Testimonio y memoria","Evaluación de daño psicológico"],
+  "Operadores de justicia (fiscales, jueces)":["Toma de decisiones judiciales","Credibilidad del testigo","Testimonio y memoria","Mediación y resolución de conflictos","Evaluación de daño psicológico"],
+  "Víctimas de violencia intrafamiliar":  ["Violencia intrafamiliar","Victimización","Evaluación de daño psicológico","Testimonio y memoria","Mediación y resolución de conflictos"],
+  "Personas en proceso de reinserción social":["Reincidencia delictiva","Psicología penitenciaria","Mediación y resolución de conflictos","Perfilación criminal","Evaluación de daño psicológico"],
+  "Menores víctimas de abuso":            ["Victimización","Evaluación de daño psicológico","Testimonio y memoria","Violencia intrafamiliar","Credibilidad del testigo"],
+  "Personal penitenciario":               ["Psicología penitenciaria","Estrés laboral y burnout","Reincidencia delictiva","Mediación y resolución de conflictos","Perfilación criminal"],
+
+  // ── AMBIENTAL ─────────────────────────────────────────────────
+  "Residentes de zonas contaminadas":     ["Estrés por hacinamiento","Contaminación acústica","Conducta proambiental","Percepción de riesgo ambiental","Bienestar psicológico"],
+  "Comunidades en zonas de riesgo ambiental":["Percepción de riesgo ambiental","Resiliencia comunitaria","Conducta proambiental","Apego al lugar","Comportamiento sostenible"],
+  "Niños en entornos urbanos densos":     ["Estrés por hacinamiento","Contaminación acústica","Espacios verdes y bienestar","Conducta proambiental","Diseño urbano y salud mental"],
+  "Trabajadores en espacios sin ventilación natural":["Estrés por hacinamiento","Contaminación acústica","Bienestar laboral","Diseño urbano y salud mental","Percepción de riesgo ambiental"],
+  "Pobladores cerca de industrias extractivas":["Percepción de riesgo ambiental","Conducta proambiental","Apego al lugar","Estrés por hacinamiento","Comportamiento sostenible"],
+  "Residentes de espacios sin áreas verdes":["Espacios verdes y bienestar","Estrés por hacinamiento","Diseño urbano y salud mental","Contaminación acústica","Conducta proambiental"],
+  "Comunidades rurales con acceso a recursos naturales":["Apego al lugar","Conducta proambiental","Comportamiento sostenible","Identidad de lugar","Percepción de riesgo ambiental"],
+  "Adolescentes en entornos urbanos":     ["Conducta proambiental","Espacios verdes y bienestar","Comportamiento sostenible","Estrés por hacinamiento","Diseño urbano y salud mental"],
+  "Adultos mayores en espacios urbanos":  ["Espacios verdes y bienestar","Estrés por hacinamiento","Diseño urbano y salud mental","Apego al lugar","Contaminación acústica"],
+  "Activistas y defensores ambientales":  ["Conducta proambiental","Comportamiento sostenible","Percepción de riesgo ambiental","Identidad de lugar","Apego al lugar"],
+
+  // ── PSICOLOGÍA POSITIVA ───────────────────────────────────────
+  "Adolescentes en transición escolar":   ["Autoestima y bienestar","Resiliencia","Optimismo","Fortalezas personales","Bienestar psicológico"],
+  "Adultos jóvenes en búsqueda de sentido":["Sentido de vida","Bienestar psicológico","Optimismo","Gratitud","Fortalezas personales"],
+  "Adultos en etapa de consolidación vital":["Felicidad y bienestar","Sentido de vida","Fortalezas personales","Resiliencia","Gratitud"],
+  "Adultos mayores activos":              ["Envejecimiento exitoso","Felicidad y bienestar","Sentido de vida","Resiliencia","Gratitud"],
+  "Profesionales con alta demanda laboral":["Resiliencia","Fortalezas personales","Bienestar psicológico","Optimismo","Flow (experiencia óptima)"],
+  "Personas en recuperación de adversidades":["Resiliencia","Crecimiento postraumático","Optimismo","Gratitud","Autocompasión"],
+  "Personas en proceso de crecimiento personal":["Fortalezas personales","Sentido de vida","Autocompasión","Mindfulness y bienestar","Optimismo"],
+  "Voluntarios y personas prosociales":   ["Fortalezas personales","Gratitud","Sentido de vida","Bienestar psicológico","Optimismo"],
+  "Docentes y educadores (positiva)":     ["Bienestar psicológico","Fortalezas personales","Resiliencia","Flow (experiencia óptima)","Gratitud"],
+  "Personas con enfermedades crónicas (positiva)":["Resiliencia","Crecimiento postraumático","Sentido de vida","Autocompasión","Optimismo"],
+
+  // ── PAREJA Y FAMILIA ──────────────────────────────────────────
+  "Parejas en convivencia temprana (0-3 años)":["Comunicación de pareja","Satisfacción marital","Conflicto familiar","Apego adulto","Funcionamiento familiar"],
+  "Parejas con hijos pequeños":           ["Crianza positiva","Conflicto familiar","Satisfacción marital","Comunicación de pareja","Funcionamiento familiar"],
+  "Parejas en crisis o conflicto":        ["Conflicto familiar","Comunicación de pareja","Satisfacción marital","Violencia intrafamiliar","Mediación y resolución de conflictos"],
+  "Familias monoparentales":              ["Funcionamiento familiar","Crianza positiva","Conflicto familiar","Resiliencia comunitaria","Comunicación de pareja"],
+  "Padres de adolescentes":              ["Crianza positiva","Conflicto familiar","Comunicación de pareja","Funcionamiento familiar","Vínculos intergeneracionales"],
+  "Familias reconstituidas o ensambladas":["Funcionamiento familiar","Conflicto familiar","Crianza positiva","Comunicación de pareja","Vínculos intergeneracionales"],
+  "Parejas en proceso de separación":     ["Divorcio y separación","Conflicto familiar","Coparentalidad","Comunicación de pareja","Satisfacción marital"],
+  "Adultos mayores en pareja":            ["Satisfacción marital","Comunicación de pareja","Vínculos intergeneracionales","Funcionamiento familiar","Apego adulto"],
+  "Cuidadores familiares de personas dependientes":["Conflicto familiar","Funcionamiento familiar","Comunicación de pareja","Vínculos intergeneracionales","Crianza positiva"],
+  "Parejas con diferencias culturales":   ["Comunicación de pareja","Conflicto familiar","Satisfacción marital","Apego adulto","Funcionamiento familiar"],
+
+  // ── SALUD ─────────────────────────────────────────────────────
+  "Pacientes con diabetes":               ["Adherencia al tratamiento","Calidad de vida","Estilos de vida saludables","Afrontamiento de enfermedad","Bienestar en enfermedades crónicas"],
+  "Pacientes oncológicos en tratamiento": ["Calidad de vida","Afrontamiento de enfermedad","Ansiedad ante procedimientos","Bienestar en enfermedades crónicas","Miedo a la muerte"],
+  "Pacientes con enfermedades cardiovasculares":["Adherencia al tratamiento","Calidad de vida","Estilos de vida saludables","Afrontamiento de enfermedad","Estrés y salud"],
+  "Pacientes con dolor crónico":          ["Dolor crónico","Calidad de vida","Afrontamiento de enfermedad","Bienestar en enfermedades crónicas","Adherencia al tratamiento"],
+  "Personas con VIH/SIDA":               ["Adherencia al tratamiento","Estigma social","Calidad de vida","Bienestar en enfermedades crónicas","Afrontamiento de enfermedad"],
+  "Pacientes en hemodiálisis":            ["Calidad de vida","Adherencia al tratamiento","Afrontamiento de enfermedad","Bienestar en enfermedades crónicas","Ansiedad ante procedimientos"],
+  "Cuidadores de pacientes crónicos":     ["Afrontamiento de enfermedad","Calidad de vida","Adherencia al tratamiento","Bienestar en enfermedades crónicas","Miedo a la muerte"],
+  "Pacientes en rehabilitación física":   ["Adherencia al tratamiento","Afrontamiento de enfermedad","Calidad de vida","Autopercepción de salud","Bienestar en enfermedades crónicas"],
+  "Personal de salud de primera línea":   ["Estrés laboral y burnout","Calidad de vida","Afrontamiento de enfermedad","Bienestar en enfermedades crónicas","Comunicación médico-paciente"],
+  "Pacientes con enfermedades raras":     ["Calidad de vida","Afrontamiento de enfermedad","Bienestar en enfermedades crónicas","Miedo a la muerte","Adherencia al tratamiento"],
+
+  // ── DESARROLLO ────────────────────────────────────────────────
+  "Infantes (0-2 años) y sus cuidadores":["Apego temprano","Desarrollo cognitivo","Desarrollo moral"],
+  "Niños en etapa preescolar (3-5 años)":["Apego temprano","Desarrollo cognitivo","Habilidades socioemocionales","Desarrollo moral"],
+  "Niños en etapa escolar (6-11 años)":  ["Desarrollo cognitivo","Habilidades socioemocionales","Desarrollo moral","Apego temprano","Rendimiento académico"],
+  "Preadolescentes (10-12 años)":        ["Identidad en adolescencia","Desarrollo moral","Desarrollo cognitivo","Habilidades socioemocionales"],
+  "Adolescentes (13-17 años)":           ["Identidad en adolescencia","Desarrollo moral","Transición a la adultez","Desarrollo cognitivo"],
+  "Adultos emergentes (18-25 años)":     ["Transición a la adultez","Identidad en adolescencia","Desarrollo moral","Bienestar psicológico"],
+  "Adultos en crisis de la mediana edad":["Duelo en el ciclo vital","Desarrollo moral","Bienestar psicológico","Sentido de vida","Vínculos intergeneracionales"],
+  "Adultos mayores jóvenes (60-74 años)":["Envejecimiento exitoso","Identidad en la vejez","Duelo en el ciclo vital","Adaptación a la jubilación","Bienestar en la tercera edad"],
+  "Adultos mayores tardíos (75+)":       ["Envejecimiento exitoso","Identidad en la vejez","Bienestar en la tercera edad","Duelo en el ciclo vital","Adaptación a la jubilación"],
+  "Personas en transiciones vitales críticas":["Duelo en el ciclo vital","Transición a la adultez","Identidad en adolescencia","Desarrollo moral","Envejecimiento exitoso"],
+
+  // ── NEUROPSICOLOGÍA ───────────────────────────────────────────
+  "Adultos mayores con deterioro cognitivo leve":["Deterioro cognitivo","Neuropsicología del envejecimiento","Memoria","Funciones ejecutivas","Atención y concentración"],
+  "Pacientes con demencia tipo Alzheimer":["Deterioro cognitivo","Memoria","Neuropsicología del envejecimiento","Funciones ejecutivas","Rehabilitación cognitiva"],
+  "Pacientes con daño cerebral adquirido":["Rehabilitación cognitiva","Funciones ejecutivas","Memoria","Atención y concentración","Lenguaje"],
+  "Niños con TDAH":                       ["Atención y concentración","Funciones ejecutivas","Memoria","Rehabilitación cognitiva","Rendimiento académico"],
+  "Niños con dificultades de aprendizaje":["Funciones ejecutivas","Memoria","Lenguaje","Atención y concentración","Rehabilitación cognitiva"],
+  "Pacientes con epilepsia":              ["Funciones ejecutivas","Memoria","Atención y concentración","Rehabilitación cognitiva","Calidad de vida"],
+  "Personas con secuelas de ACV":         ["Rehabilitación cognitiva","Lenguaje","Funciones ejecutivas","Memoria","Atención y concentración"],
+  "Pacientes con esclerosis múltiple":    ["Funciones ejecutivas","Memoria","Atención y concentración","Rehabilitación cognitiva","Velocidad de procesamiento"],
+  "Niños con trastorno del espectro autista":["Funciones ejecutivas","Lenguaje","Atención y concentración","Memoria","Percepción y cognición social"],
+  "Adultos con lesión cerebral traumática":["Rehabilitación cognitiva","Funciones ejecutivas","Memoria","Atención y concentración","Velocidad de procesamiento"],
+
+  // ── ADICCIONES ────────────────────────────────────────────────
+  "Personas en rehabilitación de alcohol":["Trastorno por uso de sustancias","Recaída","Craving","Motivación para el cambio","Prevención de recaídas"],
+  "Personas en rehabilitación de drogas ilícitas":["Trastorno por uso de sustancias","Recaída","Craving","Comorbilidad psiquiátrica","Prevención de recaídas"],
+  "Adolescentes con consumo problemático":["Trastorno por uso de sustancias","Motivación para el cambio","Comorbilidad psiquiátrica","Prevención de recaídas","Uso problemático de redes sociales"],
+  "Adultos con adicción conductual (juego, internet)":["Trastorno por uso de videojuegos","Craving","Recaída","Uso problemático de redes sociales","Comorbilidad psiquiátrica"],
+  "Personas en recaída o post-recaída":   ["Recaída","Craving","Prevención de recaídas","Motivación para el cambio","Trastorno por uso de sustancias"],
+  "Familias de personas con trastornos adictivos":["Comorbilidad psiquiátrica","Trastorno por uso de sustancias","Recaída","Motivación para el cambio","Prevención de recaídas"],
+  "Personas con consumo dual":            ["Comorbilidad psiquiátrica","Trastorno por uso de sustancias","Recaída","Craving","Prevención de recaídas"],
+  "Jóvenes universitarios con consumo de riesgo":["Trastorno por uso de sustancias","Uso problemático de redes sociales","Craving","Motivación para el cambio","Trastorno por uso de videojuegos"],
+  "Personas en tratamiento ambulatorio":  ["Trastorno por uso de sustancias","Motivación para el cambio","Prevención de recaídas","Recaída","Craving"],
+  "Personas en comunidades terapéuticas": ["Trastorno por uso de sustancias","Recaída","Prevención de recaídas","Motivación para el cambio","Adicción al trabajo"],
+
+  // ── DIGITAL ───────────────────────────────────────────────────
+  "Adolescentes usuarios intensivos de redes sociales":["Uso problemático de redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Identidad digital","Dependencia al smartphone"],
+  "Jóvenes gamers (18-30 años)":          ["Trastorno por uso de videojuegos","Uso problemático de redes sociales","Dependencia al smartphone","FOMO (miedo a perderse algo)","Bienestar digital"],
+  "Niños con acceso temprano a dispositivos":["Dependencia al smartphone","Uso problemático de redes sociales","Bienestar digital","Cyberbullying","Identidad digital"],
+  "Adultos mayores con brecha digital":   ["Bienestar digital","Relaciones online","Tecnología y soledad","Brecha digital y exclusión","Dependencia al smartphone"],
+  "Trabajadores con hiperconectividad laboral":["Dependencia al smartphone","Uso problemático de redes sociales","Bienestar digital","Tecnología y soledad","FOMO (miedo a perderse algo)"],
+  "Estudiantes universitarios y redes sociales":["Uso problemático de redes sociales","FOMO (miedo a perderse algo)","Cyberbullying","Identidad digital","Dependencia al smartphone"],
+  "Influencers y creadores de contenido": ["Identidad digital","Uso problemático de redes sociales","FOMO (miedo a perderse algo)","Bienestar digital","Relaciones online"],
+  "Personas con uso problemático de pornografía online":["Uso problemático de redes sociales","Dependencia al smartphone","Relaciones online","Bienestar digital","Trastorno por uso de videojuegos"],
+  "Usuarios de apps de citas":            ["Relaciones online","Identidad digital","FOMO (miedo a perderse algo)","Bienestar digital","Uso problemático de redes sociales"],
+  "Comunidades virtuales y fandoms":      ["Relaciones online","Identidad digital","Bienestar digital","Uso problemático de redes sociales","FOMO (miedo a perderse algo)"],
+
+  // ── EMERGENCIAS ───────────────────────────────────────────────
+  "Sobrevivientes de desastres naturales":["Estrés postraumático","Resiliencia post-desastre","Duelo traumático","Apoyo psicosocial comunitario","Crecimiento postraumático"],
+  "Primeros respondientes (bomberos, policía, paramédicos)":["Estrés postraumático","Fatiga por compasión","Resiliencia post-desastre","Intervención en crisis","Recuperación post-crisis"],
+  "Personal de salud en emergencias":     ["Estrés postraumático","Fatiga por compasión","Intervención en crisis","Primeros auxilios psicológicos","Recuperación post-crisis"],
+  "Personas desplazadas por violencia":   ["Estrés postraumático","Duelo traumático","Resiliencia post-desastre","Apoyo psicosocial comunitario","Memoria traumática"],
+  "Comunidades post-conflicto":           ["Resiliencia post-desastre","Apoyo psicosocial comunitario","Estrés postraumático","Duelo traumático","Recuperación post-crisis"],
+  "Personas que perdieron seres queridos súbitamente":["Duelo traumático","Estrés postraumático","Primeros auxilios psicológicos","Memoria traumática","Recuperación post-crisis"],
+  "Sobrevivientes de accidentes de tránsito":["Estrés postraumático","Duelo traumático","Memoria traumática","Primeros auxilios psicológicos","Recuperación post-crisis"],
+  "Personas afectadas por desastres tecnológicos":["Estrés postraumático","Resiliencia post-desastre","Pánico y evacuación","Apoyo psicosocial comunitario","Intervención en crisis"],
+  "Niños y adolescentes expuestos a emergencias":["Estrés postraumático","Primeros auxilios psicológicos","Duelo traumático","Resiliencia post-desastre","Apoyo psicosocial comunitario"],
+  "Voluntarios en zonas de desastre":     ["Fatiga por compasión","Resiliencia post-desastre","Estrés postraumático","Intervención en crisis","Apoyo psicosocial comunitario"],
+
+  // ── TRANSCULTURAL ─────────────────────────────────────────────
+  "Migrantes latinoamericanos en el exterior":["Aculturación","Estrés de aculturación","Choque cultural","Identidad étnica","Discriminación percibida"],
+  "Migrantes venezolanos en Perú":        ["Aculturación","Estrés de aculturación","Discriminación percibida","Integración social","Choque cultural"],
+  "Comunidades indígenas amazónicas":     ["Identidad étnica","Discriminación percibida","Aculturación","Integración social","Racismo y salud mental"],
+  "Comunidades indígenas andinas":        ["Identidad étnica","Discriminación percibida","Aculturación","Bilingüismo y cognición","Racismo y salud mental"],
+  "Estudiantes internacionales en universidades":["Choque cultural","Aculturación","Estrés de aculturación","Identidad bicultural","Integración social"],
+  "Hijos de migrantes (segunda generación)":["Identidad bicultural","Identidad étnica","Aculturación","Discriminación percibida","Nostalgia cultural"],
+  "Personas afroperuanas":               ["Discriminación percibida","Racismo y salud mental","Identidad étnica","Exclusión e identidad social","Integración social"],
+  "Refugiados y solicitantes de asilo":   ["Estrés de aculturación","Aculturación","Discriminación percibida","Integración social","Choque cultural"],
+  "Familias interculturales":             ["Identidad bicultural","Aculturación","Choque cultural","Nostalgia cultural","Integración social"],
+  "Profesionales en contextos multiculturales":["Identidad bicultural","Choque cultural","Aculturación","Integración social","Discriminación percibida"],
 };
 
 const VARIABLES = {
@@ -2262,70 +2545,68 @@ function renderContent(){
 
       // Botón "Realizar cambios" — solo si hay alertas
       const btnCambios = (validacionLista && tieneAlertas && !state._showCambiosPanel)
-        ? `<br><button onclick="state._showCambiosPanel=true;state._cambiosPendientes={nivel:state.nivel,diseno:state.diseno,tecnica:state.tecnica};renderContent()"
-            style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#FFFBEB;border:1.5px solid #F59E0B;color:#92400E;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
-            ✏️ Realizar cambios antes de generar
-          </button>`
+        ? '<br><button onclick="abrirCambiosPanel()" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#FFFBEB;border:1.5px solid #F59E0B;color:#92400E;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✏️ Realizar cambios antes de generar</button>'
         : '';
 
-      // Panel de cambios inline — guiado por las alertas específicas
       let cambiosPanelHtml = '';
       if(state._showCambiosPanel && tieneAlertas) {
         const enfoqueKey5 = state.enfoque.toLowerCase();
         const alertas5 = (state.aiValidation && state.aiValidation.alertas) || [];
         const sugerencia5 = (state.aiValidation && state.aiValidation.sugerencia_clave) || '';
         const alertaTexto = alertas5.join(' ').toLowerCase();
-
-        // Detectar qué secciones mostrar según alertas
         const necesitaVariables = alertaTexto.includes('variable') || alertaTexto.includes('categoría') || alertaTexto.includes('multicolineal') || alertaTexto.includes('número');
         const necesitaNivel    = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional');
         const necesitaDiseno   = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal');
         const mostrarTodo = !necesitaVariables && !necesitaNivel && !necesitaDiseno;
 
-        // ── Guía de alertas ──────────────────────────────────────
         const guiaHtml = '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">' +
           '<strong>¿Qué ajustar?</strong><ul style="margin:4px 0 0 16px;padding:0">' +
-          alertas5.map(a => '<li style="margin-bottom:3px">' + a + '</li>').join('') +
+          alertas5.map(function(a){ return '<li style="margin-bottom:3px">' + a + '</li>'; }).join('') +
           (sugerencia5 ? '<li style="color:#1D4ED8;margin-top:4px">💡 ' + sugerencia5 + '</li>' : '') +
           '</ul></div>';
 
-        // ── Variables ─────────────────────────────────────────────
-        let varsHtml5 = '';
+        var varsHtml5 = '';
         if(necesitaVariables || mostrarTodo) {
-          const staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
-          const aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(v => typeof v === 'object' ? v.nombre : v) : [];
-          const allVars5 = [...new Set([...staticVars5, ...aiVars5])].filter(Boolean);
-          const varsMencionadas = allVars5.filter(v => alertaTexto.includes(v.toLowerCase()));
+          var staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
+          var aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(function(v){ return typeof v === 'object' ? v.nombre : v; }) : [];
+          var allVars5 = staticVars5.concat(aiVars5).filter(function(v,i,a){ return v && a.indexOf(v)===i; });
+          var conflictos5 = detectarMulticolinealidad(state.variables.filter(function(v){ return v !== 'otro'; }));
+          var hayConflictos5 = Object.keys(conflictos5).length > 0;
           if(allVars5.length > 0) {
-            varsHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' +
-              (varsMencionadas.length > 0 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← revisa las marcadas</span>' : '') +
-              '</div><div class="cambios-chip-group">' +
-              allVars5.map(v => {
-                const sel = state.variables.includes(v);
-                const men = varsMencionadas.includes(v);
-                const ve  = v.replace(/'/g, "\\'");
-                const sty = men && sel ? ' style="border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important"' : '';
-                return '<button class="cambios-chip ' + (sel?'sel':'') + '"' + sty + ' onclick="toggleVar(\'' + ve + '\');renderContent()">' + (men&&sel?'⚠️ ':'') + v + (sel?' ✓':'') + '</button>';
-              }).join('') +
-              '</div></div>';
+            var chipsHtml5 = allVars5.map(function(v) {
+              var sel = state.variables.includes(v);
+              var enConflicto = sel && conflictos5[v] && conflictos5[v].length > 0;
+              var ve = v.replace(/'/g, "\\'");
+              var sty = '', prefix = '', tip = '';
+              if(sel && enConflicto) {
+                sty = ' style="border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important"';
+                prefix = '🔴 ';
+                tip = ' title="Colisiona con: ' + conflictos5[v].join(', ') + '"';
+              } else if(sel) {
+                sty = ' style="border-color:#059669!important;background:#ECFDF5!important;color:#065F46!important"';
+                prefix = '🟢 ';
+              }
+              return '<button class="cambios-chip ' + (sel ? 'sel' : '') + '"' + sty + tip + ' onclick="toggleVar(\'' + ve + '\');renderContent()">' + prefix + v + (sel ? ' ✓' : '') + '</button>';
+            }).join('');
+            var leyenda5 = hayConflictos5 ? '<div style="font-size:11px;color:#6B7280;margin-bottom:8px">🔴 Colisiona con otra variable &nbsp;🟢 Sin conflicto — Deselecciona una de las 🔴</div>' : '';
+            var labelExtra5 = hayConflictos5 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← las rojas colisionan entre sí</span>' : '';
+            varsHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' + labelExtra5 + '</div>' + leyenda5 + '<div class="cambios-chip-group">' + chipsHtml5 + '</div></div>';
           }
         }
 
-        // ── Nivel ─────────────────────────────────────────────────
-        let nivelHtml5 = '';
+        var nivelHtml5 = '';
         if((necesitaNivel || mostrarTodo) && state.enfoque !== 'Cualitativo') {
           nivelHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
-            NIVELES.map(n => '<button class="cambios-chip ' + (state.nivel===n.id?'sel':'') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id?' ✓':'') + '</button>').join('') +
+            NIVELES.map(function(n){ return '<button class="cambios-chip ' + (state.nivel===n.id ? 'sel' : '') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id ? ' ✓' : '') + '</button>'; }).join('') +
             '</div></div>';
         }
 
-        // ── Diseño ────────────────────────────────────────────────
-        let disenoHtml5 = '';
+        var disenoHtml5 = '';
         if(necesitaDiseno || mostrarTodo) {
-          const disenos5 = DISENOS[enfoqueKey5] || [];
+          var disenos5 = DISENOS[enfoqueKey5] || [];
           if(disenos5.length > 0) {
             disenoHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Diseño</div><div class="cambios-chip-group">' +
-              disenos5.map(d => { const de = d.id.replace(/'/g,"\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id?'sel':'') + '" onclick="selectDiseno(\'' + de + '\');renderContent()">' + d.label + (state.diseno===d.id?' ✓':'') + '</button>'; }).join('') +
+              disenos5.map(function(d){ var de = d.id.replace(/'/g, "\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id ? 'sel' : '') + '" onclick="selectDiseno(\'' + de + '\');renderContent()">' + d.label + (state.diseno===d.id ? ' ✓' : '') + '</button>'; }).join('') +
               '</div></div>';
           }
         }
@@ -2451,16 +2732,16 @@ function renderContent(){
     let h= errorMsg + preValHtml + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
 
-    // PDF activo solo cuando: referencias y próximos pasos ya cargaron
+    // PDF activo solo cuando: referencias y instrumentos/técnicas ya cargaron
     const refsListas = !state.aiReferenciasLoading && state.aiReferencias !== null;
-    const stepsList  = state.aiNextSteps !== null;
-    const pdfListo   = refsListas && stepsList;
+    const stepsListas  = state.aiNextSteps !== null;
+    const pdfListo   = refsListas && stepsListas;
 
     if(pdfListo) {
       h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
     } else {
-      const pdfMsg = !stepsList
-        ? 'Generando próximos pasos...'
+      const pdfMsg = !stepsListasas
+        ? 'Generando instrumentos y técnicas...'
         : !refsListas
           ? 'Generando referencias...'
           : 'Preparando PDF...';
@@ -2515,7 +2796,7 @@ function renderContent(){
     const nivelKey = "Nivel";
     const enfoqueKey = state.enfoque.toLowerCase();
     const disenoObj = DISENOS[enfoqueKey]?.find(d => d.id === state.diseno);
-    const disenoLabel = disenoObj?.label || state.diseno;
+    const disenoLabelSum = disenoObj?.label || state.diseno;
     
     let variablesDisplay = state.variables.filter(v => v !== 'otro');
     if(state.variables.includes('otro') && state.variablesOtro.trim()) {
@@ -2524,14 +2805,14 @@ function renderContent(){
     }
     
     [["Area",efectiveArea()],["Poblacion",efectivePoblacion()],["Problema",efectiveProblema()],
-     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],[nivelKey,nivelLabel],["Diseño",disenoLabel],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
+     ["Variables",variablesDisplay.join(", ")],["Enfoque",state.enfoque],[nivelKey,nivelLabel],["Diseño",disenoLabelSum],["Técnica",state.tecnica?(TECNICAS[state.nivel]?.find(t=>t.id===state.tecnica)?.label||state.tecnica):"N/A (descriptiva)"]].forEach(([k,v])=>{
       h+=`<p><span>${k}:</span> ${v}</p>`;
     });
     h+=`</div></div>`;
 
     // PRÓXIMOS PASOS — dinámicos con IA
     if(state.aiNextSteps && Array.isArray(state.aiNextSteps) && state.aiNextSteps.length > 0){
-      h+=`<div class="next-steps"><div class="next-steps-title">Próximos pasos sugeridos</div><ul>`;
+      h+=`<div class="next-steps"><div class="next-steps-title">Instrumentos y técnicas sugeridas</div><ul>`;
       state.aiNextSteps.forEach(step => {
         // Strip any HTML tags from AI response — show as plain text
         const clean = String(step).replace(/<[^>]+>/g, '').trim();
@@ -2540,7 +2821,7 @@ function renderContent(){
       h+=`</ul></div>`;
     } else {
       h+=`<div class="next-steps">
-        <div class="next-steps-title">Próximos pasos sugeridos <span style="font-size:10px;font-weight:400;opacity:.6">(generando versión personalizada...)</span></div>
+        <div class="next-steps-title">Instrumentos y técnicas sugeridas <span style="font-size:10px;font-weight:400;opacity:.6">(generando...)</span></div>
         <ul>
           <li><strong>Búsqueda bibliográfica:</strong> Busca en SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc con palabras clave de tus variables en español e inglés (últimos 5 años, mínimo 15-20 artículos)</li>
           <li><strong>Instrumentos de recolección:</strong> Verifica la disponibilidad y adaptación de los instrumentos para tu población; si faltan, búscalos en PsycTESTS o Mental Measurements Yearbook</li>
@@ -2609,10 +2890,15 @@ function nextStep(){
     // setTimeout(() => prefetchAIPoblaciones(), 1000); // on-demand only via button
   }
 }
+function abrirCambiosPanel() {
+  state._showCambiosPanel = true;
+  state._cambiosPendientes = {nivel: state.nivel, diseno: state.diseno, tecnica: state.tecnica};
+  renderContent();
+}
+
 function prevStep(){
   if(state.step>0){
     if(state.step===4) {
-      // Coming back from step 5 — reset panel
       state._showCambiosPanel=false;
     }
     state.step--;
@@ -2954,42 +3240,52 @@ async function generateNextSteps() {
   const kwPob = efectivePoblacion().split(' ').slice(0, 3).join(' ');
   const kwProb = efectiveProblema().split(' ').slice(0, 3).join(' ');
 
+  const isMixto = state.enfoque === 'Mixto';
+  const softwareAnalisis = isQual
+    ? 'ATLAS.ti, NVivo o MAXQDA'
+    : isMixto ? 'SPSS/R para el componente cuantitativo y ATLAS.ti/NVivo para el cualitativo'
+    : ['regresion-simple','regresion-multiple','correlacion'].includes(state.tecnica) ? 'SPSS o R (paquete psych)'
+    : ['mediacion','moderacion','mediacion-moderada'].includes(state.tecnica) ? 'SPSS con macro PROCESS de Hayes o R'
+    : ['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(state.tecnica) ? 'R (lavaan/semTools), AMOS o Mplus'
+    : 'SPSS o R';
+  const tipoVars = isQual ? 'categorías de análisis' : isMixto ? 'variables y categorías' : 'variables';
+  const instrTipo = isQual
+    ? 'Diseña el guion de entrevista semi-estructurada o grupo focal basado en las categorías. Define criterios de rigor: credibilidad (triangulación, member checking), transferibilidad (descripción densa) y confirmabilidad (reflexividad). Establece perfil de participantes y criterio de saturación teórica (n≈8-12 para fenomenológico, n≈12-20 para AT).'
+    : isMixto
+      ? 'Para el componente cuantitativo: identifica escalas validadas en español (alpha ≥ .70) para cada variable. Para el cualitativo: diseña el guion de entrevista/observación basado en las categorías. Planifica la secuencia de integración según el diseño (' + disenoLabel + ').'
+      : 'Identifica las escalas psicométricas validadas en español para cada variable: ' + vars.join(', ') + '. Verifica alpha de Cronbach ≥ .70 y validez de constructo en población hispanohablante. Fuentes: PsycTESTS, Mental Measurements Yearbook, repositorios de universidades peruanas.';
+
   const stepsPrompt = `Eres un metodólogo experto en psicología y asesor de tesis en el Perú.
 
 PERFIL DEL PROYECTO:
-- Título: ${state.edited.tema}
-- Área: ${efectiveArea()}
+- Área: ${efectiveArea()} | Enfoque: ${state.enfoque} | Diseño: ${disenoLabel} | Técnica: ${tecnicaLabel}
 - Población: ${getPoblacionCompleta()}
 - Problema: ${efectiveProblema()}
-- ${isQual ? 'Categorías' : 'Variables'}: ${vars.join(', ')}
-- Enfoque: ${state.enfoque} | Diseño: ${disenoLabel} | Técnica: ${tecnicaLabel}
-- Objetivo general: ${state.edited.objetivo}
-- Contexto: ${state.contexto || 'No especificado'}
-- Experiencia del investigador: ${state.experiencia}
-- Acceso a la población: ${state.viabilidad}
+- ${tipoVars}: ${vars.join(', ')}
+- Objetivo general: ${state.edited.tema}
+- Experiencia del investigador: ${state.experiencia || 'No especificada'}
+- Acceso a la población: ${state.viabilidad || 'No especificado'}
 
-${instrContext}
+Genera exactamente 5 recomendaciones CONCRETAS sobre instrumentos y técnicas para este proyecto. Adapta TODO el lenguaje al enfoque ${state.enfoque}.
 
-Genera exactamente 5 pasos CONCRETOS, PERSONALIZADOS y CRONOLÓGICAMENTE ORDENADOS para este proyecto específico.
+PASO 1 — BÚSQUEDA BIBLIOGRÁFICA:
+Bases de datos: SCOPUS, Web of Science, PsycINFO, Redalyc, SciELO Perú. Palabras clave en español e inglés usando las ${tipoVars} exactas: ${vars.join(', ')} + ${getPoblacionCompleta()}. Filtros: últimos 5 años, revisión por pares. Mínimo 15-20 artículos.
 
-REGLAS OBLIGATORIAS:
-1. El PASO 1 SIEMPRE debe ser sobre búsqueda bibliográfica en bases de datos científicas. Incluye:
-   - Bases de datos: SCOPUS, Web of Science (WOS), PubMed, PsycINFO, Redalyc, SciELO Perú
-   - Palabras clave sugeridas en español e inglés, construidas con las variables del proyecto. Ejemplo de estructura: ("${kwVars}") AND ("${kwPob}" OR "children" OR "adolescents") AND ("${kwProb}")
-   - Filtros recomendados: últimos 5 años, artículos revisados por pares, idioma español e inglés
-   - Número mínimo de artículos a revisar: al menos 15-20
+PASO 2 — INSTRUMENTOS DE RECOLECCIÓN:
+${instrTipo}
 
-2. El PASO 2 debe referirse a los instrumentos/técnicas de recolección de datos, siguiendo estrictamente el contexto de instrumentos proporcionado arriba (${instrContext.substring(0, 80)}...)
+PASO 3 — ÉTICA Y ACCESO:
+Trámites ante la institución donde se recolectarán datos de ${getPoblacionCompleta()}. Consentimiento informado${isQual ? ' y consideraciones de confidencialidad en entrevistas' : ''}. Comité de ética universitario si aplica.
 
-3. Los PASOS 3, 4 y 5 deben cubrir: aspectos éticos y permisos de acceso a la población, análisis estadístico/cualitativo con el software adecuado según la técnica (${tecnicaLabel}), y comunicación/difusión de resultados en el contexto peruano.
+PASO 4 — ANÁLISIS DE DATOS:
+Software: ${softwareAnalisis}. ${isQual ? 'Describe el proceso de análisis temático o el específico del diseño ' + disenoLabel + ': transcripción, codificación abierta, categorías emergentes y saturación.' : isMixto ? 'Describe la integración de datos cuantitativos y cualitativos según el diseño ' + disenoLabel + '.' : 'Procedimiento para ' + tecnicaLabel + ': supuestos a verificar, estadísticos a reportar y tablas APA 7.'}
 
-4. Cada paso debe mencionar elementos específicos del proyecto (variables, población, lugar, técnica).
-5. NUNCA uses lenguaje genérico como "busca artículos sobre el tema". Siempre nombra las variables exactas.
-6. Para el análisis: menciona el software específico — ${isQual ? 'ATLAS.ti, NVivo o MAXQDA' : ['regresion-simple','regresion-multiple','correlacion'].includes(state.tecnica) ? 'SPSS o R (paquete psych)' : ['mediacion','moderacion','mediacion-moderada'].includes(state.tecnica) ? 'SPSS con macro PROCESS de Hayes o R (mediation/moderation)' : ['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(state.tecnica) ? 'R (lavaan/semTools), AMOS o Mplus' : 'SPSS o R'}.
+PASO 5 — DIFUSIÓN:
+Revistas y congresos peruanos o latinoamericanos relevantes para ${efectiveArea()}. Formato de presentación de resultados.
 
-Responde SOLO con un array JSON de 5 strings de TEXTO PLANO. Sin HTML, sin etiquetas, sin asteriscos ni comillas internas problemáticas. Cada string comienza con "Paso N:" seguido del contenido:
-["Paso 1: texto concreto...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
-
+Nombra las ${tipoVars} exactas (${vars.join(', ')}) en cada paso relevante. Usa lenguaje del paradigma ${state.enfoque}. NUNCA uses lenguaje del paradigma contrario.
+Responde SOLO con array JSON de 5 strings texto plano sin HTML:
+["Paso 1: ...","Paso 2: ...","Paso 3: ...","Paso 4: ...","Paso 5: ..."]`;
   try {
     const res = await AIQueue.fetch('/api/chat', {
       method: 'POST',
@@ -4643,7 +4939,7 @@ async function downloadDoc() {
   ${imageXml}
 
   ${emptyPara(200)}
-  ${heading(secPasos+'. PRÓXIMOS PASOS SUGERIDOS','D97706')}
+  ${heading(secPasos+'. INSTRUMENTOS Y TÉCNICAS SUGERIDAS','D97706')}
   ${(() => {
     // Use AI-generated next steps if available, else fallback to generic
     const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
