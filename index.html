@@ -1095,7 +1095,7 @@ async function prefetchAIPoblaciones(manualRegen = false) {
   if(!contexto) return;
   // Only guard manual re-triggers, not the auto first-load
   if (manualRegen && !canRegen('poblaciones')) return;
-  if (manualRegen) incrementRegen();
+  if (manualRegen) incrementRegen('poblaciones');
 
   state.aiPoblacionesLoading = true;
   state.aiPoblaciones = [];
@@ -1537,6 +1537,7 @@ const stateDefaults = {
   edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
   aiValidation:null, aiValidationLoading:false, _validationAttempted:false,
+  regenCountPob:0,
   _showCambiosPanel:false, _cambiosPendientes:{nivel:null,diseno:null,tecnica:null,variables:null},
   aiNextSteps:null, editValidation:null, editValidating:false,
   aiInstruments:null, aiInstrumentsLoading:false,
@@ -1932,7 +1933,7 @@ function renderContent(){
               ? `<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border:1px solid #E5E7EB;border-radius:4px;padding:3px 8px">
                   ✓ Has visto todas las sugerencias disponibles
                 </span>`
-              : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.variables=[];prefetchAIVars(true)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
+              : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.aiVarsError=false;state.variables=[];renderContent();setTimeout(()=>prefetchAIVars(true),50)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
             }
             <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
           </div>
@@ -3087,7 +3088,7 @@ async function prefetchAIVars(manualRegen = false) {
   const problema = state.problema === 'otro' ? state.problemaOtro : state.problema;
   if(!problema || state.aiVarsLoading) return;
   if (manualRegen && !canRegen('vars')) return;
-  if (manualRegen) incrementRegen();
+  if (manualRegen) incrementRegen('vars');
 
   state.aiVarsLoading = true;
   state.aiVars = [];
@@ -3144,6 +3145,8 @@ Para cada variable devuelve un objeto JSON con:
 - "nombre": nombre canónico del constructo
 - "referencia": autor(es) principales y año del constructo o escala más usada
 - "antecedente": 1 frase sobre el antecedente empírico que justifica su relación con "${problema}"
+
+REGLA DE DIVERSIDAD: Las 10 variables/categorías deben ser CONCEPTUALMENTE DISTINTAS entre sí. Evita incluir variables que midan aspectos muy similares o solapados — eso genera multicolinealidad en el análisis estadístico. Por ejemplo, NO incluir simultáneamente "Ansiedad" y "Ansiedad rasgo" y "Ansiedad estado" — elige la más pertinente. NO incluir "Bienestar" y "Bienestar subjetivo" y "Bienestar psicológico" juntas. Cada variable debe aportar información distinta.
 
 REGLA FINAL: Si no puedes garantizar los 3 criterios para una variable, NO la incluyas. Es mejor devolver 6 variables sólidas que 8 con relleno.
 REGLA ANTI-FANTASMA: NUNCA inventes constructos. Si no recuerdas el nombre exacto en español y su instrumento validado, omite la variable. Una variable inventada o mal traducida perjudica al estudiante.
@@ -5335,16 +5338,20 @@ function showRegenToast() {
 }
 
 function canRegen(source) {
-  const count = state.regenCount || 0;
-  if (count >= REGEN_MAX) {
-    showRegenToast();
+  // Separate counters: vars has REGEN_MAX, poblaciones has 3
+  const limit = source === 'vars' ? REGEN_MAX : 3;
+  const key = source === 'vars' ? 'regenCount' : 'regenCountPob';
+  const count = state[key] || 0;
+  if (count >= limit) {
+    if(source !== 'vars') showRegenToast();
     return false;
   }
   return true;
 }
 
-function incrementRegen() {
-  state.regenCount = (state.regenCount || 0) + 1;
+function incrementRegen(source) {
+  const key = source === 'vars' ? 'regenCount' : 'regenCountPob';
+  state[key] = (state[key] || 0) + 1;
   saveState();
 }
 
