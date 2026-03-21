@@ -1522,9 +1522,9 @@ function renderInstrumentosHtml(varsList) {
 
   let h = `<div style="margin-top:20px;padding:18px;background:#F5F3FF;border-radius:12px;border:1px solid #DDD6FE">`;
   h += `<div style="font-size:14px;font-weight:700;color:#7C3AED;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-    <span>Instrumentos de ${isQual ? 'recolección' : 'medición'} sugeridos</span>
-    ${needsAI && !state.aiInstruments && !state.aiInstrumentsLoading
-      ? `<button onclick="generateAIInstruments(${JSON.stringify(varsList)})" style="font-size:11px;font-weight:600;background:#7C3AED;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit">${isQual ? "Generar guiones con IA" : "Buscar con IA"}</button>`
+    <span>Técnicas e instrumentos de recolección sugeridos</span>
+    ${state.aiInstrumentsLoading
+      ? `<span style="font-size:11px;color:#7C3AED;animation:pulse 1s infinite">⏳ Generando...</span>`
       : ''
     }
   </div>`;
@@ -1573,7 +1573,7 @@ function renderInstrumentosHtml(varsList) {
     });
   } else if(!state.aiInstrumentsLoading && needsAI && (!state.aiInstruments || state.aiInstruments.length === 0)) {
     if(isQual) {
-      h += `<p style="font-size:12px;color:#6B7280;margin-top:6px;line-height:1.6">En investigación cualitativa no se usan escalas psicométricas. Haz clic en <strong style="color:#7C3AED">Generar guiones con IA</strong> para obtener guiones metodológicos personalizados: guía de entrevista semi-estructurada, guión de grupo focal, guía de observación u otros según tu diseño.</p>`;
+      h += `<p style="font-size:12px;color:#6B7280;margin-top:6px;line-height:1.6">En investigación cualitativa se diseñan guiones metodológicos personalizados. Generando sugerencias de guía de entrevista, grupo focal u otras técnicas según tu diseño...</p>`;
     } else {
       h += `<p style="font-size:11px;color:#9CA3AF;margin-top:8px">⚠️ No se encontraron instrumentos estándar para: ${sinStatic.join(', ')}. Busca en SCOPUS, PsycINFO o consulta el <em>Mental Measurements Yearbook</em>.</p>`;
     }
@@ -2819,7 +2819,7 @@ function renderContent(){
 
     // PRÓXIMOS PASOS — dinámicos con IA
     if(state.aiNextSteps && Array.isArray(state.aiNextSteps) && state.aiNextSteps.length > 0){
-      h+=`<div class="next-steps"><div class="next-steps-title">Instrumentos y técnicas sugeridas</div><ul>`;
+      h+=`<div class="next-steps"><div class="next-steps-title">Próximos pasos sugeridos</div><ul>`;
       state.aiNextSteps.forEach(step => {
         // Strip any HTML tags from AI response — show as plain text
         const clean = String(step).replace(/<[^>]+>/g, '').trim();
@@ -2828,7 +2828,7 @@ function renderContent(){
       h+=`</ul></div>`;
     } else {
       h+=`<div class="next-steps">
-        <div class="next-steps-title">Instrumentos y técnicas sugeridas <span style="font-size:10px;font-weight:400;opacity:.6">(generando...)</span></div>
+        <div class="next-steps-title">Próximos pasos sugeridos <span style="font-size:10px;font-weight:400;opacity:.6">(generando...)</span></div>
         <ul>
           <li><strong>Búsqueda bibliográfica:</strong> Busca en SCOPUS, Web of Science, PubMed, PsycINFO y Redalyc con palabras clave de tus variables en español e inglés (últimos 5 años, mínimo 15-20 artículos)</li>
           <li><strong>Instrumentos de recolección:</strong> Verifica la disponibilidad y adaptación de los instrumentos para tu población; si faltan, búscalos en PsycTESTS o Mental Measurements Yearbook</li>
@@ -2841,7 +2841,14 @@ function renderContent(){
       if(!state.aiNextSteps) generateNextSteps();
     }
 
-    // INSTRUMENTOS SUGERIDOS EN UI
+    // Auto-trigger instruments (qualitative always, quantitative if vars have no static instrument)
+    if(!state.aiInstruments && !state.aiInstrumentsLoading && variablesDisplay.length > 0) {
+      const sinStatic = variablesDisplay.filter(v => !findInstrumento(v));
+      const shouldGenerate = state.enfoque === 'Cualitativo' || sinStatic.length > 0;
+      if(shouldGenerate) setTimeout(() => generateAIInstruments(variablesDisplay), 800);
+    }
+
+    // TÉCNICAS E INSTRUMENTOS SUGERIDOS EN UI
     h += renderInstrumentosHtml(variablesDisplay);
 
     // REFERENCIAS (metodológicas estáticas + temáticas por IA)
@@ -4883,10 +4890,14 @@ async function downloadDoc() {
         ${tableRow(xe(v), xe(instr.nombre))}`;
     }).filter(Boolean);
 
+    // Combine static instruments + AI-generated instruments for PDF
+    const aiInstrList = (state.aiInstruments && state.aiInstruments.length > 0) ? state.aiInstruments : [];
+
     const instrDetailXml = vars.map(v => {
+      // First try static bank
       let instr = findInstrumento(v);
-      if(!instr) return '';
-      return `
+      if(instr) {
+        return `
         ${fieldLabel('Variable: '+v)}
         <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
           <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>Instrumento: </w:t></w:r>
@@ -4895,6 +4906,23 @@ async function downloadDoc() {
           <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Formato: ${xe(instr.items)}</w:t></w:r></w:p>
         <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
           <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Ejemplo: "${xe(instr.ejemplo)}"</w:t></w:r></w:p>`;
+      }
+      // Try AI-generated instruments
+      const aiInstr = aiInstrList.find(i => i.variable && i.variable.toLowerCase().trim() === v.toLowerCase().trim());
+      if(aiInstr) {
+        return `
+        ${fieldLabel((state.enfoque==='Cualitativo'?'Categoría: ':'Variable: ')+v)}
+        <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:b/><w:sz w:val="19"/><w:color w:val="059669"/></w:rPr><w:t>${state.enfoque==='Cualitativo'?'Técnica/Instrumento: ':'Instrumento: '}</w:t></w:r>
+          <w:r><w:rPr><w:sz w:val="19"/><w:color w:val="111827"/></w:rPr><w:t>${xe(aiInstr.instrumento||'')}</w:t></w:r></w:p>
+        ${aiInstr.autores ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>Autores: ${xe(aiInstr.autores)}</w:t></w:r></w:p>` : ''}
+        ${aiInstr.descripcion ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="40"/></w:pPr>
+          <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="6B7280"/></w:rPr><w:t>${xe(aiInstr.descripcion)}</w:t></w:r></w:p>` : ''}
+        ${aiInstr.nota_peru ? `<w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
+          <w:r><w:rPr><w:i/><w:sz w:val="18"/><w:color w:val="059669"/></w:rPr><w:t>Perú/Latinoamérica: ${xe(aiInstr.nota_peru)}</w:t></w:r></w:p>` : '<w:p><w:pPr><w:spacing w:after="120"/></w:pPr></w:p>'}`;
+      }
+      return '';
     }).join('');
 
     const hasInstruments = instrDetailXml.trim().length > 0;
@@ -4904,7 +4932,7 @@ async function downloadDoc() {
     const secPasos  = imageXml ? 4 : 3;
     const secInstr  = hasInstruments ? (imageXml ? 5 : 4) : 0;
     const instrSectionXml = hasInstruments ? `
-      ${heading(secInstr+'. INSTRUMENTOS SUGERIDOS','7C3AED')}
+      ${heading(secInstr+'. TÉCNICAS E INSTRUMENTOS DE RECOLECCIÓN','7C3AED')}
       <w:p><w:pPr><w:ind w:left="0"/><w:spacing w:after="120"/></w:pPr>
         <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/></w:rPr>
           <w:t>Los siguientes instrumentos han sido validados en población hispanohablante y son coherentes con las variables seleccionadas. Verifique la validez y confiabilidad para su contexto específico.</w:t></w:r></w:p>
@@ -5032,7 +5060,7 @@ async function downloadDoc() {
   ${imageXml}
 
   ${emptyPara(200)}
-  ${heading(secPasos+'. INSTRUMENTOS Y TÉCNICAS SUGERIDAS','D97706')}
+  ${heading(secPasos+'. PRÓXIMOS PASOS SUGERIDOS','D97706')}
   ${(() => {
     // Use AI-generated next steps if available, else fallback to generic
     const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
