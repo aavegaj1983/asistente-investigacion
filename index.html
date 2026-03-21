@@ -2259,8 +2259,39 @@ function renderContent(){
       if(state.aiVarsLoading){
         h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;padding:10px 14px">
           <span style="animation:pulse 1s infinite;font-size:16px">🤖</span>
-          <span>Generando variables / categorías personalizadas para tu proyecto...</span>
+          <span>Personalizando sugerencias con IA...</span>
         </div>`;
+        // Show static vars during loading so user can select while AI generates
+        if(staticVars.length > 0) {
+          h+=`<div class="chips">`;
+          staticVars.forEach(v => {
+            const esc = v.replace(/'/g, "\'");
+            const isActive = state.variables.includes(v);
+            h+=`<button class="chip ${isActive?'active':''}" onclick="toggleVar('${esc}')">${v}</button>`;
+          });
+          h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
+          h+=`</div>`;
+          // Show multicollinearity hint during loading too
+          const nvLoad = state.variables.filter(v => v !== 'otro').length;
+          if(nvLoad > 0) {
+            const confLoad = detectarMulticolinealidad(state.variables.filter(v => v !== 'otro'));
+            if(Object.keys(confLoad).length > 0) {
+              const pares = [];
+              const vis = new Set();
+              state.variables.filter(v=>v!=='otro').forEach(v => {
+                if(confLoad[v]) confLoad[v].forEach(v2 => {
+                  const p = [v,v2].sort().join('|');
+                  if(!vis.has(p)){vis.add(p);pares.push([v,v2]);}
+                });
+              });
+              h+=`<div class="hint warning" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E">
+                ⚠️ <strong>Posible multicolinealidad:</strong> ${pares.map(([a,b]) => `<em>${a}</em> y <em>${b}</em>`).join('; ')}. Considera usar solo una de cada par.
+              </div>`;
+            } else {
+              h+=`<div class="hint">${NIVEL_HINT[nvLoad] || '💡 Con '+nvLoad+' aspectos tienes un perfil sólido.'}</div>`;
+            }
+          }
+        }
       } else if(state.aiVars.length > 0){
         const regenLeft = REGEN_MAX - (state.regenCount||0);
         const varBtnDisabled = regenLeft <= 0;
@@ -2282,8 +2313,6 @@ function renderContent(){
       }
 
       if(state.aiVarsLoading){
-        // Already showing loading indicator above — just add "Otro" chip below once loaded
-        h+=`<div style="margin-top:8px"><button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button></div>`;
       } else if(vars.length>0){
         h+=`<div class="chips">`;
         vars.forEach(v=>{
@@ -5019,6 +5048,9 @@ async function downloadDoc() {
     const emptyPara = (before=200) =>
       `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0"/></w:pPr></w:p>`;
 
+    // ── Section numbers fixed per spec ──────────────────────────
+    // 1.Elementos  2.Perfil(+diagrama si aplica)  3.Pasos  4.Técnicas(opt)  5.Referencias
+
     // ── Imagen del diagrama ───────────────────────────────────────
     const tecnicasConDiagrama = ['regresion-multiple','mediacion','moderacion',
       'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
@@ -5041,7 +5073,7 @@ async function downloadDoc() {
           if(imageBytes && imageBytes.byteLength > 100){
             imageRels = `<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagram.png"/>`;
             imageXml  = `
-              ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
+              ${heading('2.1 MODELO TEÓRICO PROPUESTO','059669')}
               <w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="160" w:after="80"/></w:pPr>
                 <w:r>
                   <w:drawing>
@@ -5076,7 +5108,7 @@ async function downloadDoc() {
           } else {
             // PNG falló pero tenemos SVG — incluir nota
             imageXml = `
-              ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
+              ${heading('2.1 MODELO TEÓRICO PROPUESTO','059669')}
               <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
                 <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
                   <w:t>Ver diagrama en la aplicación web: ${xe(tecnicaLabel)}. El diagrama no pudo incluirse como imagen en este dispositivo.</w:t></w:r></w:p>`;
@@ -5085,7 +5117,7 @@ async function downloadDoc() {
       } catch(e){
         console.warn('Diagram generation failed:', e.message);
         imageXml = `
-          ${heading('3. MODELO TEÓRICO PROPUESTO','059669')}
+          ${heading('2.1 MODELO TEÓRICO PROPUESTO','059669')}
           <w:p><w:pPr><w:ind w:left="240"/><w:spacing w:after="120"/></w:pPr>
             <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="374151"/><w:i/></w:rPr>
               <w:t>Ver diagrama en la aplicación web usando el botón "Ver modelo teórico". Técnica: ${xe(tecnicaLabel)}</w:t></w:r></w:p>`;
@@ -5145,12 +5177,11 @@ async function downloadDoc() {
 
     const hasInstruments = instrDetailXml.trim().length > 0;
 
-    // ── Section numbers — always sequential, no gaps ─────────────
-    let secN = 2;
-    const secModelo = imageXml ? (++secN) : 0;
-    const secPasos  = ++secN;
+    // ── Section numbers (continued — secN already has 2+diagram+pasos) ─
+    // secPasos already set from early calculation above
     const secInstr  = hasInstruments ? (++secN) : 0;
     const secRefs   = ++secN;
+
 
     // Build summary table: variable → instrument name (static + AI)
     const allInstrRows = vars.map(v => {
@@ -5314,11 +5345,10 @@ async function downloadDoc() {
     ${tableRow('Diseño', disenoLabel)}
     ${tableRow('Técnica de análisis', tecnicaLabel)}
   </w:tbl>
-
-  ${imageXml}
+  ${imageXml ? emptyPara(120)+imageXml : ''}
 
   ${emptyPara(200)}
-  ${heading(secPasos+'. PRÓXIMOS PASOS SUGERIDOS','D97706')}
+  ${heading('3. PRÓXIMOS PASOS SUGERIDOS','D97706')}
   ${(() => {
     // Use AI-generated next steps if available, else fallback to generic
     const steps = (state.aiNextSteps && state.aiNextSteps.length > 0)
