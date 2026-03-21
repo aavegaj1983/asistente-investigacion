@@ -169,6 +169,20 @@ h2 span{color:var(--brand)}
 }
 .badge-hint.recommended{color:var(--green);font-weight:600}
 
+/* ── Enfoque tooltip expandido ─────────────────────────────────── */
+.badge-enfoque-tooltip{
+  display:none;margin-top:10px;padding:10px 12px;
+  background:#F8FAFF;border:1px solid var(--brand-mid);
+  border-radius:8px;font-size:12px;color:var(--gray-700);
+  line-height:1.6;font-style:normal;text-align:left;
+}
+.badge-enfoque-tooltip .tooltip-fuente{
+  display:block;margin-top:6px;font-size:10.5px;
+  color:var(--gray-400);font-style:italic;
+}
+.badge:hover .badge-enfoque-tooltip{display:block}
+.badge.active .badge-enfoque-tooltip{display:block}
+
 /* ── CHIPS ───────────────────────────────────────────────────────── */
 .chip{
   padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;
@@ -1402,9 +1416,9 @@ Responde SOLO con JSON sin texto adicional:
 }
 
 const NIVEL_HINT = {
-  1:"Con 1 aspecto del fenómeno el estudio suele ser <strong>descriptivo</strong>. Puedes agregar más para ampliar el alcance.",
-  2:"Con 2 aspectos puedes explorar relaciones entre ellos o profundizar cualitativamente en cada uno.",
-  3:"Con 3 o más aspectos tienes opciones para estudios correlacionales, explicativos o cualitativos en profundidad.",
+  1:"Con 1 aspecto el estudio se centrará en <strong>comprender o caracterizar en profundidad ese fenómeno</strong>. Puedes agregar más para ampliar el alcance.",
+  2:"Con 2 aspectos podrás <strong>explorar relaciones entre ellos</strong> o <strong>profundizar en cada uno</strong> según el enfoque que elijas.",
+  3:"Con 3 o más aspectos tienes opciones para estudios relacionales, explicativos o cualitativos de mayor complejidad.",
 };
 
 // CARGAR ESTADO DESDE LOCALSTORAGE
@@ -1483,7 +1497,7 @@ const stateDefaults = {
   result:null, loading:false, editMode:false,
   edited:{tema:"",pregunta:"",objetivo:"",obj_esp1:"",obj_esp2:"",obj_esp3:"",hipotesis:"",planteamiento:""},
   aiVars:[], aiVarsLoading:false, aiVarsError:false,
-  aiValidation:null, aiValidationLoading:false,
+  aiValidation:null, aiValidationLoading:false, _validationAttempted:false,
   aiNextSteps:null, editValidation:null, editValidating:false,
   aiInstruments:null, aiInstrumentsLoading:false,
   aiPoblaciones:[], aiPoblacionesLoading:false,
@@ -1920,12 +1934,33 @@ function renderContent(){
     // ── Enfoque ───────────────────────────────────────────────────
     h+=sectionLabel("¿Qué enfoque metodológico prefieres?");
     h+=`<div class="options">`;
+    const enfoqueDefs = {
+      'Cuantitativo': {
+        desc: 'Mide variables, establece magnitudes y relaciones mediante estadística',
+        tooltip: `Busca <strong>medir las variables de interés</strong>, determinar su magnitud y establecer las relaciones e interacciones entre ellas mediante el análisis estadístico (CHIP-PUCP, 2017). El conocimiento se construye desde datos numéricos, instrumentos validados e hipótesis comprobables.
+        <span class="tooltip-fuente">Hernández & Mendoza (2018); CHIP-PUCP, Nóblega et al. (2017)</span>`,
+      },
+      'Cualitativo': {
+        desc: 'Comprende vivencias, significados y experiencias del sujeto',
+        tooltip: `Se interesa por <strong>estudiar al sujeto y su forma de construir los significados</strong>, las vivencias en torno a las categorías o temas de investigación (CHIP-PUCP, 2017). No mide: explora, describe e interpreta desde la perspectiva de los propios participantes en su contexto natural.
+        <span class="tooltip-fuente">Hernández & Mendoza (2018); CHIP-PUCP, Nóblega et al. (2017); Creswell (2013)</span>`,
+      },
+      'Mixto': {
+        desc: 'Integra métodos cuantitativos y cualitativos en un mismo estudio',
+        tooltip: `<strong>Integra sistemáticamente</strong> la ruta cuantitativa y la cualitativa para lograr una comprensión más completa del fenómeno (Hernández & Mendoza, 2018). No es simplemente sumar ambos — es combinarlos de forma que se complementen y enriquezcan mutuamente.
+        <span class="tooltip-fuente">Creswell & Plano Clark (2017); Hernández & Mendoza (2018)</span>`,
+      },
+    };
     ENFOQUES.forEach(e=>{
-      let desc="";
-      if(e==="Cuantitativo") desc="Números, estadísticas, medición objetiva";
-      if(e==="Cualitativo")  desc="Experiencias, significados, profundidad";
-      if(e==="Mixto")        desc="Combina métodos cuantitativos y cualitativos";
-      h+=badgeWithDesc(e, desc, null, state.enfoque===e, `selectEnfoque('${e}')`);
+      const def = enfoqueDefs[e] || {};
+      const tooltipHtml = def.tooltip
+        ? `<div class="badge-enfoque-tooltip">${def.tooltip}</div>`
+        : '';
+      h+=`<button class="badge ${state.enfoque===e?'active':''}" onclick="selectEnfoque('${e}')">
+        <div class="badge-title">${e}</div>
+        <div class="badge-desc">${def.desc||''}</div>
+        ${tooltipHtml}
+      </button>`;
     });
     h+=`</div>`;
 
@@ -2082,19 +2117,34 @@ function renderContent(){
         }
         validationHtml += `</div>`;
       } else if(!state.aiValidation) {
-        // Validation not done yet — show subtle pending indicator
+        // Validation not done yet or failed — show loading and trigger retry
         validationHtml = `<div style="margin-bottom:16px;padding:10px 14px;background:#F8FAFF;border:1px solid #C7D2FE;border-radius:10px;display:flex;align-items:center;gap:8px">
           <span style="font-size:16px;animation:pulse 1.2s infinite">🔍</span>
-          <span style="font-size:12px;color:#3730A3">Analizando tu perfil metodológico...</span>
+          <span style="font-size:12px;color:#3730A3">Analizando coherencia metodológica...</span>
         </div>`;
+        // Trigger validation if not already running
+        if(!state.aiValidationLoading) {
+          setTimeout(() => validateCoherence(), 300);
+        }
       }
+
+      // Botón activo solo cuando la validación terminó (éxito o error de API)
+      const validacionLista = !state.aiValidationLoading && (
+        state.aiValidation !== null ||
+        state._validationAttempted === true
+      );
+      const btnGenerar = validacionLista
+        ? `<button class="btn-generate" onclick="generate()">Generar propuesta</button>`
+        : `<button class="btn-generate" disabled style="opacity:.45;cursor:not-allowed;transform:none;box-shadow:none">
+            Esperando diagnóstico...
+           </button>`;
 
       el.innerHTML=`<div class="generate-box">
         ${warnHtml}
         ${validationHtml}
         <p>Generaremos una propuesta para: <strong>${tecnicaLabel}</strong>.<br>
         <span style="font-size:13px;color:#9CA3AF">Revisa el diagnóstico arriba. Si hay alertas, usa ← Atrás para ajustar.</span></p>
-        <button class="btn-generate" onclick="generate()">Generar propuesta</button>
+        ${btnGenerar}
       </div>`;
       return;
     }
@@ -2195,7 +2245,23 @@ function renderContent(){
     let h= errorMsg + preValHtml + editValHtml + `<div class="result-header"><p>Puedes editar los resultados directamente</p><div class="result-actions">`;
     h+=`<button class="btn-sm btn-edit" onclick="toggleEdit()">${state.editMode?"Ver resultado":"Editar"}</button>`;
 
-    h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
+    // PDF activo solo cuando: referencias y próximos pasos ya cargaron
+    const refsListas = !state.aiReferenciasLoading && state.aiReferencias !== null;
+    const stepsList  = state.aiNextSteps !== null;
+    const pdfListo   = refsListas && stepsList;
+
+    if(pdfListo) {
+      h+=`<button class="btn-sm btn-download" onclick="downloadPDF()">📄 Descargar PDF</button>`;
+    } else {
+      const pdfMsg = !stepsList
+        ? 'Generando próximos pasos...'
+        : !refsListas
+          ? 'Generando referencias...'
+          : 'Preparando PDF...';
+      h+=`<button class="btn-sm btn-download" disabled
+        style="opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;pointer-events:none"
+        title="${pdfMsg}">⏳ ${pdfMsg}</button>`;
+    }
     // Mostrar diagrama según técnica seleccionada (no el diseño)
     const tecnicaParaDiagrama = ['regresion-multiple','mediacion','moderacion',
       'mediacion-moderada','path-analysis','sem-mediacion','sem-moderacion','sem-completo'];
@@ -2328,6 +2394,7 @@ function nextStep(){
       // Re-validar si: nunca se validó, o si había alertas (usuario pudo haber cambiado algo)
       if(!state.aiValidation || tieneAlertasPrevias) {
         state.aiValidation = null;
+        state._validationAttempted = false;
         validateCoherence();
       }
     }
@@ -3013,8 +3080,10 @@ Responde SOLO con JSON:
     state.aiValidation = parsed;
   } catch(e) {
     state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
+    state._validationAttempted = true;
   } finally {
     state.aiValidationLoading = false;
+    state._validationAttempted = true;
     renderContent();
     saveState();
   }
