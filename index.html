@@ -2813,33 +2813,63 @@ async function validateCoherence() {
         ? `Análisis mixto (${disenoLabel})`
         : 'Estadística descriptiva / Sin técnica avanzada';
 
-  const valPrompt = `Eres un metodólogo experto en investigación en psicología. Evalúa la coherencia metodológica del siguiente perfil de tesis de pregrado:
+  const isQual = state.enfoque === 'Cualitativo';
+  const valPrompt = `Eres un metodólogo experto en investigación en psicología que conoce a fondo la taxonomía de Ato, López y Benavente (2013) y el marco CHIP-PUCP (2017) para investigación cualitativa.
 
+PERFIL A EVALUAR:
 - Área: ${efectiveArea()}
 - Población: ${getPoblacionCompleta()}
 - Problema: ${efectiveProblema()}
-- ${state.enfoque === 'Cualitativo' ? 'Categorías' : 'Variables'} (${vars.length}): ${vars.join(', ')}
+- ${isQual ? 'Categorías de análisis' : 'Variables'} (${vars.length}): ${vars.join(', ')}
 - Enfoque: ${state.enfoque}
-- Nivel/Paradigma: ${nivelLabel}
+- Nivel: ${nivelLabel}
 - Diseño: ${disenoLabel}
-- Técnica de análisis: ${tecnicaLabel}
-- Contexto: ${state.contexto || 'No especificado'}
+- Técnica: ${tecnicaLabel}
 
-Evalúa considerando:
-1. ¿Las variables/categorías son coherentes con el problema y el diseño?
-2. ¿El número de variables es adecuado para la técnica elegida?
-3. ¿El diseño y la técnica son apropiados para el nivel de investigación?
-4. ¿Hay algún riesgo metodológico REAL e importante? Solo alerta ante errores claros y graves.
-5. ¿El proyecto es viable para un tesista de pregrado?
+${isQual ? `MARCO TEÓRICO CUALITATIVO OBLIGATORIO (CHIP-PUCP, 2017; Pistrang & Barker, 2012) — estas combinaciones son VÁLIDAS Y COHERENTES:
+• Fenomenológico = entrevistas semi-estructuradas + análisis IPA o Giorgi ✅
+• Análisis temático = entrevistas o grupos focales + Braun & Clarke (2006) ✅
+• Etnográfico = observación participante + entrevistas + documentos ✅
+• Teoría Fundamentada = entrevistas con muestreo teórico + Strauss & Corbin ✅
+• Estudio de Caso = triangulación de fuentes + Yin (2018) ✅
+• Narrativo = entrevistas narrativas + análisis narrativo ✅
+• Investigación-Acción = técnicas participativas + ciclos reflexivos ✅
 
-Responde SOLO con JSON sin texto adicional ni markdown:
+REGLAS OBLIGATORIAS PARA ENFOQUE CUALITATIVO:
+- Las categorías de análisis NO son variables cuantitativas. NUNCA penalices por número de categorías.
+- La ausencia de hipótesis estadística es CORRECTA — se usan supuestos flexibles (CHIP-PUCP, 2017).
+- No usar estadística es CORRECTO en cualitativo.
+- Contexto geográfico no especificado NO es un error — no es campo de este formulario.
+- Etnografía, Teoría Fundamentada e Investigación-Acción son diseños válidos aunque demanden más recursos.
+  Si el estudiante los eligió conscientemente, son coherentes. Solo menciona su exigencia como fortaleza/desafío, NO como alerta.
+` : `MARCO TEÓRICO CUANTITATIVO OBLIGATORIO (Ato et al., 2013) — estas combinaciones son VÁLIDAS:
+• Correlacional + No-exp. transversal + Correlación/Regresión simple = DCS/DPT ✅
+• Explicativo/Causal + No-exp. transversal + Regresión múltiple = DPT ✅
+• Explicativo/Causal + No-exp. transversal + Mediación/Moderación/Path/SEM = DVO/DVL ✅
+• Explicativo/Causal + No-exp. longitudinal + Regresión/Path/SEM = DPL/DLEP ✅
+`}
+
+EVALÚA SOLO ESTOS PROBLEMAS REALES:
+${isQual ? `1. Categorías claramente incoherentes con el problema declarado
+2. Uso de lenguaje cuantitativo en un perfil cualitativo (ej: "medir la relación entre variables")
+3. Mezcla incoherente de paradigmas (ej: fenomenológico + análisis estadístico)` : `1. Variables claramente incoherentes con el problema declarado
+2. Número de variables inadecuado para la técnica (ej: mediación con 1 variable)
+3. Riesgo de multicolinealidad entre variables muy similares
+4. Inviabilidad clara para pregrado (SEM completo sin justificación)`}
+
+NO alertes por:
+- Contexto geográfico no especificado
+- Cualquier combinación válida del marco teórico listado
+- Cosas que ya están bien elegidas
+
+Responde SOLO con JSON:
 {
   "nivel_coherencia": "alta|media|baja",
   "emoji": "✅|⚠️|🔴",
-  "titulo": "frase corta de 5 palabras máximo evaluando el perfil",
-  "fortalezas": ["fortaleza 1 específica al proyecto","fortaleza 2"],
-  "alertas": ["alerta SOLO si hay error metodológico real y grave — si el perfil cualitativo es coherente, usa []"],
-  "sugerencia_clave": "Una sugerencia concreta y accionable. Si el problema está en variables o problema, indica 'Regresa al Paso 3'. Si está en nivel/diseño/técnica, indica 'Ajusta en el Paso 4'. Máximo 20 palabras."
+  "titulo": "frase de 5 palabras máximo evaluando el perfil",
+  "fortalezas": ["fortaleza concreta 1","fortaleza concreta 2"],
+  "alertas": ["alerta SOLO si hay error real — si todo es coherente devuelve []"],
+  "sugerencia_clave": "Sugerencia de máximo 20 palabras. Si el problema es de categorías/variables indica Regresa al Paso 3. Si es de diseño indica Ajusta en el Paso 4."
 }`;
 
   try {
