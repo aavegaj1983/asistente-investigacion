@@ -843,9 +843,17 @@ const PARES_MULTICOLINEAL = [
   // Impulsividad y autocontrol
   ["Impulsividad","Autocontrol"],
   ["Impulsividad","Regulación emocional"],
-  // Adicciones
+  // Adicciones (cont.)
   ["Craving","Dependencia"],
   ["Trastorno por uso de sustancias","Dependencia"],
+  // Social
+  ["Exclusión social","Aislamiento social"],
+  ["Identidad social","Autoconcepto"],
+  ["Cohesión social","Capital social"],
+  ["Convivencia comunitaria","Cohesión comunitaria"],
+  ["Participación ciudadana","Participación comunitaria"],
+  ["Resiliencia comunitaria","Cohesión comunitaria"],
+  ["Estigma social","Discriminación percibida"],
   // Digital — alta correlación documentada en literatura
   ["Comparación social","Autoestima"],
   ["Comparación social online","Autoestima"],
@@ -858,13 +866,13 @@ const PARES_MULTICOLINEAL = [
   ["Bienestar digital","Bienestar psicológico"],
   ["Soledad","Aislamiento social"],
   ["Tecnología y soledad","Soledad"],
-  // Jurídica
+  // Jurídica (cont.)
   ["Credibilidad del testigo","Confianza en el testimonio"],
   ["Exactitud del testimonio","Memoria de testigos oculares"],
   ["Memoria de fuente","Memoria de testigos oculares"],
   ["Daño psicológico","Estrés postraumático"],
   ["Victimización","Estrés postraumático"],
-  // Deporte
+  // Deporte (cont.)
   ["Ansiedad competitiva","Estrés precompetitivo"],
   ["Autoconfianza deportiva","Autoeficacia"],
   ["Burnout deportivo","Agotamiento"],
@@ -876,7 +884,7 @@ const PARES_MULTICOLINEAL = [
   ["Clima organizacional","Cultura organizacional"],
   ["Desempeño laboral","Rendimiento laboral"],
   ["Acoso laboral (mobbing)","Estrés laboral"],
-  // Salud
+  // Salud (cont.)
   ["Calidad de vida","Bienestar psicológico"],
   ["Adherencia al tratamiento","Autoeficacia en salud"],
   ["Dolor crónico","Catastrofización"],
@@ -900,6 +908,110 @@ const PARES_MULTICOLINEAL = [
   ["Memoria","Aprendizaje"],
   ["Deterioro cognitivo","Demencia"],
   ["Velocidad de procesamiento","Atención sostenida"],
+  // Transcultural
+  ["Aculturación","Estrés de aculturación"],
+  ["Aculturación","Choque cultural"],
+  ["Estrés de aculturación","Choque cultural"],
+  ["Identidad étnica","Identidad bicultural"],
+  ["Identidad étnica","Identidad cultural"],
+  ["Identidad bicultural","Identidad cultural"],
+  ["Identidad cultural","Diferenciación cultural"],
+  ["Identidad cultural","Identidad étnica"],
+  ["Discriminación percibida","Racismo y salud mental"],
+  ["Integración social","Aculturación"],
+  // Positiva (cont.)
+  ["Bienestar psicológico","Felicidad y bienestar"],
+  ["Resiliencia","Crecimiento postraumático"],
+  ["Gratitud","Bienestar subjetivo"],
+  ["Optimismo","Esperanza"],
+  ["Mindfulness y bienestar","Regulación emocional"],
+  ["Sentido de vida","Propósito de vida"],
+  ["Autocompasión","Autoestima"],
+  // Pareja y familia
+  ["Satisfacción marital","Ajuste diádico"],
+  ["Cohesión familiar","Funcionamiento familiar"],
+  ["Comunicación de pareja","Satisfacción marital"],
+  ["Conflicto familiar","Violencia intrafamiliar"],
+  // Salud (cont.)
+  ["Calidad de vida","Bienestar psicológico"],
+  ["Adherencia al tratamiento","Autoeficacia en salud"],
+  ["Dolor crónico","Catastrofización"],
+  ["Ansiedad ante la muerte","Miedo a la muerte"],
+  // Emergencias
+  ["Estrés postraumático","Trauma"],
+  ["Resiliencia post-desastre","Resiliencia"],
+  ["Fatiga por compasión","Burnout"],
+  ["Duelo traumático","Duelo"],
+  // Adicciones (cont.)
+  ["Craving","Dependencia"],
+  ["Trastorno por uso de sustancias","Dependencia"],
+  ["Recaída","Prevención de recaídas"],
+  ["Motivación para el cambio","Autoeficacia de abstinencia"],
+  // Digital
+  ["Uso problemático de redes sociales","Dependencia al smartphone"],
+  ["FOMO (miedo a perderse algo)","Ansiedad social"],
+  ["Cyberbullying","Acoso escolar (bullying)"],
+  ["Identidad digital","Identidad online"],
+  // Jurídica (cont.)
+  ["Credibilidad del testigo","Confianza en el testimonio"],
+  ["Exactitud del testimonio","Memoria de testigos oculares"],
+  ["Daño psicológico","Estrés postraumático"],
+  ["Victimización","Estrés postraumático"],
+  // Deporte (cont.)
+  ["Ansiedad competitiva","Estrés precompetitivo"],
+  ["Autoconfianza deportiva","Autoeficacia"],
+  ["Burnout deportivo","Agotamiento"],
+  ["Fortaleza mental","Resiliencia"],
+  // Desarrollo
+  ["Identidad en adolescencia","Identidad bicultural"],
+  ["Envejecimiento exitoso","Bienestar en la tercera edad"],
+  // Consumidor
+  ["Satisfacción del cliente","Lealtad a marcas"],
+  ["Intención de compra","Decisión de compra"],
+];
+
+// Palabras clave semánticas por dominio — para detectar solapamiento en vars IA
+const SEMANTIC_CLUSTERS = [
+  // Identidad
+  ["identidad cultural","identidad étnica","identidad bicultural","diferenciación cultural","sentido de pertenencia cultural","autoconcepto cultural"],
+  // Aculturación/estrés
+  ["aculturación","estrés aculturativo","estrés de aculturación","choque cultural","adaptación cultural","ajuste cultural","ajuste psicológico intercultural"],
+  // Integración social
+  ["integración social","inclusión social","cohesión social","participación social"],
+  // Discriminación
+  ["discriminación percibida","racismo","estigma","prejuicio","exclusión social"],
+  // Bienestar (varias áreas)
+  ["bienestar psicológico","bienestar subjetivo","bienestar","calidad de vida","satisfacción con la vida","felicidad"],
+  // Ansiedad/estrés
+  ["ansiedad","estrés percibido","estrés","angustia","malestar psicológico"],
+  // Autoeficacia
+  ["autoeficacia","autoconfianza","autoconcepto","autoestima"],
+  // Resiliencia
+  ["resiliencia","afrontamiento","crecimiento postraumático","fortaleza"],
+  // Motivación
+  ["motivación intrínseca","motivación extrínseca","motivación","engagement"],
+  // Burnout/agotamiento
+  ["burnout","agotamiento emocional","desgaste","fatiga por compasión"],
+  // Apoyo social
+  ["apoyo social","redes de apoyo","soporte social"],
+  // Regulación emocional
+  ["regulación emocional","autocontrol","control emocional","inteligencia emocional"],
+  // Memoria/cognición
+  ["memoria","memoria de trabajo","funciones ejecutivas","atención","concentración"],
+  // Craving/dependencia
+  ["craving","dependencia","uso problemático","adicción"],
+  // PTSD/trauma
+  ["estrés postraumático","trauma","victimización","daño psicológico"],
+  // Social/comunitario
+  ["cohesión social","cohesión comunitaria","convivencia comunitaria","capital social","sentido de comunidad"],
+  ["exclusión social","discriminación percibida","estigma social","marginalización"],
+  ["identidad social","autoconcepto social","pertenencia grupal","sentido de pertenencia"],
+  ["participación ciudadana","participación comunitaria","empoderamiento comunitario"],
+  // Consumidor
+  ["intención de compra","decisión de compra","actitud hacia la marca"],
+  ["satisfacción del cliente","lealtad a marcas","fidelización"],
+  // Jurídica
+  ["credibilidad del testimonio","exactitud del testimonio","confianza en memoria"],
 ];
 
 // Detecta qué variables seleccionadas colisionan entre sí
@@ -907,9 +1019,9 @@ function detectarMulticolinealidad(varsSeleccionadas) {
   const conflictos = {}; // varName → [lista de vars con las que colisiona]
   const vsLower = varsSeleccionadas.map(v => v.toLowerCase().trim());
 
+  // 1. Check against PARES_MULTICOLINEAL (exact/partial match)
   PARES_MULTICOLINEAL.forEach(([a, b]) => {
     const aL = a.toLowerCase(), bL = b.toLowerCase();
-    // Check exact or partial match
     const idxA = vsLower.findIndex(v => v === aL || v.includes(aL) || aL.includes(v));
     const idxB = vsLower.findIndex(v => v === bL || v.includes(bL) || bL.includes(v));
     if(idxA >= 0 && idxB >= 0 && idxA !== idxB) {
@@ -921,6 +1033,36 @@ function detectarMulticolinealidad(varsSeleccionadas) {
       if(!conflictos[vb].includes(va)) conflictos[vb].push(va);
     }
   });
+
+  // 2. Semantic cluster check — catches AI-generated vars with similar concepts
+  // Two vars conflict if they share the same semantic cluster
+  SEMANTIC_CLUSTERS.forEach(cluster => {
+    const matchedIdxs = [];
+    vsLower.forEach((v, idx) => {
+      const vWords = v.replace(/[()]/g,'').split(/\s+/);
+      const matchScore = cluster.filter(keyword => {
+        const kWords = keyword.split(/\s+/);
+        // Match if 2+ significant words overlap, or if the keyword is fully contained
+        return v.includes(keyword) || keyword.includes(v) ||
+               kWords.filter(kw => kw.length > 4 && vWords.some(vw => vw.includes(kw) || kw.includes(vw))).length >= 2;
+      }).length;
+      if(matchScore > 0) matchedIdxs.push(idx);
+    });
+    // If 2+ selected vars match the same cluster, they potentially overlap
+    if(matchedIdxs.length >= 2) {
+      for(let i = 0; i < matchedIdxs.length; i++) {
+        for(let j = i+1; j < matchedIdxs.length; j++) {
+          const va = varsSeleccionadas[matchedIdxs[i]];
+          const vb = varsSeleccionadas[matchedIdxs[j]];
+          if(!conflictos[va]) conflictos[va] = [];
+          if(!conflictos[vb]) conflictos[vb] = [];
+          if(!conflictos[va].includes(vb)) conflictos[va].push(vb);
+          if(!conflictos[vb].includes(va)) conflictos[vb].push(va);
+        }
+      }
+    }
+  });
+
   return conflictos;
 }
 
@@ -2198,8 +2340,8 @@ function canNext(){
     return state.problema!=="" && (state.variables.length>0 || tieneVarsTexto);
   }
   if(s===3){
-    // Cualitativo: solo necesita diseño (no nivel)
-    if(state.enfoque === "Cualitativo") {
+    // Cualitativo y Mixto: solo necesitan diseño (no nivel)
+    if(state.enfoque === "Cualitativo" || state.enfoque === "Mixto") {
       return state.diseno !== "";
     }
     if(!state.enfoque || !state.nivel || !state.diseno) return false;
@@ -2286,7 +2428,7 @@ function getAutoSuggestion() {
 // ── MINI COHERENCE INDICATOR (reglas locales, sin API) ────────────
 function getMiniCoherence() {
   if (!state.enfoque || !state.diseno) return null;
-  if (state.enfoque !== 'Cualitativo' && !state.nivel) return null;
+  if (state.enfoque !== 'Cualitativo' && state.enfoque !== 'Mixto' && !state.nivel) return null;
   let alerts = [], positives = [], tips = [];
   let vars = state.variables.filter(v => v !== 'otro');
   if (state.variables.includes('otro') && state.variablesOtro.trim())
@@ -2311,6 +2453,10 @@ function getMiniCoherence() {
       alerts.push(`Moderación simple: requiere exactamente 3 variables (X, W, Y). Tienes ${nv}. Elimina una, o cambia a Mediación moderada (4 vars), Regresión múltiple, Path Analysis o SEM completo.`);
     if (state.tecnica === 'mediacion-moderada' && nv < 4)
       alerts.push(`Mediación moderada requiere 4 variables (tienes ${nv})`);
+    if (state.tecnica === 'regresion-simple' && nv > 2)
+      alerts.push(`Regresión simple: usa 1 predictor + 1 criterio (tienes ${nv}). Con ${nv} variables usa Regresión múltiple.`);
+    if (state.tecnica === 'regresion-simple' && nv < 2)
+      alerts.push(`Regresión simple requiere exactamente 2 variables: X (predictor) e Y (criterio).`);
     if (state.tecnica === 'regresion-multiple' && nv < 3)
       alerts.push(`Regresión múltiple requiere al menos 3 variables (tienes ${nv})`);
     if (['path-analysis','sem-mediacion','sem-moderacion','sem-completo'].includes(state.tecnica) && state.nivel === 'correlacional')
@@ -2719,8 +2865,23 @@ function renderContent(){
       });
       h+=`</div>`;
 
+    } else if(state.enfoque === "Mixto") {
+      // ── BLOQUE MIXTO: va directo al diseño, sin pasar por nivel ───
+      // El diseño mixto ya codifica la lógica de integración (Creswell & Plano Clark, 2017)
+      h+=sectionLabel("¿Qué diseño de investigación mixto utilizarás?",
+        "El diseño define cómo se integran los componentes cuantitativo y cualitativo (Creswell & Plano Clark, 2017).");
+      h+=`<div class="hint" style="background:#EEF2FF;border-color:#C7D2FE;color:#3730A3">
+        📌 En investigación <strong>mixta</strong>, el nivel (correlacional, explicativo…) aplica al <strong>componente cuantitativo</strong> y está implícito en el diseño que elijas. Selecciona el diseño que mejor describa cómo integrarás ambos métodos.
+      </div>`;
+      h+=`<div class="options">`;
+      DISENOS.mixto.forEach(d=>{
+        const esc=d.id.replace(/'/g,"\'");
+        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+      });
+      h+=`</div>`;
+
     } else {
-      // ── BLOQUE CUANTITATIVO / MIXTO: nivel → diseño ───────────────
+      // ── BLOQUE CUANTITATIVO: nivel → diseño ───────────────
       h+=sectionLabel("¿Qué nivel de investigación buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
@@ -3408,7 +3569,7 @@ function prevStep(){
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
-function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
+function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
 function selectDiseno(v){state.diseno=v;state.tecnica="";state.aiValidation=null;updateNav();renderContent();saveState();}
@@ -3677,6 +3838,10 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
     if(nv < 4) warnings.push(`⚠️ La mediación moderada requiere 4 variables: X, M (mediador), Y y W (moderador). Actualmente tienes ${nv}. Regresa al paso 3 y agrega la variable faltante.`);
   }
   // Regresión múltiple necesita al menos 3 variables (2 predictores + Y)
+  if(tecnica === 'regresion-simple') {
+    if(nv < 2) warnings.push(`⚠️ La regresión simple requiere exactamente 2 variables: 1 predictor (X) y 1 criterio (Y). Actualmente tienes ${nv}.`);
+    if(nv > 2) warnings.push(`⚠️ La regresión simple predice Y con UN solo predictor X. Tienes ${nv} variables — las extra no serán usadas. Si quieres múltiples predictores, cambia a Regresión múltiple.`);
+  }
   if(tecnica === 'regresion-multiple') {
     if(nv < 3) warnings.push(`⚠️ La regresión múltiple requiere al menos 2 predictores y 1 variable dependiente (mínimo 3 variables). Actualmente tienes ${nv}.`);
   }
