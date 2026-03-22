@@ -2851,7 +2851,14 @@ function renderObPerfil() {
     <div class="perfil-blk">
       <div class="perfil-blk-label">Variables que podrías estudiar</div>
       <div class="perfil-vars">
-        ${vars.map((v,i)=>{const enc=encodeURIComponent(v);return `<button class="${selVars.includes(v)?'pvar-on':'pvar-off'}" data-v="${enc}" onclick="togglePerfilVar(decodeURIComponent(this.dataset.v))">${selVars.includes(v)?'✓ ':''} ${v}</button>`;}).join('')}
+        ${vars.map((v,i)=>{
+          const enc=encodeURIComponent(v);
+          const on=selVars.includes(v);
+          return `<span style="display:inline-flex;align-items:center;gap:0;border-radius:18px;border:${on?'1px solid #4F46E5':'0.5px solid #E5E7EB'};background:${on?'#EEF2FF':'#fff'};overflow:hidden">
+            <button style="padding:5px 8px 5px 11px;font-size:12px;color:${on?'#3730A3':'#6B7280'};background:none;border:none;cursor:pointer;font-family:inherit" data-v="${enc}" onclick="togglePerfilVar(decodeURIComponent(this.dataset.v))">${on?'✓ ':''} ${v}</button>
+            <button style="padding:5px 9px 5px 4px;font-size:11px;color:${on?'#818CF8':'#D1D5DB'};background:none;border:none;cursor:pointer;line-height:1" data-v="${enc}" onclick="eliminarPerfilVar(decodeURIComponent(this.dataset.v))" title="Eliminar">✕</button>
+          </span>`;
+        }).join('')}
         ${state._perfilAddingVar
           ? `<span style="display:inline-flex;align-items:center;gap:5px">
               <input id="pvar-new-input" type="text" placeholder="Nueva variable…" autofocus
@@ -2950,6 +2957,15 @@ function selectGuidedAnswer(qId, answer, qi) {
     renderOnboarding(document.getElementById('content'));
   }
   saveState();
+}
+
+function eliminarPerfilVar(v) {
+  const p = state.explorationProfile;
+  if(!p) return;
+  if(p.variables) p.variables = p.variables.filter(x=>x!==v);
+  if(p.selectedVars) p.selectedVars = p.selectedVars.filter(x=>x!==v);
+  saveState();
+  renderOnboarding(document.getElementById('content'));
 }
 
 function agregarPerfilVar(v) {
@@ -3508,8 +3524,34 @@ function renderContent(){
     if(state.modoExploracion && state.explorationProfile) h += renderContextStrip();
 
     // ── Enfoque ───────────────────────────────────────────────────
-    if(state.modoExploracion && state.explorationProfile && state.variables.filter(v=>v!=='otro').length >= 2) {
-      h+=`<div class="hint-exploracion">💡 Con tus variables, el enfoque <strong>cuantitativo</strong> es el más frecuente en este tipo de estudios. Puedes cambiarlo si tienes otro en mente.</div>`;
+    if(state.modoExploracion && state.explorationProfile) {
+      const nv = state.variables.filter(v=>v!=='otro').length;
+      const nivelRec = nv >= 3 ? 'explicativo' : nv === 2 ? 'correlacional' : 'descriptivo';
+      const disenoRec = 'no experimental transversal';
+      const tecnicaRec = nv >= 3 ? 'regresión múltiple o mediación' : nv === 2 ? 'correlación o regresión simple' : 'estadística descriptiva';
+      const nivelLabel = nv >= 3 ? 'Explicativo / Causal' : nv === 2 ? 'Correlacional / Predictivo' : 'Descriptivo';
+      h += `<div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:12px;padding:14px 16px;margin-bottom:4px">
+        <div style="font-size:11px;font-weight:700;color:#4F46E5;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Recomendación para tu perfil</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:white;border-radius:8px;padding:9px 11px;border:0.5px solid #C7D2FE">
+            <div style="font-size:10px;color:#818CF8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Enfoque</div>
+            <div style="font-size:13px;font-weight:500;color:#3730A3">Cuantitativo</div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:9px 11px;border:0.5px solid #C7D2FE">
+            <div style="font-size:10px;color:#818CF8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Nivel</div>
+            <div style="font-size:13px;font-weight:500;color:#3730A3">${nivelLabel}</div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:9px 11px;border:0.5px solid #C7D2FE">
+            <div style="font-size:10px;color:#818CF8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Diseño</div>
+            <div style="font-size:13px;font-weight:500;color:#3730A3">No experimental transversal</div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:9px 11px;border:0.5px solid #C7D2FE">
+            <div style="font-size:10px;color:#818CF8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Técnica</div>
+            <div style="font-size:13px;font-weight:500;color:#3730A3">${tecnicaRec}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#6366F1;margin-top:8px;line-height:1.5">Puedes cambiar cualquier opción. Las selecciones de abajo ya tienen esta recomendación marcada.</div>
+      </div>`;
     }
     h+=sectionLabel("¿Qué enfoque metodológico prefieres?");
     h+=`<div class="options">`;
@@ -3530,6 +3572,11 @@ function renderContent(){
         <span class="tooltip-fuente">Creswell & Plano Clark (2017); Hernández & Mendoza (2018)</span>`,
       },
     };
+    // Auto-select enfoque cuantitativo when modoExploracion and not yet chosen
+    if(state.modoExploracion && state.explorationProfile && !state.enfoque) {
+      state.enfoque = 'Cuantitativo';
+      saveState();
+    }
     ENFOQUES.forEach(e=>{
       const def = enfoqueDefs[e] || {};
       const tooltipHtml = def.tooltip
@@ -3586,6 +3633,12 @@ function renderContent(){
 
     } else {
       // ── BLOQUE CUANTITATIVO: nivel → diseño ───────────────
+      // Auto-select nivel if modoExploracion and not yet chosen
+      if(state.modoExploracion && state.explorationProfile && !state.nivel) {
+        const nv2 = state.variables.filter(v=>v!=='otro').length;
+        state.nivel = nv2 >= 3 ? 'explicativo' : nv2 === 2 ? 'correlacional' : 'descriptivo';
+        saveState();
+      }
       h+=sectionLabel("¿Qué nivel de investigación buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
@@ -3603,6 +3656,11 @@ function renderContent(){
         const enfoqueKey = state.enfoque.toLowerCase();
         const disenosTodos = DISENOS[enfoqueKey] || [];
 
+        // Auto-select diseño no-experimental-transversal when modoExploracion and not yet chosen
+        if(state.modoExploracion && state.explorationProfile && !state.diseno) {
+          state.diseno = 'no-experimental-transversal';
+          saveState();
+        }
         // Filtrar diseños según nivel (Ato et al., 2013; Hernández & Mendoza, 2018)
         let disenosDisponibles = disenosTodos;
         let notaNivel = '';
@@ -3908,7 +3966,21 @@ function renderContent(){
           '</div>' +
         '</div>';
 
-        // ── Sección 3: Nivel y Diseño (solo si necesario) ──
+        // ── Sección 3: Técnica (si la alerta menciona técnica) ──
+        var tecnicaHtml5 = '';
+        const necesitaTecnica = alertaTexto.includes('técnica') || alertaTexto.includes('tecnica') || alertaTexto.includes('correlaci') || alertaTexto.includes('regresion') || alertaTexto.includes('regresión') || alertaTexto.includes('mediaci') || alertaTexto.includes('moderaci') || alertaTexto.includes('path') || alertaTexto.includes('sem');
+        if(necesitaTecnica && state.enfoque === 'Cuantitativo' && state.nivel && state.diseno) {
+          const tecs5 = getTecnicasDisponibles(state.nivel, state.diseno);
+          if(Array.isArray(tecs5) && tecs5.length > 0) {
+            tecnicaHtml5 = '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Cambiar técnica de análisis</div>' +
+              '<div style="font-size:12px;color:#6B7280;margin-bottom:8px;line-height:1.5">La técnica actual puede no ser la más adecuada para tu número de variables. Selecciona otra:</div>' +
+              '<div class="cambios-chip-group">' +
+              tecs5.map(function(t){ return '<button class="cambios-chip ' + (state.tecnica===t.id ? 'sel' : '') + '" onclick="selectTecnica(this.dataset.v);renderContent()" data-v="' + t.id + '">' + t.label + (state.tecnica===t.id ? ' ✓' : '') + '</button>'; }).join('') +
+              '</div></div>';
+          }
+        }
+
+        // ── Sección 4: Nivel y Diseño (solo si necesario) ──
         var nivelHtml5 = '';
         if((necesitaNivel) && state.enfoque !== 'Cualitativo') {
           nivelHtml5 = '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Nivel de investigación</div><div class="cambios-chip-group">' +
@@ -3930,6 +4002,7 @@ function renderContent(){
           '<div class="cambios-panel-title">✏️ Resolver conflictos antes de generar</div>' +
           previewSectionHtml5 +
           multicolHtml5 +
+          tecnicaHtml5 +
           nivelHtml5 + disenoHtml5 +
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
