@@ -259,6 +259,82 @@ textarea{min-height:70px;resize:vertical}
 .var-warn{color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .var-error{color:#991B1B;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .var-validating{color:#6B7280;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:6px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:8px}
+/* ── ONBOARDING STEP -1 ─────────────────────────────────────────── */
+.ob-wrap{padding:32px 24px 24px;max-width:420px;margin:0 auto}
+.ob-label{font-size:11px;font-weight:700;color:#4F46E5;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.ob-q{font-size:21px;font-weight:500;color:var(--gray-900);line-height:1.35;margin-bottom:6px}
+.ob-sub{font-size:13px;color:var(--gray-500);line-height:1.6;margin-bottom:20px}
+.ob-textarea{width:100%;min-height:80px;resize:none;font-size:14px;border:1.5px solid var(--gray-200);border-radius:12px;padding:12px 15px;font-family:inherit;background:#fff;color:var(--gray-900);transition:border-color .2s;box-sizing:border-box}
+.ob-textarea:focus{outline:none;border-color:#4F46E5}
+.ob-textarea::placeholder{color:var(--gray-400)}
+.ob-examples{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 18px}
+.ob-example-chip{font-size:11px;border:0.5px solid var(--gray-200);border-radius:14px;padding:5px 10px;color:var(--gray-500);cursor:pointer;background:var(--gray-50);font-family:inherit;transition:all .15s}
+.ob-example-chip:hover{border-color:#4F46E5;color:#4F46E5;background:#EEF2FF}
+.ob-btn-primary{width:100%;padding:13px;border-radius:12px;background:#4F46E5;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-bottom:10px}
+.ob-btn-primary:hover{background:#3730A3}
+.ob-btn-primary:disabled{opacity:.45;cursor:not-allowed;background:#4F46E5}
+.ob-divider{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+.ob-divider::before,.ob-divider::after{content:'';flex:1;height:0.5px;background:var(--gray-200)}
+.ob-divider span{font-size:12px;color:var(--gray-400)}
+.ob-btn-guide{width:100%;padding:11px;border-radius:12px;background:none;border:1px solid var(--gray-200);font-size:13px;font-weight:500;color:var(--gray-600);cursor:pointer;font-family:inherit;margin-bottom:8px;transition:all .15s}
+.ob-btn-guide:hover{border-color:#4F46E5;color:#4F46E5;background:#F5F3FF}
+.ob-btn-skip{width:100%;padding:10px;border-radius:12px;background:none;border:none;font-size:13px;color:var(--gray-400);cursor:pointer;font-family:inherit;transition:color .15s}
+.ob-btn-skip:hover{color:var(--gray-600)}
+.ob-back{font-size:12px;color:var(--gray-400);background:none;border:none;cursor:pointer;font-family:inherit;margin-bottom:20px;display:flex;align-items:center;gap:4px;padding:0}
+.ob-back:hover{color:var(--gray-600)}
+.ob-prog{display:flex;gap:5px;margin-bottom:28px}
+.ob-prog-dot{height:3px;border-radius:2px;flex:1;background:var(--gray-200);transition:background .2s}
+.ob-prog-dot.done{background:#4F46E5}
+.ob-prog-dot.active{background:#818CF8}
+.ob-big-q{font-size:21px;font-weight:500;color:var(--gray-900);line-height:1.35;margin-bottom:24px}
+.ob-opt{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--gray-200);background:#fff;font-size:14px;color:var(--gray-700);cursor:pointer;text-align:left;font-family:inherit;line-height:1.4;transition:all .18s;display:block;margin-bottom:9px}
+.ob-opt:hover{border-color:#4F46E5;color:#3730A3;background:#FAFAFE}
+.ob-opt.chosen{border-color:#4F46E5;background:#EEF2FF;color:#3730A3;font-weight:500}
+.ob-more{width:100%;padding:11px;border-radius:12px;border:1px dashed var(--gray-200);background:none;font-size:13px;color:var(--gray-400);cursor:pointer;font-family:inherit;transition:all .18s;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ob-more:hover{border-color:#4F46E5;color:#4F46E5}
+.ob-extra-opt{width:100%;padding:11px 14px;border-radius:12px;border:1px solid #C7D2FE;background:#EEF2FF;font-size:13px;color:#3730A3;cursor:pointer;text-align:left;font-family:inherit;line-height:1.4;transition:all .18s;display:block;margin-bottom:7px}
+.ob-extra-opt:hover{border-color:#4F46E5;background:#E0E7FF}
+.ob-extra-opt.chosen{border-color:#4F46E5;font-weight:500}
+.ob-free-wrap{margin-top:8px;position:relative}
+.ob-free-sep{height:0.5px;background:var(--gray-200);margin:10px 0 10px}
+.ob-free-label{font-size:12px;color:var(--gray-500);margin-bottom:7px}
+.ob-free-input{width:100%;font-size:13px;border:1.5px solid #4F46E5;border-radius:10px;padding:11px 44px 11px 14px;font-family:inherit;background:#fff;color:var(--gray-900);box-sizing:border-box}
+.ob-free-input:focus{outline:none}
+.ob-free-input::placeholder{color:var(--gray-400)}
+.ob-free-send{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:7px;background:#4F46E5;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ob-skip{text-align:center;margin-top:14px}
+.ob-skip-btn{background:none;border:none;font-size:12px;color:var(--gray-400);cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+.ob-skip-btn:hover{color:var(--gray-600)}
+.ob-hyp-card{border:1.5px solid var(--gray-200);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s}
+.ob-hyp-card:hover{border-color:#818CF8;background:#FAFAFE}
+.ob-hyp-card.chosen{border-color:#4F46E5;background:#EEF2FF}
+.ob-hyp-area{font-size:10px;font-weight:700;color:#4F46E5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ob-hyp-title{font-size:14px;font-weight:500;color:var(--gray-900);margin-bottom:6px;line-height:1.35}
+.ob-hyp-vars{display:flex;flex-wrap:wrap;gap:4px}
+.ob-hyp-var{font-size:11px;padding:3px 8px;border-radius:10px;background:#F3F4F6;color:#374151;border:0.5px solid #E5E7EB}
+.ob-hyp-var.hi{background:#ECFDF5;color:#065F46;border-color:#A7F3D0}
+.ob-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:16px}
+.ob-loading-dots{display:flex;gap:6px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:#818CF8}
+@keyframes ob-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+.ob-dot:nth-child(1){animation:ob-bounce 1.2s ease infinite}
+.ob-dot:nth-child(2){animation:ob-bounce 1.2s ease .2s infinite}
+.ob-dot:nth-child(3){animation:ob-bounce 1.2s ease .4s infinite}
+.ob-loading-text{font-size:13px;color:var(--gray-400);text-align:center;line-height:1.5}
+.perfil-blk{margin-bottom:12px}
+.perfil-blk-label{font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.perfil-row{background:var(--gray-50);border:0.5px solid var(--gray-200);border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.perfil-val{font-size:14px;font-weight:500;color:var(--gray-900)}
+.perfil-edit-btn{font-size:11px;color:#4F46E5;background:none;border:none;cursor:pointer;font-family:inherit;flex-shrink:0}
+.perfil-vars{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:var(--gray-50);border:0.5px solid var(--gray-200);border-radius:10px}
+.pvar-on{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 11px;border-radius:18px;border:1px solid #4F46E5;color:#3730A3;background:#EEF2FF;cursor:pointer}
+.pvar-off{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 11px;border-radius:18px;border:0.5px solid var(--gray-200);color:var(--gray-500);background:#fff;cursor:pointer;transition:all .15s}
+.pvar-off:hover{border-color:#818CF8;color:#4F46E5}
+.pvar-add{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 11px;border-radius:18px;border:1px dashed var(--gray-300);color:var(--gray-400);cursor:pointer;background:none;font-family:inherit}
+.pvar-add:hover{border-color:#4F46E5;color:#4F46E5}
+.ctx-strip{background:#1E1B4B;border-radius:10px;padding:9px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.5}
+.ctx-strip strong{color:#fff;font-weight:600}
+.hint-exploracion{background:#F0FDF4;border:0.5px solid #A7F3D0;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#065F46;line-height:1.6}
 
 /* ── SELECTED VARS BOX ──────────────────────────────────────────── */
 .sel-vars-box{
@@ -2226,7 +2302,7 @@ const AIQueue = {
 
 const REGEN_MAX = 5;  // 5 intentos para variables IA
 const stateDefaults = {
-  step:0, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
+  step:-1, area:"", areaOtro:"", poblacion:"", poblacionOtro:"",
   problema:"", problemaOtro:"", variables:[], variablesOtro:"",
   enfoque:"", nivel:"", epistemologia:"", diseno:"", tecnica:"",
   experiencia:"", viabilidad:"", contexto:"", motivacion:"",
@@ -2242,13 +2318,36 @@ const stateDefaults = {
   aiInstruments:null, aiInstrumentsLoading:false,
   aiPoblaciones:[], aiPoblacionesLoading:false,
   aiReferencias:null, aiReferenciasLoading:false,
-  regenCount:0
+  regenCount:0,
+  // ── Onboarding (step -1) ─────────────────────────────────────
+  paso0Mode: null,         // null=landing | 'A' | 'B' | 'perfil'
+  modoExploracion: false,  // true when arriving from A or B
+  explorationText: '',     // Ruta A: free text
+  explorationLoading: false,
+  explorationHypotheses: null,  // [{fenomeno,area,areaId,poblacion,variables}]
+  explorationHypothesisIdx: -1,
+  explorationProfile: null,     // confirmed profile
+  guidedStep: 0,           // Ruta B: 0-3
+  guidedAnswers: {},       // {q1,q2,q3,q4}
+  guidedExpanded: {},      // {q1:bool, q2:bool, ...}
+  _verTodasAreas: false    // step 0: show all areas override
 };
 if(savedState) {
+  // Detect old saves (before onboarding feature): paso0Mode won't exist
+  const isOldSave = !Object.prototype.hasOwnProperty.call(savedState, 'paso0Mode');
   // Ensure edited has all new fields
   savedState.edited = Object.assign({}, stateDefaults.edited, savedState.edited || {});
   // Ensure all top-level new fields exist
   savedState = Object.assign({}, stateDefaults, savedState);
+  // If old save at step 0 with no area → show onboarding
+  if(isOldSave && savedState.step === 0 && !savedState.area) {
+    savedState.step = -1;
+    savedState.paso0Mode = null;
+  }
+  // If state is fully fresh (step 0, no progress) → show onboarding
+  if(savedState.paso0Mode === null && savedState.step === 0 && !savedState.area && !savedState.result) {
+    savedState.step = -1;
+  }
 }
 
 let state = savedState || {
@@ -2286,7 +2385,19 @@ let state = savedState || {
   editValidating:false,
   aiReferencias:null,
   aiReferenciasLoading:false,
-  regenCount:0
+  regenCount:0,
+  // ── Onboarding (step -1) ─────────────────────────────────────
+  paso0Mode: null,         // null=landing | 'A' | 'B' | 'perfil'
+  modoExploracion: false,  // true when arriving from A or B
+  explorationText: '',     // Ruta A: free text
+  explorationLoading: false,
+  explorationHypotheses: null,  // [{fenomeno,area,areaId,poblacion,variables}]
+  explorationHypothesisIdx: -1,
+  explorationProfile: null,     // confirmed profile
+  guidedStep: 0,           // Ruta B: 0-3
+  guidedAnswers: {},       // {q1,q2,q3,q4}
+  guidedExpanded: {},      // {q1:bool, q2:bool, ...}
+  _verTodasAreas: false    // step 0: show all areas override
 };
 
 // GUARDAR ESTADO AUTOMÁTICAMENTE
@@ -2317,6 +2428,7 @@ function getPoblacionCompleta(){
 
 function canNext(){
   const s=state.step;
+  if(s===-1) return false; // onboarding handled by inline buttons
   if(s===0){
     if(state.area==="otro") return state.areaOtro.trim()!=="";
     return state.area!=="";
@@ -2383,13 +2495,18 @@ function sectionLabel(t, tooltip=""){
 }
 
 function renderStepsBar(){
+  if(state.step === -1) {
+    document.getElementById("steps-bar").innerHTML = "";
+    document.getElementById("step-label").textContent = "";
+    return;
+  }
   let h="";
   STEPS.forEach((name,i)=>{
     const done=i<state.step;
     const active=i===state.step;
     const pending=i>state.step;
     let cls=done?"done":active?"active":"pending";
-    h+=`<div class="step-circle ${cls}" onclick="${done?`state.step=${i};render()`:''}">${done?'✓':i+1}</div>`;
+    h+=`<div class="step-circle ${cls}" onclick="${done?`state.step=${i};render()`:''}">` + (done?'✓':i+1) + `</div>`;
     if(i<STEPS.length-1){
       h+=`<div class="step-line ${done?'done':'pending'}"></div>`;
     }
@@ -2510,20 +2627,389 @@ function renderMiniCoherence(context) {
   return h;
 }
 
+// ════════════════════════════════════════════════════════════════
+// ONBOARDING — RUTA A / B / C  (paso -1)
+// ════════════════════════════════════════════════════════════════
+
+const PREGUNTAS_GUIADAS = [
+  { id:'q1', texto:'¿A quién te gustaría estudiar?',
+    opciones:['Adolescentes o jóvenes','Adultos en general','Trabajadores o empleados','Pacientes o personas con un diagnóstico','Niños o infantes','Adultos mayores'],
+    extra:['Deportistas de alto rendimiento','Migrantes o refugiados','Personas privadas de libertad','Personal de salud o cuidadores','Comunidades indígenas o rurales'] },
+  { id:'q2', texto:'¿En qué contexto viven o trabajan?',
+    opciones:['Colegio o universidad','Hospital o centro de salud','Empresa u organización','Comunidad o barrio','Familia o entorno doméstico','Entorno deportivo o competitivo'],
+    extra:['Centro penitenciario','Comunidad rural o indígena','Entorno virtual o remoto','Centro de rehabilitación','Institución técnica o laboral'] },
+  { id:'q3', texto:'¿Qué es lo que más te preocupa o te llama la atención?',
+    opciones:['Cómo se sienten por dentro (emociones, bienestar)','Cómo se relacionan con otros','Cómo les va en el estudio o el trabajo','Una conducta que les afecta (celular, alcohol, etc.)','Algo que les pasó o les hizo daño','Cómo piensan o toman decisiones'],
+    extra:['Cómo se adaptan a cambios o pérdidas','El sentido de pertenencia a un grupo','Su forma de afrontar el estrés','Cómo manejan situaciones de presión','Su identidad y quiénes sienten que son'] },
+  { id:'q4', texto:'¿Alguna palabra que ya asocias con tu tema?',
+    opciones:['Ansiedad · estrés · depresión','Autoestima · identidad · bienestar','Motivación · rendimiento · logro','Violencia · trauma · abuso','Liderazgo · clima laboral · burnout','Celular · redes · tecnología'],
+    extra:['Resiliencia · afrontamiento · fortaleza','Soledad · aislamiento · exclusión','Adicción · dependencia · craving','Migración · aculturación · identidad cultural','Familia · crianza · apego · vínculos'] }
+];
+
+function renderContextStrip() {
+  if(!state.modoExploracion || !state.explorationProfile) return '';
+  const p = state.explorationProfile;
+  const parts = [];
+  if(p.fenomeno) parts.push(`<strong>${p.fenomeno}</strong>`);
+  if(p.poblacion) parts.push(`con ${p.poblacion}`);
+  if(!parts.length) return '';
+  return `<div class="ctx-strip">🧭 Investigando ${parts.join(' ')}</div>`;
+}
+
+function renderOnboarding(el) {
+  const mode = state.paso0Mode;
+  if(!mode) {
+    el.innerHTML = renderObLanding();
+  } else if(mode === 'A') {
+    if(state.explorationLoading) el.innerHTML = renderObLoading('Analizando tu idea…', 'Buscando conexiones en la literatura de psicología');
+    else if(state.explorationHypotheses) el.innerHTML = renderObHypotheses();
+    else el.innerHTML = renderObLanding();
+  } else if(mode === 'B') {
+    if(state.explorationLoading) el.innerHTML = renderObLoading('Construyendo tu perfil…', 'La IA está consolidando tus respuestas');
+    else el.innerHTML = renderObGuided();
+  } else if(mode === 'perfil') {
+    el.innerHTML = renderObPerfil();
+  }
+}
+
+function renderObLanding() {
+  const examples = ['Jóvenes y celulares','Estrés en el trabajo','Rendimiento escolar','Violencia en pareja','Ansiedad universitaria'];
+  return `<div class="ob-wrap">
+    <div class="ob-label">Para empezar</div>
+    <div class="ob-q">¿Qué te genera curiosidad<br>o preocupación?</div>
+    <div class="ob-sub">Escríbelo con tus palabras — sin tecnicismos. La IA lo convierte en un punto de partida.</div>
+    <textarea class="ob-textarea" id="ob-text" placeholder="Ej: me preocupa que los jóvenes están todo el día con el celular y se aíslan más…" oninput="state.explorationText=this.value;saveState()">${state.explorationText||''}</textarea>
+    <div class="ob-examples">
+      ${examples.map(e=>`<button class="ob-example-chip" onclick="document.getElementById('ob-text').value='${e}';state.explorationText='${e}';saveState()">${e}</button>`).join('')}
+    </div>
+    <button class="ob-btn-primary" onclick="iniciarRutaA()" ${!state.explorationText.trim()?'disabled':''}>Explorar mi idea →</button>
+    <div class="ob-divider"><span>o</span></div>
+    <button class="ob-btn-guide" onclick="iniciarRutaB()">🧭 Ayúdame a descubrirlo paso a paso</button>
+    <button class="ob-btn-skip" onclick="iniciarRutaC()">Ya sé lo que quiero investigar →</button>
+  </div>`;
+}
+
+function renderObLoading(title, sub) {
+  return `<div class="ob-wrap">
+    <div class="ob-loading">
+      <div class="ob-loading-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+      <div class="ob-loading-text"><strong style="color:var(--gray-700)">${title}</strong><br>${sub}</div>
+    </div>
+  </div>`;
+}
+
+function renderObHypotheses() {
+  const hyps = state.explorationHypotheses || [];
+  const areaMap = {};
+  if(typeof AREAS !== 'undefined') AREAS.forEach(a => areaMap[a.id] = a.label);
+  return `<div class="ob-wrap">
+    <button class="ob-back" onclick="state.explorationHypotheses=null;renderOnboarding(document.getElementById('content'))">← Editar mi idea</button>
+    <div class="ob-label">Encontré estas posibilidades</div>
+    <div class="ob-q" style="font-size:17px;margin-bottom:6px">¿Cuál se acerca más a lo que quieres estudiar?</div>
+    <div class="ob-sub" style="margin-bottom:18px">Selecciona la que mejor describa tu interés.</div>
+    ${hyps.map((h,i)=>`
+      <div class="ob-hyp-card ${state.explorationHypothesisIdx===i?'chosen':''}" onclick="state.explorationHypothesisIdx=${i};renderOnboarding(document.getElementById('content'))">
+        <div class="ob-hyp-area">${areaMap[h.areaId]||h.area||''}</div>
+        <div class="ob-hyp-title">${h.fenomeno||''}</div>
+        ${h.variables&&h.variables.length?`<div class="ob-hyp-vars">${h.variables.slice(0,4).map((v,vi)=>`<span class="ob-hyp-var${vi<2?' hi':''}">${v}</span>`).join('')}</div>`:''}
+      </div>`).join('')}
+    <div style="margin-top:14px">
+      <button class="ob-btn-primary" onclick="confirmarHipotesis()" ${state.explorationHypothesisIdx<0?'disabled':''}>Continuar con esta idea →</button>
+      <button class="ob-btn-skip" onclick="iniciarRutaC()" style="margin-top:6px;display:block;text-align:center">Ver todas las opciones manualmente</button>
+    </div>
+  </div>`;
+}
+
+function renderObGuided() {
+  const qi = state.guidedStep;
+  if(qi >= PREGUNTAS_GUIADAS.length) {
+    procesarRutaB();
+    return renderObLoading('Construyendo tu perfil…', 'La IA está consolidando tus respuestas');
+  }
+  const q = PREGUNTAS_GUIADAS[qi];
+  const ans = state.guidedAnswers[q.id];
+  const expanded = state.guidedExpanded[q.id];
+  const dots = PREGUNTAS_GUIADAS.map((_,i)=>`<div class="ob-prog-dot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
+  return `<div class="ob-wrap">
+    ${qi>0?`<button class="ob-back" onclick="state.guidedStep=${qi-1};renderOnboarding(document.getElementById('content'))">← Anterior</button>`:''}
+    <div class="ob-prog">${dots}</div>
+    <div class="ob-big-q">${q.texto}</div>
+    ${q.opciones.map(o=>`<button class="ob-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
+    ${expanded ? `
+      <div style="height:0.5px;background:var(--gray-100);margin:6px 0 10px"></div>
+      ${q.extra.map(o=>`<button class="ob-extra-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
+      <div class="ob-free-sep"></div>
+      <div class="ob-free-label">¿No está la tuya? Escríbela.</div>
+      <div class="ob-free-wrap">
+        <input class="ob-free-input" type="text" id="ob-free-${q.id}" placeholder="Escribe tu respuesta…" value="${typeof ans==='string'&&!q.opciones.includes(ans)&&!q.extra.includes(ans)?ans:''}" onkeypress="if(event.key==='Enter'){selectGuidedAnswer('${q.id}',this.value,${qi})}">
+        <button class="ob-free-send" onclick="selectGuidedAnswer('${q.id}',document.getElementById('ob-free-${q.id}').value,${qi})">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    ` : `<button class="ob-more" onclick="state.guidedExpanded['${q.id}']=true;renderOnboarding(document.getElementById('content'))">＋ Ver más opciones</button>`}
+    <div class="ob-skip"><button class="ob-skip-btn" onclick="selectGuidedAnswer('${q.id}',null,${qi})">No lo tengo claro aún</button></div>
+  </div>`;
+}
+
+function renderObPerfil() {
+  const p = state.explorationProfile;
+  if(!p) return renderObLanding();
+  const areaMap = {};
+  if(typeof AREAS !== 'undefined') AREAS.forEach(a => areaMap[a.id] = a.label);
+  const areaLabel = areaMap[p.areaId] || p.area || '—';
+  const vars = p.variables || [];
+  const selVars = p.selectedVars || [...vars.slice(0,3)];
+  return `<div class="ob-wrap">
+    <div class="ob-label">Tu punto de partida</div>
+    <div class="ob-q" style="font-size:18px;margin-bottom:4px">Esto es lo que identifiqué</div>
+    <div class="ob-sub" style="margin-bottom:18px">Revísalo y ajusta lo que no encaje — luego continuamos.</div>
+    <div class="perfil-blk">
+      <div class="perfil-blk-label">Área de psicología</div>
+      <div class="perfil-row"><span class="perfil-val">${areaLabel}</span><button class="perfil-edit-btn" onclick="iniciarRutaC()">Cambiar →</button></div>
+    </div>
+    <div class="perfil-blk">
+      <div class="perfil-blk-label">Fenómeno de estudio</div>
+      <div class="perfil-row"><span class="perfil-val">${p.fenomeno||'—'}</span><button class="perfil-edit-btn" onclick="iniciarRutaC()">Cambiar →</button></div>
+    </div>
+    <div class="perfil-blk">
+      <div class="perfil-blk-label">Población</div>
+      <div class="perfil-row"><span class="perfil-val">${p.poblacion||'—'}</span><button class="perfil-edit-btn" onclick="iniciarRutaC()">Cambiar →</button></div>
+    </div>
+    <div class="perfil-blk">
+      <div class="perfil-blk-label">Variables que podrías estudiar</div>
+      <div class="perfil-vars">
+        ${vars.map((v,i)=>`<button class="${selVars.includes(v)?'pvar-on':'pvar-off'}" onclick="togglePerfilVar('${v.replace(/'/g,"\'")}','${p.areaId||''}')">${selVars.includes(v)?'✓ ':''} ${v}</button>`).join('')}
+        <button class="pvar-add" onclick="iniciarRutaC()">＋ Agregar</button>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <button class="ob-btn-primary" onclick="confirmarPerfil()">Continuar con este perfil →</button>
+      <button class="ob-btn-skip" onclick="iniciarRutaC()" style="margin-top:8px;display:block;text-align:center">Empezar desde cero manualmente</button>
+    </div>
+  </div>`;
+}
+
+function selectGuidedAnswer(qId, answer, qi) {
+  if(!answer || !answer.trim()) {
+    // skip this question
+    state.guidedAnswers[qId] = null;
+  } else {
+    state.guidedAnswers[qId] = answer;
+  }
+  state.guidedExpanded = {};
+  state.guidedStep = qi + 1;
+  if(state.guidedStep >= PREGUNTAS_GUIADAS.length) {
+    // all answered — synthesize
+    state.paso0Mode = 'B';
+    state.explorationLoading = true;
+    renderOnboarding(document.getElementById('content'));
+    setTimeout(() => procesarRutaB(), 50);
+  } else {
+    renderOnboarding(document.getElementById('content'));
+  }
+  saveState();
+}
+
+function togglePerfilVar(v, areaId) {
+  const p = state.explorationProfile;
+  if(!p) return;
+  if(!p.selectedVars) p.selectedVars = [...(p.variables||[]).slice(0,3)];
+  const idx = p.selectedVars.indexOf(v);
+  if(idx > -1) p.selectedVars.splice(idx,1);
+  else p.selectedVars.push(v);
+  saveState();
+  renderOnboarding(document.getElementById('content'));
+}
+
+function iniciarRutaA() {
+  if(!state.explorationText.trim()) return;
+  state.paso0Mode = 'A';
+  state.explorationLoading = true;
+  state.explorationHypotheses = null;
+  state.explorationHypothesisIdx = -1;
+  renderOnboarding(document.getElementById('content'));
+  setTimeout(() => procesarRutaA(), 50);
+}
+
+function iniciarRutaB() {
+  state.paso0Mode = 'B';
+  state.guidedStep = 0;
+  state.guidedAnswers = {};
+  state.guidedExpanded = {};
+  state.explorationLoading = false;
+  renderOnboarding(document.getElementById('content'));
+}
+
+function iniciarRutaC() {
+  // Go directly to step 0 (Area) with no preselection
+  state.modoExploracion = false;
+  state.explorationProfile = null;
+  state.step = 0;
+  saveState();
+  render();
+}
+
+async function procesarRutaA() {
+  const texto = state.explorationText;
+  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
+  const prompt = `Analiza esta inquietud de investigación en psicología: "${texto}"
+
+Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin texto adicional:
+[{"fenomeno":"fenómeno a estudiar máx 8 palabras","area":"Psicología X","areaId":"${areaIds}","poblacion":"descripción población máx 6 palabras","variables":["var1","var2","var3"]}]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:600,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content)||(data.content?.map(b=>b.text||'').join(''))||'';
+    let parsed = null;
+    try { parsed = safeParseJSON(text); } catch(e) {}
+    if(Array.isArray(parsed) && parsed.length >= 1) {
+      state.explorationHypotheses = parsed.slice(0,3);
+    } else {
+      // fallback: go to manual
+      iniciarRutaC(); return;
+    }
+  } catch(e) {
+    iniciarRutaC(); return;
+  }
+  state.explorationLoading = false;
+  saveState();
+  renderOnboarding(document.getElementById('content'));
+}
+
+async function procesarRutaB() {
+  const ans = state.guidedAnswers;
+  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
+  const q1 = ans.q1||'No especificado', q2 = ans.q2||'No especificado';
+  const q3 = ans.q3||'No especificado', q4 = ans.q4||'No especificado';
+  const prompt = `El usuario respondió sobre su idea de investigación en psicología:
+1. ¿A quién estudiarías?: "${q1}"
+2. ¿En qué contexto?: "${q2}"
+3. ¿Qué le preocupa?: "${q3}"
+4. Palabras clave: "${q4}"
+
+Genera UN perfil de investigación. Devuelve SOLO JSON sin texto adicional:
+{"fenomeno":"fenómeno máx 8 palabras","area":"Psicología X","areaId":"${areaIds}","poblacion":"descripción población máx 6 palabras","variables":["var1","var2","var3","var4"]}`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:350,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content)||(data.content?.map(b=>b.text||'').join(''))||'';
+    let parsed = null;
+    try { parsed = safeParseJSON(text); } catch(e) {}
+    if(parsed && parsed.fenomeno) {
+      state.explorationProfile = parsed;
+      state.paso0Mode = 'perfil';
+    } else {
+      iniciarRutaC(); return;
+    }
+  } catch(e) {
+    iniciarRutaC(); return;
+  }
+  state.explorationLoading = false;
+  saveState();
+  renderOnboarding(document.getElementById('content'));
+}
+
+function confirmarHipotesis() {
+  const idx = state.explorationHypothesisIdx;
+  const hyps = state.explorationHypotheses || [];
+  if(idx < 0 || !hyps[idx]) return;
+  state.explorationProfile = hyps[idx];
+  state.paso0Mode = 'perfil';
+  renderOnboarding(document.getElementById('content'));
+}
+
+function confirmarPerfil() {
+  const p = state.explorationProfile;
+  if(!p) { iniciarRutaC(); return; }
+  // Apply profile to state
+  state.modoExploracion = true;
+  // Set area
+  if(p.areaId && typeof AREAS !== 'undefined') {
+    const found = AREAS.find(a => a.id === p.areaId);
+    if(found) state.area = p.areaId;
+  }
+  // Set problema (fuzzy match to closest existing)
+  if(p.fenomeno && state.area && typeof PROBLEMAS !== 'undefined') {
+    const probs = PROBLEMAS[state.area] || [];
+    const fenLow = p.fenomeno.toLowerCase();
+    let best = null, bestScore = 0;
+    probs.forEach(pr => {
+      const words = fenLow.split(' ').filter(w=>w.length>3);
+      const score = words.filter(w=>pr.toLowerCase().includes(w)).length;
+      if(score > bestScore) { bestScore=score; best=pr; }
+    });
+    if(best && bestScore > 0) { state.problema = best; }
+    else { state.problema = 'otro'; state.problemaOtro = p.fenomeno; }
+  }
+  // Set poblacion (fuzzy match)
+  if(p.poblacion && state.area && typeof POBLACIONES !== 'undefined') {
+    const pobs = POBLACIONES[state.area] || [];
+    const pobLow = p.poblacion.toLowerCase();
+    let bestP = null, bestSc = 0;
+    pobs.forEach(pb => {
+      const words = pobLow.split(' ').filter(w=>w.length>3);
+      const score = words.filter(w=>pb.toLowerCase().includes(w)).length;
+      if(score > bestSc) { bestSc=score; bestP=pb; }
+    });
+    if(bestP && bestSc > 0) { state.poblacion = bestP; }
+    else { state.poblacion = 'otro'; state.poblacionOtro = p.poblacion; }
+  }
+  // Set variables (from selectedVars or first 3)
+  const selVars = p.selectedVars || (p.variables||[]).slice(0,3);
+  if(selVars.length) {
+    state.variables = selVars;
+  }
+  // Go to step 0 (Area)
+  state.step = 0;
+  saveState();
+  render();
+}
+
 function renderContent(){
   const el=document.getElementById("content");
   const s=state.step;
 
+  if(s===-1){
+    renderOnboarding(el);
+    return;
+  }
+
   if(s===0){
-    let h=sectionLabel("¿Qué área de la psicología te interesa?");
+    let h = renderContextStrip();
+    // Decide which areas to show
+    const mostrarTodasAreas = !state.modoExploracion || !state.explorationProfile || state._verTodasAreas;
+    let areasAMostrar = AREAS;
+    if(!mostrarTodasAreas && state.explorationProfile) {
+      // Top 4: the inferred area + 3 adjacent plausible ones
+      const areaInferida = state.explorationProfile.areaId;
+      const adyacentes = { clinica:['social','desarrollo','positiva'], educativa:['social','desarrollo','organizacional'], organizacional:['social','positiva','salud'], social:['clinica','positiva','desarrollo'], digital:['clinica','social','educativa'], positiva:['clinica','salud','social'], salud:['clinica','desarrollo','positiva'], juridica:['social','clinica','emergencias'], adicciones:['clinica','social','salud'], transcultural:['social','clinica','positiva'], emergencias:['clinica','social','salud'], ambiental:['social','positiva','clinica'], deporte:['positiva','salud','organizacional'], pareja_familia:['social','clinica','desarrollo'], desarrollo:['educativa','clinica','social'], neuropsicologia:['clinica','salud','educativa'], consumidor:['social','organizacional','digital'] };
+      const adj = (adyacentes[areaInferida]||['clinica','social','positiva']).slice(0,3);
+      const top4Ids = [areaInferida, ...adj].filter(Boolean);
+      areasAMostrar = top4Ids.map(id=>AREAS.find(a=>a.id===id)).filter(Boolean);
+    }
+    if(state.modoExploracion && state.explorationProfile) {
+      h += `<div class="hint-exploracion">💡 Preseleccioné el área más probable para tu idea. Puedes cambiarla si no encaja.</div>`;
+    }
+    h+=sectionLabel("¿Qué área de la psicología te interesa?");
     h+=`<div class="grid3">`;
-    AREAS.forEach(a=>{
+    areasAMostrar.forEach(a=>{
       const iconHtml = a.icon && a.icon.trim().startsWith('<svg') 
         ? `<span class="area-icon" style="display:flex;align-items:center;justify-content:center">${a.icon}</span>`
         : `<span class="area-icon">${a.icon}</span>`;
       h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')">${iconHtml}<span>${a.label}</span></button>`;
     });
     h+=`</div>`;
+    if(!mostrarTodasAreas) {
+      h+=`<div style="text-align:center;margin-top:4px"><button onclick="state._verTodasAreas=true;renderContent()" style="font-size:12px;color:#4F46E5;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">Ver todas las áreas →</button></div>`;
+    }
     if(state.area==="otro"){
       h+=`<input type="text" class="otro-input" placeholder="Especifica tu area" value="${state.areaOtro}" oninput="state.areaOtro=this.value;updateNav();saveState()"/>`;
     }
@@ -2531,7 +3017,11 @@ function renderContent(){
   }
 
   else if(s===1){
-    let h=sectionLabel("¿Con qué población quieres trabajar?");
+    let h = renderContextStrip();
+    if(state.modoExploracion && state.explorationProfile && state.poblacion) {
+      h+=`<div class="hint-exploracion">💡 Preseleccioné la población más probable. Puedes cambiarla libremente.</div>`;
+    }
+    h+=sectionLabel("¿Con qué población quieres trabajar?");
 
     const staticPobs = state.area && state.area!=="otro" ? POBLACIONES[state.area] : [];
     const usandoAI = state.aiPoblaciones && state.aiPoblaciones.length > 0;
@@ -2628,10 +3118,21 @@ function renderContent(){
     if(mostrarVariables){
       // En este paso el enfoque aún no está definido → lenguaje neutro
       // CHIP-PUCP (2017); Hernández & Mendoza (2018, cap. 3)
+      // Context strip for modoExploracion
+      if(state.modoExploracion && state.explorationProfile) {
+        h += renderContextStrip();
+        if(state.variables.length > 0) {
+          h += `<div class="hint-exploracion">💡 Las variables están preseleccionadas según tu idea. Puedes agregar o quitar las que necesites.</div>`;
+        }
+      }
       h+=sectionLabel(
         "¿Qué aspectos del fenómeno quieres estudiar?",
         "Según el enfoque seleccionado en el siguiente paso, estos aspectos serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
       );
+      // Hint when arriving from exploration mode
+      if(state.modoExploracion && state.explorationProfile && state.variables.length > 0) {
+        h+=`<div class="hint-exploracion">💡 Preseleccioné las variables más relevantes para tu idea. Puedes agregar, quitar o cambiarlas.</div>`;
+      }
       // Auto-trigger AI vars if not loaded and not loading.
       // Reset aiVarsError so stale errors from localStorage don't block retries.
       if(state.problema && state.problema !== 'otro' && state.aiVars.length === 0 && !state.aiVarsLoading) {
@@ -2818,8 +3319,12 @@ function renderContent(){
 
   else if(s===3){
     let h=`<div class="gap20">`;
+    if(state.modoExploracion && state.explorationProfile) h += renderContextStrip();
 
     // ── Enfoque ───────────────────────────────────────────────────
+    if(state.modoExploracion && state.explorationProfile && state.variables.filter(v=>v!=='otro').length >= 2) {
+      h+=`<div class="hint-exploracion">💡 Con tus variables, el enfoque <strong>cuantitativo</strong> es el más frecuente en este tipo de estudios. Puedes cambiarlo si tienes otro en mente.</div>`;
+    }
     h+=sectionLabel("¿Qué enfoque metodológico prefieres?");
     h+=`<div class="options">`;
     const enfoqueDefs = {
@@ -2851,7 +3356,9 @@ function renderContent(){
       </button>`;
     });
     h+=`</div>`;
-
+    if(state.modoExploracion && state.explorationProfile && !state.enfoque) {
+      h+=`<div class="hint-exploracion" style="margin-top:6px">💡 Basándonos en tus variables, el enfoque <strong>cuantitativo</strong> es el más común para este tipo de investigación. Puedes elegir el que mejor se adapte a tus objetivos.</div>`;
+    }
 
     // ── Nivel (cuantitativo/mixto) | directo al diseño (cualitativo) ──
     if(state.enfoque === "Cualitativo") {
@@ -3500,10 +4007,17 @@ function renderContent(){
 }
 
 function updateNav(){
-  document.getElementById("btn-back").disabled=state.step===0;
-  const nb=document.getElementById("btn-next");
-  nb.disabled=!canNext();
-  nb.style.display=state.step===4?"none":"block";
+  const bb = document.getElementById("btn-back");
+  const nb = document.getElementById("btn-next");
+  if(state.step === -1) {
+    bb.style.display = "none";
+    nb.style.display = "none";
+    return;
+  }
+  bb.style.display = "block";
+  bb.disabled = state.step === 0;
+  nb.disabled = !canNext();
+  nb.style.display = state.step === 4 ? "none" : "block";
   // En paso 4 (Metodología): "Verificar y continuar" si hubo alertas previas
   if(state.step===3) {
     const tieneAlertas = state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0;
@@ -3566,7 +4080,7 @@ function prevStep(){
   }
 }
 
-function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
+function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state._verTodasAreas=false;state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
@@ -3699,7 +4213,12 @@ function nuevoProyecto(){
     
     // Reiniciar estado
     state = {
-      step:0,
+      step:-1,
+      paso0Mode: null, modoExploracion: false,
+      explorationText: '', explorationLoading: false,
+      explorationHypotheses: null, explorationHypothesisIdx: -1,
+      explorationProfile: null,
+      guidedStep: 0, guidedAnswers: {}, guidedExpanded: {},
       area:"",
       areaOtro:"",
       poblacion:"",
