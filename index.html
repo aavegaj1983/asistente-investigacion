@@ -138,7 +138,7 @@ h2 span{color:var(--brand)}
   box-shadow:var(--shadow-sm);
   display:flex;flex-direction:column;align-items:center;gap:6px;
 }
-.badge-area .area-icon{font-size:22px;line-height:1}
+.badge-area .area-icon{font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
 .badge-area:hover{background:var(--brand-light);border-color:var(--brand-mid);color:var(--brand-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .badge-area.active{
   border-color:var(--brand);background:var(--brand-light);
@@ -788,40 +788,37 @@ function safeParseJSON(text) {
 const STEPS = ["Área","Población","Problema","Metodología","Resultado"];
 
 const AREAS = [
-  // Clínica y Salud Mental
   {id:"clinica",          label:"Psicología clínica",             icon:"🧠", keywords:"clinica psicopatologia trastornos mental"},
   {id:"neuropsicologia",  label:"Neuropsicología",                icon:"💊", keywords:"neuropsicologia cerebro cognitivo"},
   {id:"salud-mental-com", label:"Salud mental comunitaria",       icon:"🩺", keywords:"salud mental comunitaria"},
   {id:"salud",            label:"Psicología de la salud",         icon:"🔬", keywords:"salud fisica biopsicosocial"},
   {id:"adicciones",       label:"Adicciones",                     icon:"🚭", keywords:"adicciones sustancias drogas alcohol"},
   {id:"politicas-salud",  label:"Políticas en salud mental",      icon:"📋", keywords:"politicas publicas salud mental"},
-  // Social, Comunitaria y Política
   {id:"social",           label:"Psicología social",              icon:"👥", keywords:"social grupos actitudes influencia"},
   {id:"comunitaria",      label:"Psicología comunitaria",         icon:"🏘️", keywords:"comunitaria comunidad intervencion"},
   {id:"politica",         label:"Psicología política",            icon:"🗳️", keywords:"politica poder ideologia"},
   {id:"paz-conflictos",   label:"Paz y conflictos",               icon:"✌️", keywords:"paz conflictos violencia"},
   {id:"transcultural",    label:"Transcultural",                  icon:"🌍", keywords:"transcultural cultura diversidad"},
   {id:"juridica",         label:"Jurídica / forense",             icon:"⚖️", keywords:"juridica forense legal crimen"},
-  // Desarrollo y Ciclo Vital
   {id:"desarrollo",       label:"Psicología del desarrollo",      icon:"🌱", keywords:"desarrollo infantil ciclo vital"},
   {id:"pareja-familia",   label:"Pareja y familia",               icon:"👨‍👩‍👧", keywords:"pareja familia relaciones"},
   {id:"educativa",        label:"Educativa",                      icon:"🎓", keywords:"educativa escolar aprendizaje"},
   {id:"gerontologia",     label:"Psicogerontología",              icon:"👴", keywords:"gerontologia vejez adulto mayor"},
-  // Organizacional y Aplicada
   {id:"organizacional",   label:"Organizacional",                 icon:"🏢", keywords:"organizacional trabajo laboral"},
   {id:"deporte",          label:"Deporte",                        icon:"🏅", keywords:"deporte rendimiento atleta"},
   {id:"consumidor",       label:"Consumidor",                     icon:"🛒", keywords:"consumidor comportamiento compra"},
   {id:"publicidad",       label:"Publicidad y medios",            icon:"📣", keywords:"publicidad medios marketing"},
-  // Emergente y Contextual
   {id:"digital",          label:"Digital / cibernética",          icon:"📱", keywords:"digital tecnologia internet redes"},
   {id:"ambiental",        label:"Ambiental",                      icon:"🌿", keywords:"ambiental ecologia naturaleza"},
   {id:"emergencias",      label:"Emergencias",                    icon:"🚨", keywords:"emergencias desastres crisis"},
   {id:"positiva",         label:"Positiva",                       icon:"🌞", keywords:"positiva bienestar fortalezas"},
-  // Bases Científicas
   {id:"psicobiologia",    label:"Psicobiología y neurociencias",  icon:"🧬", keywords:"psicobiologia neurociencia biologia"},
   {id:"experimental",     label:"Experimental y cognitiva",       icon:"🔭", keywords:"experimental cognitiva cognicion"},
   {id:"otro",             label:"Otro",                           icon:"✏️", keywords:"otro ninguna"},
 ];
+
+
+
 
 const POBLACIONES = {
   clinica:["Niños y adolescentes (6-17 años)","Adultos jóvenes (18-35 años)","Adultos (36-59 años)","Adultos mayores (60+)","Personas con trastornos de ansiedad","Personas con depresión diagnosticada","Personas con trastornos del estado de ánimo","Cuidadores informales de personas dependientes","Pacientes en atención psicológica ambulatoria","Personas en proceso de duelo"],
@@ -841,15 +838,6 @@ const POBLACIONES = {
   digital:["Adolescentes usuarios intensivos de redes sociales","Jóvenes gamers (18-30 años)","Niños con acceso temprano a dispositivos","Adultos mayores con brecha digital","Trabajadores con hiperconectividad laboral","Estudiantes universitarios y redes sociales","Influencers y creadores de contenido","Personas con uso problemático de pornografía online","Usuarios de apps de citas","Comunidades virtuales y fandoms"],
   emergencias:["Sobrevivientes de desastres naturales","Primeros respondientes (bomberos, policía, paramédicos)","Personal de salud en emergencias","Personas desplazadas por violencia","Comunidades post-conflicto","Personas que perdieron seres queridos súbitamente","Sobrevivientes de accidentes de tránsito","Personas afectadas por desastres tecnológicos","Niños y adolescentes expuestos a emergencias","Voluntarios en zonas de desastre"],
   transcultural:["Migrantes latinoamericanos en el exterior","Migrantes venezolanos en Perú","Comunidades indígenas amazónicas","Comunidades indígenas andinas","Estudiantes internacionales en universidades","Hijos de migrantes (segunda generación)","Personas afroperuanas","Refugiados y solicitantes de asilo","Familias interculturales","Profesionales en contextos multiculturales"],
-  "salud-mental-com":["Comunidades urbano-marginales con acceso limitado a servicios","Usuarios de centros comunitarios de salud mental","Familias de personas con trastornos mentales graves","Personas en situación de calle con problemática de salud mental","Adolescentes en riesgo en contextos vulnerables","Adultos mayores en situación de abandono","Migrantes con necesidades de salud mental","Comunidades rurales sin acceso a psicólogos","Personal de salud comunitaria","Voluntarios en programas de salud mental"],
-  "politicas-salud":["Funcionarios públicos del sector salud","Tomadores de decisiones en ministerios de salud","Operadores de programas nacionales de salud mental","Profesionales de salud en el primer nivel de atención","Gestores de ONG en salud mental","Académicos y asesores de políticas","Usuarios del sistema público de salud mental","Representantes de organizaciones de personas con trastornos mentales","Personal de instituciones psiquiátricas","Comunidades beneficiarias de programas de salud"],
-  comunitaria:["Líderes y dirigentes comunitarios","Jóvenes en programas de intervención comunitaria","Madres de familia en organizaciones de base","Comunidades rurales andinas","Comunidades en zonas de conflicto social","Pobladores de asentamientos humanos","Adultos mayores en organizaciones barriales","Migrantes internos en nuevos contextos","Familias en situación de vulnerabilidad","Voluntarios y agentes comunitarios de salud"],
-  politica:["Militantes y activistas políticos","Electores en períodos electorales","Jóvenes con participación política emergente","Funcionarios y servidores públicos","Líderes de movimientos sociales","Personas afectadas por polarización política","Ciudadanos en contextos de crisis institucional","Comunidades indígenas con demandas políticas","Periodistas políticos","Académicos en ciencias políticas"],
-  "paz-conflictos":["Comunidades post-conflicto armado","Víctimas del terrorismo o conflicto interno","Excombatientes en proceso de reinserción","Desplazados internos por violencia","Comunidades en zonas de conflicto minero","Mediadores y operadores de paz","Niños y adolescentes expuestos a violencia colectiva","Personal de organismos internacionales de paz","Familias en duelo por violencia política","Comunidades en proceso de reconciliación"],
-  gerontologia:["Adultos mayores autónomos (60-74 años)","Adultos mayores frágiles (75+)","Adultos mayores institucionalizados","Adultos mayores con deterioro cognitivo leve","Cuidadores formales e informales de adultos mayores","Adultos mayores con enfermedades crónicas","Adultos mayores en situación de soledad","Adultos mayores en programas de envejecimiento activo","Familias con adultos mayores dependientes","Adultos mayores en transición de jubilación"],
-  publicidad:["Adolescentes expuestos a publicidad digital","Jóvenes consumidores de contenido en redes","Adultos influenciados por publicidad emocional","Usuarios de plataformas de streaming con publicidad","Consumidores de campañas de salud pública","Personas expuestas a desinformación mediática","Audiencias de medios tradicionales (TV, radio)","Creadores de contenido e influencers","Profesionales del marketing y la comunicación","Poblaciones vulnerables ante publicidad manipuladora"],
-  psicobiologia:["Pacientes con trastornos neurológicos","Personas con predisposición genética a trastornos mentales","Participantes en estudios de neuroimagen","Sujetos en estudios psicofisiológicos","Personas con trastornos del sueño","Adultos mayores en estudios de neuroenvejecimiento","Niños en estudios de neurodesarrollo","Personas con respuestas de estrés crónico","Voluntarios en estudios de laboratorio","Personas con enfermedades psicosomáticas"],
-  experimental:["Estudiantes universitarios como participantes de laboratorio","Adultos en estudios de cognición y percepción","Niños en estudios de desarrollo cognitivo","Personas en estudios de memoria y aprendizaje","Participantes en estudios de toma de decisiones","Personas en investigación de atención y concentración","Adultos en estudios de procesamiento emocional","Participantes en estudios de lenguaje y comunicación","Personas en investigación de psicología del razonamiento","Voluntarios en estudios de cognición social"],
   otro:[],
 };
 
@@ -871,6 +859,15 @@ const PROBLEMAS = {
   digital:["Uso problemático de redes sociales","Cyberbullying","FOMO (miedo a perderse algo)","Dependencia al smartphone","Identidad digital","Relaciones online","Desinformación y salud mental","Bienestar digital","Tecnología y soledad","Brecha digital y exclusión"],
   emergencias:["Estrés postraumático","Resiliencia post-desastre","Primeros auxilios psicológicos","Duelo traumático","Pánico y evacuación","Intervención en crisis","Fatiga por compasión","Apoyo psicosocial comunitario","Memoria traumática","Recuperación post-crisis"],
   transcultural:["Aculturación","Choque cultural","Identidad étnica","Discriminación percibida","Estrés de aculturación","Integración social","Bilingüismo y cognición","Identidad bicultural","Racismo y salud mental","Nostalgia cultural"],
+  "salud-mental-com":["Acceso a servicios de salud mental","Salud mental en comunidades vulnerables","Estigma hacia la enfermedad mental","Prevención comunitaria en salud mental","Intervención psicosocial comunitaria","Resiliencia en comunidades en riesgo","Salud mental y pobreza","Apoyo social en comunidades","Derechos de personas con trastornos mentales","Salud mental post-desastre"],
+  "politicas-salud":["Implementación de políticas de salud mental","Cobertura y acceso a servicios psicológicos","Desinstitucionalización psiquiátrica","Presupuesto público en salud mental","Legislación en salud mental","Evaluación de programas de salud mental","Salud mental en atención primaria","Formación de recursos humanos en salud mental","Determinantes sociales de la salud mental","Salud mental en planes nacionales de salud"],
+  comunitaria:["Sentido de comunidad","Empoderamiento comunitario","Participación ciudadana y comunitaria","Redes de apoyo comunitario","Intervención psicosocial en comunidades","Identidad comunitaria","Capital social","Cohesión social","Prevención comunitaria","Resiliencia colectiva"],
+  politica:["Comportamiento electoral","Cultura política","Identidad política y partidaria","Polarización política","Participación política","Autoritarismo y democracia","Liderazgo político","Desinformación política","Psicología del populismo","Confianza institucional"],
+  "paz-conflictos":["Estrés postraumático en contextos de conflicto","Reconciliación y perdón","Memoria colectiva del conflicto","Identidad en contextos de guerra","Resiliencia en comunidades post-conflicto","Duelo colectivo","Violencia política y salud mental","Reintegración de excombatientes","Desplazamiento interno y bienestar","Justicia transicional y salud mental"],
+  gerontologia:["Envejecimiento exitoso","Soledad en adultos mayores","Deterioro cognitivo leve","Calidad de vida en la vejez","Dependencia funcional","Depresión en adultos mayores","Adaptación a la jubilación","Vínculos intergeneracionales","Cuidado y sobrecarga del cuidador","Identidad en la vejez"],
+  publicidad:["Persuasión publicitaria","Actitudes hacia la publicidad","Influencia de redes sociales en el consumo","Efectos de la publicidad en la autoestima","Publicidad engañosa y bienestar","Comportamiento del consumidor ante medios","Alfabetización mediática","Impacto emocional de la publicidad","Publicidad y estereotipos","Bienestar digital y publicidad"],
+  psicobiologia:["Bases neurobiológicas del estrés","Psiconeuroinmunología","Genética del comportamiento","Bases biológicas de la emoción","Neurobiología del sueño","Psicofisiología del estrés","Bases neurales de la cognición","Factores biológicos en trastornos mentales","Neuroendocrinología del comportamiento","Epigenética y salud mental"],
+  experimental:["Procesos atencionales","Memoria y aprendizaje","Toma de decisiones","Razonamiento y solución de problemas","Percepción y cognición","Sesgos cognitivos","Cognición social","Velocidad de procesamiento","Control inhibitorio","Metacognición"],
   otro:[],
 };
 
@@ -1373,6 +1370,69 @@ const PROBLEMAS_PRIORITARIOS = {
   "Refugiados y solicitantes de asilo":   ["Estrés de aculturación","Aculturación","Discriminación percibida","Integración social","Choque cultural"],
   "Familias interculturales":             ["Identidad bicultural","Aculturación","Choque cultural","Nostalgia cultural","Integración social"],
   "Profesionales en contextos multiculturales":["Identidad bicultural","Choque cultural","Aculturación","Integración social","Discriminación percibida"],
+
+  // ── SALUD MENTAL COMUNITARIA ───────────────────────────────────
+  "Comunidades urbano-marginales con acceso limitado a servicios":["Acceso a servicios de salud mental","Estigma hacia la enfermedad mental","Salud mental y pobreza","Resiliencia en comunidades en riesgo","Apoyo social en comunidades"],
+  "Usuarios de centros comunitarios de salud mental":["Salud mental en comunidades vulnerables","Estigma hacia la enfermedad mental","Acceso a servicios de salud mental","Intervención psicosocial comunitaria","Apoyo social en comunidades"],
+  "Familias de personas con trastornos mentales graves":["Estigma hacia la enfermedad mental","Apoyo social en comunidades","Salud mental en comunidades vulnerables","Resiliencia en comunidades en riesgo","Intervención psicosocial comunitaria"],
+  "Adolescentes en riesgo en contextos vulnerables":["Salud mental y pobreza","Prevención comunitaria en salud mental","Resiliencia en comunidades en riesgo","Estigma hacia la enfermedad mental","Apoyo social en comunidades"],
+  "Comunidades rurales sin acceso a psicólogos":["Acceso a servicios de salud mental","Salud mental y pobreza","Intervención psicosocial comunitaria","Prevención comunitaria en salud mental","Resiliencia en comunidades en riesgo"],
+
+  // ── POLÍTICAS EN SALUD MENTAL ──────────────────────────────────
+  "Funcionarios públicos del sector salud":["Implementación de políticas de salud mental","Cobertura y acceso a servicios psicológicos","Formación de recursos humanos en salud mental","Evaluación de programas de salud mental","Determinantes sociales de la salud mental"],
+  "Operadores de programas nacionales de salud mental":["Implementación de políticas de salud mental","Evaluación de programas de salud mental","Cobertura y acceso a servicios psicológicos","Salud mental en atención primaria","Determinantes sociales de la salud mental"],
+  "Usuarios del sistema público de salud mental":["Acceso a servicios de salud mental","Derechos de personas con trastornos mentales","Estigma hacia la enfermedad mental","Cobertura y acceso a servicios psicológicos","Salud mental en atención primaria"],
+
+  // ── PSICOLOGÍA COMUNITARIA ─────────────────────────────────────
+  "Líderes y dirigentes comunitarios":["Empoderamiento comunitario","Sentido de comunidad","Participación ciudadana y comunitaria","Capital social","Identidad comunitaria"],
+  "Jóvenes en programas de intervención comunitaria":["Participación ciudadana y comunitaria","Empoderamiento comunitario","Sentido de comunidad","Resiliencia colectiva","Redes de apoyo comunitario"],
+  "Comunidades en zonas de conflicto social":["Resiliencia colectiva","Cohesión social","Redes de apoyo comunitario","Sentido de comunidad","Intervención psicosocial en comunidades"],
+  "Pobladores de asentamientos humanos":["Sentido de comunidad","Cohesión social","Capital social","Participación ciudadana y comunitaria","Resiliencia colectiva"],
+
+  // ── PSICOLOGÍA POLÍTICA ────────────────────────────────────────
+  "Militantes y activistas políticos":["Identidad política y partidaria","Participación política","Comportamiento electoral","Polarización política","Cultura política"],
+  "Electores en períodos electorales":["Comportamiento electoral","Confianza institucional","Polarización política","Cultura política","Desinformación política"],
+  "Jóvenes con participación política emergente":["Participación política","Identidad política y partidaria","Cultura política","Confianza institucional","Comportamiento electoral"],
+  "Funcionarios y servidores públicos":["Confianza institucional","Cultura política","Liderazgo político","Identidad política y partidaria","Polarización política"],
+  "Líderes de movimientos sociales":["Liderazgo político","Participación política","Identidad política y partidaria","Empoderamiento comunitario","Polarización política"],
+  "Personas afectadas por polarización política":["Polarización política","Cultura política","Confianza institucional","Desinformación política","Identidad política y partidaria"],
+  "Ciudadanos en contextos de crisis institucional":["Confianza institucional","Polarización política","Cultura política","Comportamiento electoral","Psicología del populismo"],
+  "Comunidades indígenas con demandas políticas":["Participación política","Identidad política y partidaria","Empoderamiento comunitario","Cultura política","Confianza institucional"],
+  "Periodistas políticos":["Desinformación política","Cultura política","Confianza institucional","Polarización política","Liderazgo político"],
+  "Académicos en ciencias políticas":["Cultura política","Comportamiento electoral","Polarización política","Confianza institucional","Participación política"],
+
+  // ── PAZ Y CONFLICTOS ──────────────────────────────────────────
+  "Comunidades post-conflicto armado":["Estrés postraumático en contextos de conflicto","Resiliencia en comunidades post-conflicto","Memoria colectiva del conflicto","Duelo colectivo","Reconciliación y perdón"],
+  "Víctimas del terrorismo o conflicto interno":["Estrés postraumático en contextos de conflicto","Duelo colectivo","Memoria colectiva del conflicto","Violencia política y salud mental","Reconciliación y perdón"],
+  "Excombatientes en proceso de reinserción":["Reintegración de excombatientes","Estrés postraumático en contextos de conflicto","Identidad en contextos de guerra","Resiliencia en comunidades post-conflicto","Reconciliación y perdón"],
+  "Desplazados internos por violencia":["Desplazamiento interno y bienestar","Estrés postraumático en contextos de conflicto","Duelo colectivo","Resiliencia en comunidades post-conflicto","Memoria colectiva del conflicto"],
+  "Niños y adolescentes expuestos a violencia colectiva":["Estrés postraumático en contextos de conflicto","Duelo colectivo","Violencia política y salud mental","Resiliencia en comunidades post-conflicto","Memoria colectiva del conflicto"],
+
+  // ── PSICOGERONTOLOGÍA ─────────────────────────────────────────
+  "Adultos mayores autónomos (60-74 años)":["Envejecimiento exitoso","Calidad de vida en la vejez","Bienestar subjetivo en vejez","Adaptación a la jubilación","Soledad en adultos mayores"],
+  "Adultos mayores frágiles (75+)":["Dependencia funcional","Calidad de vida en la vejez","Depresión en adultos mayores","Soledad en adultos mayores","Deterioro cognitivo leve"],
+  "Adultos mayores institucionalizados":["Calidad de vida en la vejez","Depresión en adultos mayores","Soledad en adultos mayores","Dependencia funcional","Identidad en la vejez"],
+  "Adultos mayores con deterioro cognitivo leve":["Deterioro cognitivo leve","Depresión en adultos mayores","Calidad de vida en la vejez","Soledad en adultos mayores","Dependencia funcional"],
+  "Cuidadores formales e informales de adultos mayores":["Sobrecarga del cuidador","Estrés laboral y burnout","Calidad de vida en la vejez","Depresión en adultos mayores","Vínculos intergeneracionales"],
+  "Adultos mayores en situación de soledad":["Soledad en adultos mayores","Depresión en adultos mayores","Calidad de vida en la vejez","Redes de apoyo comunitario","Bienestar subjetivo en vejez"],
+  "Adultos mayores en programas de envejecimiento activo":["Envejecimiento exitoso","Calidad de vida en la vejez","Bienestar subjetivo en vejez","Participación ciudadana y comunitaria","Vínculos intergeneracionales"],
+  "Adultos mayores en transición de jubilación":["Adaptación a la jubilación","Identidad en la vejez","Bienestar subjetivo en vejez","Calidad de vida en la vejez","Envejecimiento exitoso"],
+
+  // ── PUBLICIDAD Y MEDIOS ────────────────────────────────────────
+  "Adolescentes expuestos a publicidad digital":["Efectos de la publicidad en la autoestima","Influencia de redes sociales en el consumo","Comportamiento del consumidor ante medios","Alfabetización mediática","Publicidad y estereotipos"],
+  "Jóvenes consumidores de contenido en redes":["Influencia de redes sociales en el consumo","Actitudes hacia la publicidad","Efectos de la publicidad en la autoestima","Bienestar digital y publicidad","Alfabetización mediática"],
+  "Creadores de contenido e influencers":["Influencia de redes sociales en el consumo","Actitudes hacia la publicidad","Bienestar digital y publicidad","Comportamiento del consumidor ante medios","Publicidad y estereotipos"],
+
+  // ── PSICOBIOLOGÍA ─────────────────────────────────────────────
+  "Participantes en estudios de neuroimagen":["Bases neurales de la cognición","Bases biológicas de la emoción","Neurobiología del sueño","Factores biológicos en trastornos mentales","Bases neurobiológicas del estrés"],
+  "Personas con trastornos del sueño":["Neurobiología del sueño","Bases neurobiológicas del estrés","Bases biológicas de la emoción","Psiconeuroinmunología","Neuroendocrinología del comportamiento"],
+  "Personas con respuestas de estrés crónico":["Bases neurobiológicas del estrés","Psiconeuroinmunología","Neuroendocrinología del comportamiento","Bases biológicas de la emoción","Epigenética y salud mental"],
+
+  // ── EXPERIMENTAL Y COGNITIVA ──────────────────────────────────
+  "Estudiantes universitarios como participantes de laboratorio":["Procesos atencionales","Memoria y aprendizaje","Toma de decisiones","Sesgos cognitivos","Control inhibitorio"],
+  "Adultos en estudios de cognición y percepción":["Procesos atencionales","Velocidad de procesamiento","Sesgos cognitivos","Razonamiento y solución de problemas","Metacognición"],
+  "Personas en estudios de memoria y aprendizaje":["Memoria y aprendizaje","Procesos atencionales","Velocidad de procesamiento","Control inhibitorio","Metacognición"],
+  "Participantes en estudios de toma de decisiones":["Toma de decisiones","Sesgos cognitivos","Razonamiento y solución de problemas","Control inhibitorio","Cognición social"],
 };
 
 const VARIABLES = {
@@ -3119,7 +3179,7 @@ function iniciarRutaC() {
 
 async function procesarRutaA() {
   const texto = state.explorationText;
-  const areaIds = 'clinica|educativa|organizacional|social|comunitaria|politica|paz-conflictos|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural|salud-mental-com|politicas-salud|gerontologia|publicidad|psicobiologia|experimental';
+  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
   const prompt = `Analiza esta inquietud de investigación en psicología: "${texto}"
 
 Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin texto adicional:
@@ -3151,7 +3211,7 @@ Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin
 
 async function procesarRutaB() {
   const ans = state.guidedAnswers;
-  const areaIds = 'clinica|educativa|organizacional|social|comunitaria|politica|paz-conflictos|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural|salud-mental-com|politicas-salud|gerontologia|publicidad|psicobiologia|experimental';
+  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
   const q1 = ans.q1||'No especificado', q2 = ans.q2||'No especificado';
   const q3 = ans.q3||'No especificado', q4 = ans.q4||'No especificado';
   const prompt = `El usuario respondió sobre su idea de investigación en psicología:
@@ -3263,7 +3323,7 @@ function renderContent(){
     if(!mostrarTodasAreas && state.explorationProfile) {
       // Top 4: the inferred area + 3 adjacent plausible ones
       const areaInferida = state.explorationProfile.areaId;
-      const adyacentes = { clinica:['salud-mental-com','desarrollo','positiva'], educativa:['social','desarrollo','organizacional'], organizacional:['social','positiva','salud'], social:['comunitaria','politica','desarrollo'], digital:['clinica','social','educativa'], positiva:['clinica','salud','social'], salud:['clinica','desarrollo','positiva'], juridica:['social','clinica','emergencias'], adicciones:['clinica','social','salud'], transcultural:['social','clinica','positiva'], emergencias:['clinica','social','salud'], ambiental:['social','positiva','clinica'], deporte:['positiva','salud','organizacional'], 'pareja-familia':['social','clinica','desarrollo'], desarrollo:['educativa','clinica','social'], neuropsicologia:['clinica','salud','educativa'], consumidor:['social','organizacional','digital'], comunitaria:['social','salud-mental-com','politica'], politica:['social','comunitaria','paz-conflictos'], 'paz-conflictos':['comunitaria','politica','emergencias'], 'salud-mental-com':['clinica','comunitaria','salud'], 'politicas-salud':['salud-mental-com','salud','comunitaria'], gerontologia:['desarrollo','salud','clinica'], publicidad:['consumidor','digital','social'], psicobiologia:['neuropsicologia','clinica','experimental'], experimental:['psicobiologia','neuropsicologia','clinica'] };
+      const adyacentes = { clinica:['social','desarrollo','positiva'], educativa:['social','desarrollo','organizacional'], organizacional:['social','positiva','salud'], social:['clinica','positiva','desarrollo'], digital:['clinica','social','educativa'], positiva:['clinica','salud','social'], salud:['clinica','desarrollo','positiva'], juridica:['social','clinica','emergencias'], adicciones:['clinica','social','salud'], transcultural:['social','clinica','positiva'], emergencias:['clinica','social','salud'], ambiental:['social','positiva','clinica'], deporte:['positiva','salud','organizacional'], pareja_familia:['social','clinica','desarrollo'], desarrollo:['educativa','clinica','social'], neuropsicologia:['clinica','salud','educativa'], consumidor:['social','organizacional','digital'] };
       const adj = (adyacentes[areaInferida]||['clinica','social','positiva']).slice(0,3);
       const top4Ids = [areaInferida, ...adj].filter(Boolean);
       areasAMostrar = top4Ids.map(id=>AREAS.find(a=>a.id===id)).filter(Boolean);
@@ -3275,20 +3335,17 @@ function renderContent(){
       </div>`;
     }
     h+=sectionLabel("¿Qué área de la psicología te interesa?");
-    h+=`<div style="position:relative;margin-bottom:12px">
-      <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none">🔍</span>
-      <input id="area-search" type="text" placeholder="Buscar área..."
-        style="width:100%;padding:9px 12px 9px 32px;font-size:13px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--gray-50);color:var(--gray-900);font-family:var(--font);outline:none;box-sizing:border-box"
-        oninput="filterAreas(this.value)"
-        value=""
-      />
-    </div>`;
-    h+=`<div class="grid3" id="areas-grid">`;
+    h+=`<div class="grid3">`;
     areasAMostrar.forEach(a=>{
       h+=`<button class="badge-area ${state.area===a.id?'active':''}" data-keywords="${a.keywords||''} ${a.label.toLowerCase()}" onclick="selectArea('${a.id}')"><span class="area-icon">${a.icon}</span><span>${a.label}</span></button>`;
     });
+
+
+
+
+
+
     h+=`</div>`;
-    h+=`<div id="areas-empty" style="display:none;text-align:center;padding:1.5rem 0;font-size:13px;color:var(--gray-400)">No se encontraron áreas.</div>`;
     if(!mostrarTodasAreas) {
       h+=`<div style="text-align:center;margin-top:4px"><button onclick="state._verTodasAreas=true;renderContent()" style="font-size:12px;color:#4F46E5;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">Ver todas las áreas →</button></div>`;
     }
@@ -4539,20 +4596,6 @@ function prevStep(){
 }
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state._verTodasAreas=false;state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
-function filterAreas(q){
-  const grid=document.getElementById('areas-grid');
-  const empty=document.getElementById('areas-empty');
-  if(!grid)return;
-  const val=q.toLowerCase().trim();
-  let visible=0;
-  grid.querySelectorAll('.badge-area').forEach(btn=>{
-    const k=(btn.dataset.keywords||'')+(btn.querySelector('span:last-child')||{}).textContent||'';
-    const show=!val||k.toLowerCase().includes(val);
-    btn.style.display=show?'':'none';
-    if(show)visible++;
-  });
-  if(empty)empty.style.display=visible===0?'block':'none';
-}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
@@ -5126,7 +5169,7 @@ Instrumentos validados en español: UWES-S, PHQ-9, CEAM, ESCABAS, SBI-U, MSLQ.`,
 Constructos canónicos: Burnout (Maslach MBI), Engagement laboral (UWES), Satisfacción laboral (JDI/Warr), Compromiso organizacional (Meyer & Allen), Liderazgo transformacional/transaccional (Bass MLQ), Clima organizacional (Litwin & Stringer), Justicia organizacional (Colquitt), Acoso laboral (NAQ-R), Estrés laboral (Karasek/Siegrist), Autoeficacia profesional, Conflicto trabajo-familia, Desempeño laboral, Inteligencia emocional en el trabajo (MSCEIT/WLEIS).
 Instrumentos validados en español: MBI-GS, UWES, NAQ-R, MLQ, JDI, COPSOQ.`,
 
-  social: `ÁREA: Psicología social
+  social: `ÁREA: Psicología social y comunitaria
 Constructos canónicos: Identidad social (Tajfel), Exclusión social percibida, Prejuicio y discriminación (Modern Racism Scale/Allport), Cohesión social, Resiliencia comunitaria, Capital social, Participación ciudadana, Sentido de comunidad (McMillan), Apoyo social percibido (MOS), Normas subjetivas, Actitudes (Ajzen TPB), Empoderamiento comunitario, Estigma social.
 Instrumentos validados en español: MOS-SSS, RSES, SCS, EBS.`,
 
@@ -5177,6 +5220,42 @@ Instrumentos validados en español: PCL-5-sp, CD-RISC-10-sp, PTGI-sp, ProQOL-sp.
   transcultural: `ÁREA: Psicología transcultural y migración
 Constructos canónicos: Aculturación (BACCI/ARSMA — Cuéllar), Estrés de aculturación (SAFE — Mena), Identidad étnica/racial (MEIM — Phinney), Discriminación percibida (EDIS/SOES), Identidad bicultural (BII), Nostalgia cultural (Surrey Nostalgia Scale), Bilingüismo y cognición, Apoyo social en migración, Ajuste psicológico intercultural, Choque cultural (Oberg), Integración social (Berry model), Racismo y salud mental (EDS).
 Instrumentos validados en español: MEIM-R, SAFE-sp, ARSMA-II.`,
+
+  "salud-mental-com": `ÁREA: Salud mental comunitaria
+Constructos canónicos: Sentido de comunidad (McMillan & Chavis), Apoyo social percibido (MOS-SSS), Estigma hacia la enfermedad mental (CAMI — Taylor), Acceso a servicios de salud mental, Resiliencia comunitaria (CART), Empoderamiento comunitario (Community Empowerment Scale), Capital social (Putnam), Salud mental positiva (Lluch), Necesidades psicosociales no cubiertas, Intervención psicosocial comunitaria.
+Instrumentos validados en español: MOS-SSS, CAMI-sp, escala de Sentido de Comunidad.`,
+
+  "politicas-salud": `ÁREA: Políticas públicas en salud mental
+Constructos canónicos: Cobertura de servicios de salud mental (OMS Atlas), Brecha de tratamiento (treatment gap — WHO), Desinstitucionalización psiquiátrica, Determinantes sociales de salud mental (CSDH-OMS), Legislación en salud mental (IESM-OMS), Estigma estructural, Calidad de atención en salud mental (QualiMental), Equidad en salud mental, Recursos humanos en salud mental, Presupuesto público en salud.
+Instrumentos validados en español: IESM-OMS, cuestionarios de evaluación de programas públicos.`,
+
+  comunitaria: `ÁREA: Psicología comunitaria
+Constructos canónicos: Sentido de comunidad (McMillan & Chavis SCI-2), Empoderamiento comunitario (Zimmerman), Participación ciudadana y comunitaria, Capital social (Putnam/Coleman), Redes de apoyo comunitario, Identidad comunitaria, Cohesión social (Forrest & Kearns), Resiliencia colectiva (Norris CART), Intervención psicosocial en comunidades, Prevención comunitaria en salud mental.
+Instrumentos validados en español: SCI-2-sp, escalas de empoderamiento comunitario, ICS.`,
+
+  politica: `ÁREA: Psicología política
+Constructos canónicos: Autoritarismo de ala derecha (RWA — Altemeyer), Orientación a la dominancia social (SDO — Pratto), Identidad política/partidaria, Cultura política (Almond & Verba), Comportamiento electoral (Downs), Polarización afectiva, Confianza institucional, Cinismo político, Psicología del liderazgo político (House), Pensamiento sistémico-1 vs 2 en política (Kahneman), Desinformación y creencias políticas.
+Instrumentos validados en español: RWA-sp, SDO-7-sp, escalas de confianza institucional.`,
+
+  "paz-conflictos": `ÁREA: Psicología de la paz y conflictos
+Constructos canónicos: Estrés postraumático en conflicto (PCL-5), Perdón y reconciliación (Enright Forgiveness Inventory), Memoria colectiva del conflicto, Identidad endogrupal/exogrupal (Tajfel), Resiliencia post-conflicto (CD-RISC), Contacto intergrupal (Pettigrew), Violencia política y trauma, Justicia transicional y salud mental, Duelo colectivo, Reintegración social de excombatientes.
+Instrumentos validados en español: PCL-5-sp, EFI-sp, escalas de contacto intergrupal.`,
+
+  gerontologia: `ÁREA: Psicogerontología
+Constructos canónicos: Envejecimiento exitoso (Baltes & Baltes SOC), Calidad de vida en vejez (CASP-19), Soledad en adultos mayores (UCLA Loneliness Scale), Deterioro cognitivo leve (MoCA), Depresión geriátrica (GDS — Yesavage), Dependencia funcional (Barthel/Lawton), Sobrecarga del cuidador (Zarit), Adaptación a la jubilación, Bienestar subjetivo en vejez (SWLS), Identidad en la vejez (Erikson).
+Instrumentos validados en español: GDS-15-sp, MoCA-sp, Zarit-sp, CASP-19-sp, UCLA-sp.`,
+
+  publicidad: `ÁREA: Psicología de la publicidad y medios
+Constructos canónicos: Persuasión publicitaria (ELM — Petty & Cacioppo), Actitudes hacia la publicidad (Lutz), Procesamiento dual (Kahneman System 1/2), Comparación social online (INCOM — Gibbons), Efectos de la publicidad en autoestima, Comportamiento del consumidor ante medios, Alfabetización mediática crítica, Influencia de redes sociales (Social Comparison Theory), Publicidad y estereotipos de género, Bienestar digital.
+Instrumentos validados en español: INCOM-sp, escalas de actitud hacia la publicidad.`,
+
+  psicobiologia: `ÁREA: Psicobiología y neurociencias
+Constructos canónicos: Respuesta de estrés (HPA axis — Selye/McEwen), Psiconeuroinmunología (Ader), Bases neurales de la emoción (LeDoux/Damasio), Neurobiología del sueño (PSQI — Buysse), Psicofisiología del estrés (SCR/HRV), Genética del comportamiento (heritabilidad), Neuroendocrinología (cortisol/oxitocina), Bases biológicas de trastornos mentales (NIMH RDoC), Epigenética y salud mental, Cognición encarnada.
+Instrumentos validados en español: PSQI-sp, marcadores psicofisiológicos, escalas de síntomas somáticos.`,
+
+  experimental: `ÁREA: Psicología experimental y cognitiva
+Constructos canónicos: Atención sostenida/selectiva/dividida (CPT/TMT), Memoria de trabajo (Digit Span/N-back), Toma de decisiones (Iowa Gambling Task/Ultimatum Game), Razonamiento inductivo/deductivo, Sesgos cognitivos (Kahneman heuristics), Control inhibitorio (Stroop/Go-NoGo), Velocidad de procesamiento (SDMT), Cognición social (ToM/empatía cognitiva), Metacognición (MCQ-30), Aprendizaje por condicionamiento.
+Instrumentos validados en español: MCQ-30-sp, tareas cognitivas computarizadas, Stroop Victoria.`,
 };
 
 function getAreaContext(area) {
