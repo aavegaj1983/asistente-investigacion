@@ -788,24 +788,39 @@ function safeParseJSON(text) {
 const STEPS = ["Área","Población","Problema","Metodología","Resultado"];
 
 const AREAS = [
-  {id:"clinica", label:"Psicología clínica y salud mental", icon:`<svg width="28" height="28" viewBox="0 0 40 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="18.5" y="2" width="3" height="52" rx="1.5" fill="#4F46E5"/><circle cx="20" cy="3" r="3.5" fill="#4F46E5"/><path d="M20 10 C27 10, 27 16, 20 16 C13 16, 13 22, 20 22 C27 22, 27 28, 20 28 C13 28, 13 34, 20 34 C27 34, 27 40, 20 40 C13 40, 13 46, 20 46" stroke="#059669" stroke-width="2.4" stroke-linecap="round" fill="none"/><ellipse cx="20" cy="8.5" rx="3.2" ry="2.2" fill="#059669"/><circle cx="18.8" cy="8" r="0.7" fill="white"/><circle cx="21.2" cy="8" r="0.7" fill="white"/><circle cx="18.8" cy="8" r="0.32" fill="#111"/><circle cx="21.2" cy="8" r="0.32" fill="#111"/><path d="M19 7 L17.4 5.5 M21 7 L22.6 5.5" stroke="#DC2626" stroke-width="0.9" stroke-linecap="round"/></svg>`},
-  {id:"educativa", label:"Psicología educativa", icon:"📚"},
-  {id:"organizacional", label:"Psicología organizacional", icon:"🏢"},
-  {id:"social", label:"Psicología social y comunitaria", icon:"🤝"},
-  {id:"deporte", label:"Psicología del deporte", icon:"🏅"},
-  {id:"consumidor", label:"Psicología del consumidor", icon:"🛒"},
-  {id:"juridica", label:"Psicología jurídica/forense", icon:"⚖️"},
-  {id:"ambiental", label:"Psicología ambiental", icon:"🌱"},
-  {id:"positiva", label:"Psicología positiva", icon:"✨"},
-  {id:"pareja-familia", label:"Psicología de pareja y familia", icon:"🫂"},
-  {id:"salud", label:"Psicología de la salud", icon:"🏥"},
-  {id:"desarrollo", label:"Psicología del desarrollo", icon:"🍼"},
-  {id:"neuropsicologia", label:"Neuropsicología", icon:"🧠"},
-  {id:"adicciones", label:"Psicología de las adicciones", icon:"🚭"},
-  {id:"digital", label:"Psicología digital/cibernética", icon:"📱"},
-  {id:"emergencias", label:"Psicología de emergencias y desastres", icon:"🚨"},
-  {id:"transcultural", label:"Psicología transcultural", icon:"🌍"},
-  {id:"otro", label:"Otro", icon:"✏️"},
+  // Clínica y Salud Mental
+  {id:"clinica",          label:"Psicología clínica",             icon:"🧠", keywords:"clinica psicopatologia trastornos mental"},
+  {id:"neuropsicologia",  label:"Neuropsicología",                icon:"💊", keywords:"neuropsicologia cerebro cognitivo"},
+  {id:"salud-mental-com", label:"Salud mental comunitaria",       icon:"🩺", keywords:"salud mental comunitaria"},
+  {id:"salud",            label:"Psicología de la salud",         icon:"🔬", keywords:"salud fisica biopsicosocial"},
+  {id:"adicciones",       label:"Adicciones",                     icon:"🚭", keywords:"adicciones sustancias drogas alcohol"},
+  {id:"politicas-salud",  label:"Políticas en salud mental",      icon:"📋", keywords:"politicas publicas salud mental"},
+  // Social, Comunitaria y Política
+  {id:"social",           label:"Psicología social",              icon:"👥", keywords:"social grupos actitudes influencia"},
+  {id:"comunitaria",      label:"Psicología comunitaria",         icon:"🏘️", keywords:"comunitaria comunidad intervencion"},
+  {id:"politica",         label:"Psicología política",            icon:"🗳️", keywords:"politica poder ideologia"},
+  {id:"paz-conflictos",   label:"Paz y conflictos",               icon:"✌️", keywords:"paz conflictos violencia"},
+  {id:"transcultural",    label:"Transcultural",                  icon:"🌍", keywords:"transcultural cultura diversidad"},
+  {id:"juridica",         label:"Jurídica / forense",             icon:"⚖️", keywords:"juridica forense legal crimen"},
+  // Desarrollo y Ciclo Vital
+  {id:"desarrollo",       label:"Psicología del desarrollo",      icon:"🌱", keywords:"desarrollo infantil ciclo vital"},
+  {id:"pareja-familia",   label:"Pareja y familia",               icon:"👨‍👩‍👧", keywords:"pareja familia relaciones"},
+  {id:"educativa",        label:"Educativa",                      icon:"🎓", keywords:"educativa escolar aprendizaje"},
+  {id:"gerontologia",     label:"Psicogerontología",              icon:"👴", keywords:"gerontologia vejez adulto mayor"},
+  // Organizacional y Aplicada
+  {id:"organizacional",   label:"Organizacional",                 icon:"🏢", keywords:"organizacional trabajo laboral"},
+  {id:"deporte",          label:"Deporte",                        icon:"🏅", keywords:"deporte rendimiento atleta"},
+  {id:"consumidor",       label:"Consumidor",                     icon:"🛒", keywords:"consumidor comportamiento compra"},
+  {id:"publicidad",       label:"Publicidad y medios",            icon:"📣", keywords:"publicidad medios marketing"},
+  // Emergente y Contextual
+  {id:"digital",          label:"Digital / cibernética",          icon:"📱", keywords:"digital tecnologia internet redes"},
+  {id:"ambiental",        label:"Ambiental",                      icon:"🌿", keywords:"ambiental ecologia naturaleza"},
+  {id:"emergencias",      label:"Emergencias",                    icon:"🚨", keywords:"emergencias desastres crisis"},
+  {id:"positiva",         label:"Positiva",                       icon:"🌞", keywords:"positiva bienestar fortalezas"},
+  // Bases Científicas
+  {id:"psicobiologia",    label:"Psicobiología y neurociencias",  icon:"🧬", keywords:"psicobiologia neurociencia biologia"},
+  {id:"experimental",     label:"Experimental y cognitiva",       icon:"🔭", keywords:"experimental cognitiva cognicion"},
+  {id:"otro",             label:"Otro",                           icon:"✏️", keywords:"otro ninguna"},
 ];
 
 const POBLACIONES = {
@@ -826,6 +841,15 @@ const POBLACIONES = {
   digital:["Adolescentes usuarios intensivos de redes sociales","Jóvenes gamers (18-30 años)","Niños con acceso temprano a dispositivos","Adultos mayores con brecha digital","Trabajadores con hiperconectividad laboral","Estudiantes universitarios y redes sociales","Influencers y creadores de contenido","Personas con uso problemático de pornografía online","Usuarios de apps de citas","Comunidades virtuales y fandoms"],
   emergencias:["Sobrevivientes de desastres naturales","Primeros respondientes (bomberos, policía, paramédicos)","Personal de salud en emergencias","Personas desplazadas por violencia","Comunidades post-conflicto","Personas que perdieron seres queridos súbitamente","Sobrevivientes de accidentes de tránsito","Personas afectadas por desastres tecnológicos","Niños y adolescentes expuestos a emergencias","Voluntarios en zonas de desastre"],
   transcultural:["Migrantes latinoamericanos en el exterior","Migrantes venezolanos en Perú","Comunidades indígenas amazónicas","Comunidades indígenas andinas","Estudiantes internacionales en universidades","Hijos de migrantes (segunda generación)","Personas afroperuanas","Refugiados y solicitantes de asilo","Familias interculturales","Profesionales en contextos multiculturales"],
+  "salud-mental-com":["Comunidades urbano-marginales con acceso limitado a servicios","Usuarios de centros comunitarios de salud mental","Familias de personas con trastornos mentales graves","Personas en situación de calle con problemática de salud mental","Adolescentes en riesgo en contextos vulnerables","Adultos mayores en situación de abandono","Migrantes con necesidades de salud mental","Comunidades rurales sin acceso a psicólogos","Personal de salud comunitaria","Voluntarios en programas de salud mental"],
+  "politicas-salud":["Funcionarios públicos del sector salud","Tomadores de decisiones en ministerios de salud","Operadores de programas nacionales de salud mental","Profesionales de salud en el primer nivel de atención","Gestores de ONG en salud mental","Académicos y asesores de políticas","Usuarios del sistema público de salud mental","Representantes de organizaciones de personas con trastornos mentales","Personal de instituciones psiquiátricas","Comunidades beneficiarias de programas de salud"],
+  comunitaria:["Líderes y dirigentes comunitarios","Jóvenes en programas de intervención comunitaria","Madres de familia en organizaciones de base","Comunidades rurales andinas","Comunidades en zonas de conflicto social","Pobladores de asentamientos humanos","Adultos mayores en organizaciones barriales","Migrantes internos en nuevos contextos","Familias en situación de vulnerabilidad","Voluntarios y agentes comunitarios de salud"],
+  politica:["Militantes y activistas políticos","Electores en períodos electorales","Jóvenes con participación política emergente","Funcionarios y servidores públicos","Líderes de movimientos sociales","Personas afectadas por polarización política","Ciudadanos en contextos de crisis institucional","Comunidades indígenas con demandas políticas","Periodistas políticos","Académicos en ciencias políticas"],
+  "paz-conflictos":["Comunidades post-conflicto armado","Víctimas del terrorismo o conflicto interno","Excombatientes en proceso de reinserción","Desplazados internos por violencia","Comunidades en zonas de conflicto minero","Mediadores y operadores de paz","Niños y adolescentes expuestos a violencia colectiva","Personal de organismos internacionales de paz","Familias en duelo por violencia política","Comunidades en proceso de reconciliación"],
+  gerontologia:["Adultos mayores autónomos (60-74 años)","Adultos mayores frágiles (75+)","Adultos mayores institucionalizados","Adultos mayores con deterioro cognitivo leve","Cuidadores formales e informales de adultos mayores","Adultos mayores con enfermedades crónicas","Adultos mayores en situación de soledad","Adultos mayores en programas de envejecimiento activo","Familias con adultos mayores dependientes","Adultos mayores en transición de jubilación"],
+  publicidad:["Adolescentes expuestos a publicidad digital","Jóvenes consumidores de contenido en redes","Adultos influenciados por publicidad emocional","Usuarios de plataformas de streaming con publicidad","Consumidores de campañas de salud pública","Personas expuestas a desinformación mediática","Audiencias de medios tradicionales (TV, radio)","Creadores de contenido e influencers","Profesionales del marketing y la comunicación","Poblaciones vulnerables ante publicidad manipuladora"],
+  psicobiologia:["Pacientes con trastornos neurológicos","Personas con predisposición genética a trastornos mentales","Participantes en estudios de neuroimagen","Sujetos en estudios psicofisiológicos","Personas con trastornos del sueño","Adultos mayores en estudios de neuroenvejecimiento","Niños en estudios de neurodesarrollo","Personas con respuestas de estrés crónico","Voluntarios en estudios de laboratorio","Personas con enfermedades psicosomáticas"],
+  experimental:["Estudiantes universitarios como participantes de laboratorio","Adultos en estudios de cognición y percepción","Niños en estudios de desarrollo cognitivo","Personas en estudios de memoria y aprendizaje","Participantes en estudios de toma de decisiones","Personas en investigación de atención y concentración","Adultos en estudios de procesamiento emocional","Participantes en estudios de lenguaje y comunicación","Personas en investigación de psicología del razonamiento","Voluntarios en estudios de cognición social"],
   otro:[],
 };
 
@@ -3095,7 +3119,7 @@ function iniciarRutaC() {
 
 async function procesarRutaA() {
   const texto = state.explorationText;
-  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
+  const areaIds = 'clinica|educativa|organizacional|social|comunitaria|politica|paz-conflictos|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural|salud-mental-com|politicas-salud|gerontologia|publicidad|psicobiologia|experimental';
   const prompt = `Analiza esta inquietud de investigación en psicología: "${texto}"
 
 Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin texto adicional:
@@ -3127,7 +3151,7 @@ Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin
 
 async function procesarRutaB() {
   const ans = state.guidedAnswers;
-  const areaIds = 'clinica|educativa|organizacional|social|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural';
+  const areaIds = 'clinica|educativa|organizacional|social|comunitaria|politica|paz-conflictos|deporte|consumidor|juridica|ambiental|positiva|pareja-familia|salud|desarrollo|neuropsicologia|adicciones|digital|emergencias|transcultural|salud-mental-com|politicas-salud|gerontologia|publicidad|psicobiologia|experimental';
   const q1 = ans.q1||'No especificado', q2 = ans.q2||'No especificado';
   const q3 = ans.q3||'No especificado', q4 = ans.q4||'No especificado';
   const prompt = `El usuario respondió sobre su idea de investigación en psicología:
@@ -3239,7 +3263,7 @@ function renderContent(){
     if(!mostrarTodasAreas && state.explorationProfile) {
       // Top 4: the inferred area + 3 adjacent plausible ones
       const areaInferida = state.explorationProfile.areaId;
-      const adyacentes = { clinica:['social','desarrollo','positiva'], educativa:['social','desarrollo','organizacional'], organizacional:['social','positiva','salud'], social:['clinica','positiva','desarrollo'], digital:['clinica','social','educativa'], positiva:['clinica','salud','social'], salud:['clinica','desarrollo','positiva'], juridica:['social','clinica','emergencias'], adicciones:['clinica','social','salud'], transcultural:['social','clinica','positiva'], emergencias:['clinica','social','salud'], ambiental:['social','positiva','clinica'], deporte:['positiva','salud','organizacional'], pareja_familia:['social','clinica','desarrollo'], desarrollo:['educativa','clinica','social'], neuropsicologia:['clinica','salud','educativa'], consumidor:['social','organizacional','digital'] };
+      const adyacentes = { clinica:['salud-mental-com','desarrollo','positiva'], educativa:['social','desarrollo','organizacional'], organizacional:['social','positiva','salud'], social:['comunitaria','politica','desarrollo'], digital:['clinica','social','educativa'], positiva:['clinica','salud','social'], salud:['clinica','desarrollo','positiva'], juridica:['social','clinica','emergencias'], adicciones:['clinica','social','salud'], transcultural:['social','clinica','positiva'], emergencias:['clinica','social','salud'], ambiental:['social','positiva','clinica'], deporte:['positiva','salud','organizacional'], 'pareja-familia':['social','clinica','desarrollo'], desarrollo:['educativa','clinica','social'], neuropsicologia:['clinica','salud','educativa'], consumidor:['social','organizacional','digital'], comunitaria:['social','salud-mental-com','politica'], politica:['social','comunitaria','paz-conflictos'], 'paz-conflictos':['comunitaria','politica','emergencias'], 'salud-mental-com':['clinica','comunitaria','salud'], 'politicas-salud':['salud-mental-com','salud','comunitaria'], gerontologia:['desarrollo','salud','clinica'], publicidad:['consumidor','digital','social'], psicobiologia:['neuropsicologia','clinica','experimental'], experimental:['psicobiologia','neuropsicologia','clinica'] };
       const adj = (adyacentes[areaInferida]||['clinica','social','positiva']).slice(0,3);
       const top4Ids = [areaInferida, ...adj].filter(Boolean);
       areasAMostrar = top4Ids.map(id=>AREAS.find(a=>a.id===id)).filter(Boolean);
@@ -3251,14 +3275,20 @@ function renderContent(){
       </div>`;
     }
     h+=sectionLabel("¿Qué área de la psicología te interesa?");
-    h+=`<div class="grid3">`;
+    h+=`<div style="position:relative;margin-bottom:12px">
+      <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none">🔍</span>
+      <input id="area-search" type="text" placeholder="Buscar área..."
+        style="width:100%;padding:9px 12px 9px 32px;font-size:13px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--gray-50);color:var(--gray-900);font-family:var(--font);outline:none;box-sizing:border-box"
+        oninput="filterAreas(this.value)"
+        value=""
+      />
+    </div>`;
+    h+=`<div class="grid3" id="areas-grid">`;
     areasAMostrar.forEach(a=>{
-      const iconHtml = a.icon && a.icon.trim().startsWith('<svg') 
-        ? `<span class="area-icon" style="display:flex;align-items:center;justify-content:center">${a.icon}</span>`
-        : `<span class="area-icon">${a.icon}</span>`;
-      h+=`<button class="badge-area ${state.area===a.id?'active':''}" onclick="selectArea('${a.id}')">${iconHtml}<span>${a.label}</span></button>`;
+      h+=`<button class="badge-area ${state.area===a.id?'active':''}" data-keywords="${a.keywords||''} ${a.label.toLowerCase()}" onclick="selectArea('${a.id}')"><span class="area-icon">${a.icon}</span><span>${a.label}</span></button>`;
     });
     h+=`</div>`;
+    h+=`<div id="areas-empty" style="display:none;text-align:center;padding:1.5rem 0;font-size:13px;color:var(--gray-400)">No se encontraron áreas.</div>`;
     if(!mostrarTodasAreas) {
       h+=`<div style="text-align:center;margin-top:4px"><button onclick="state._verTodasAreas=true;renderContent()" style="font-size:12px;color:#4F46E5;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">Ver todas las áreas →</button></div>`;
     }
@@ -4509,6 +4539,20 @@ function prevStep(){
 }
 
 function selectArea(v){state.area=v;state.areaOtro="";state.poblacion="";state.poblacionOtro="";state.problema="";state.problemaOtro="";state.variables=[];state._verTodasAreas=false;state.aiPoblaciones=[];state.aiPoblacionesLoading=false;updateNav();renderContent();saveState();}
+function filterAreas(q){
+  const grid=document.getElementById('areas-grid');
+  const empty=document.getElementById('areas-empty');
+  if(!grid)return;
+  const val=q.toLowerCase().trim();
+  let visible=0;
+  grid.querySelectorAll('.badge-area').forEach(btn=>{
+    const k=(btn.dataset.keywords||'')+(btn.querySelector('span:last-child')||{}).textContent||'';
+    const show=!val||k.toLowerCase().includes(val);
+    btn.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  if(empty)empty.style.display=visible===0?'block':'none';
+}
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
 function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
@@ -5082,7 +5126,7 @@ Instrumentos validados en español: UWES-S, PHQ-9, CEAM, ESCABAS, SBI-U, MSLQ.`,
 Constructos canónicos: Burnout (Maslach MBI), Engagement laboral (UWES), Satisfacción laboral (JDI/Warr), Compromiso organizacional (Meyer & Allen), Liderazgo transformacional/transaccional (Bass MLQ), Clima organizacional (Litwin & Stringer), Justicia organizacional (Colquitt), Acoso laboral (NAQ-R), Estrés laboral (Karasek/Siegrist), Autoeficacia profesional, Conflicto trabajo-familia, Desempeño laboral, Inteligencia emocional en el trabajo (MSCEIT/WLEIS).
 Instrumentos validados en español: MBI-GS, UWES, NAQ-R, MLQ, JDI, COPSOQ.`,
 
-  social: `ÁREA: Psicología social y comunitaria
+  social: `ÁREA: Psicología social
 Constructos canónicos: Identidad social (Tajfel), Exclusión social percibida, Prejuicio y discriminación (Modern Racism Scale/Allport), Cohesión social, Resiliencia comunitaria, Capital social, Participación ciudadana, Sentido de comunidad (McMillan), Apoyo social percibido (MOS), Normas subjetivas, Actitudes (Ajzen TPB), Empoderamiento comunitario, Estigma social.
 Instrumentos validados en español: MOS-SSS, RSES, SCS, EBS.`,
 
