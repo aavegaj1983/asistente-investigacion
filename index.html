@@ -2333,25 +2333,22 @@ const stateDefaults = {
   _verTodasAreas: false    // step 0: show all areas override
 };
 if(savedState) {
-  // Detect old saves (before onboarding feature): paso0Mode won't exist
-  const isOldSave = !Object.prototype.hasOwnProperty.call(savedState, 'paso0Mode');
   // Ensure edited has all new fields
   savedState.edited = Object.assign({}, stateDefaults.edited, savedState.edited || {});
-  // Ensure all top-level new fields exist
+  // Ensure all top-level new fields exist (stateDefaults first, savedState overrides)
   savedState = Object.assign({}, stateDefaults, savedState);
-  // If old save at step 0 with no area → show onboarding
-  if(isOldSave && savedState.step === 0 && !savedState.area) {
+  // Show onboarding if no real progress (area not selected, no result)
+  // This handles: fresh users, old saves at step 0, cleared cache
+  const hasProgress = savedState.area || savedState.result;
+  if(!hasProgress) {
     savedState.step = -1;
     savedState.paso0Mode = null;
-  }
-  // If state is fully fresh (step 0, no progress) → show onboarding
-  if(savedState.paso0Mode === null && savedState.step === 0 && !savedState.area && !savedState.result) {
-    savedState.step = -1;
+    savedState.modoExploracion = false;
   }
 }
 
 let state = savedState || {
-  step:0,
+  step:-1,
   area:"",
   areaOtro:"",
   poblacion:"",
