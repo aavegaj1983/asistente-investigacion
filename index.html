@@ -2872,6 +2872,14 @@ function renderObPerfil() {
           : `<button class="pvar-add" onclick="state._perfilAddingVar=true;renderOnboarding(document.getElementById('content'))">＋ Agregar</button>`
         }
       </div>
+      ${(()=>{
+        const orig = p._originalVars || [];
+        const curr = p.variables || [];
+        const hasDeleted = orig.some(v => !curr.includes(v));
+        return hasDeleted
+          ? `<button onclick="restaurarVarsOriginales()" style="margin-top:8px;background:none;border:none;font-size:11px;color:#4F46E5;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px;display:block">↩ Restaurar sugerencias originales</button>`
+          : '';
+      })()}
     </div>
     <div style="margin-top:18px">
       <button class="ob-btn-primary" onclick="confirmarPerfil()">Continuar con este perfil →</button>
@@ -2959,6 +2967,18 @@ function selectGuidedAnswer(qId, answer, qi) {
   saveState();
 }
 
+function restaurarVarsOriginales() {
+  const p = state.explorationProfile;
+  if(!p || !p._originalVars) return;
+  // Restore original vars, keep any manually added ones
+  const manualAdded = (p.variables||[]).filter(v => !p._originalVars.includes(v));
+  p.variables = [...p._originalVars, ...manualAdded];
+  // Reselect original ones
+  p.selectedVars = [...p.variables.slice(0, 3)];
+  saveState();
+  renderOnboarding(document.getElementById('content'));
+}
+
 function eliminarPerfilVar(v) {
   const p = state.explorationProfile;
   if(!p) return;
@@ -3040,6 +3060,7 @@ Genera EXACTAMENTE 3 posibles enfoques de investigación. Devuelve SOLO JSON sin
     try { parsed = safeParseJSON(text); } catch(e) {}
     if(Array.isArray(parsed) && parsed.length >= 1) {
       state.explorationHypotheses = parsed.slice(0,3);
+      state.explorationHypotheses.forEach(h => { if(h.variables) h._originalVars = [...h.variables]; });
     } else {
       // fallback: go to manual
       iniciarRutaC(); return;
@@ -3076,6 +3097,7 @@ Genera UN perfil de investigación. Devuelve SOLO JSON sin texto adicional:
     let parsed = null;
     try { parsed = safeParseJSON(text); } catch(e) {}
     if(parsed && parsed.fenomeno) {
+      if(parsed.variables) parsed._originalVars = [...parsed.variables];
       state.explorationProfile = parsed;
       state.paso0Mode = 'perfil';
     } else {
@@ -3093,7 +3115,9 @@ function confirmarHipotesis() {
   const idx = state.explorationHypothesisIdx;
   const hyps = state.explorationHypotheses || [];
   if(idx < 0 || !hyps[idx]) return;
-  state.explorationProfile = hyps[idx];
+  const hp = {...hyps[idx]};
+  if(hp.variables) hp._originalVars = [...hp.variables];
+  state.explorationProfile = hp;
   state.paso0Mode = 'perfil';
   renderOnboarding(document.getElementById('content'));
 }
@@ -3577,30 +3601,32 @@ function renderContent(){
       state.enfoque = 'Cuantitativo';
       saveState();
     }
+    const nVarsRec = state.variables.filter(v=>v!=='otro').length;
+    const enfoqueRec = state.modoExploracion ? 'Cuantitativo' : null;
+    const nivelRec = nVarsRec >= 3 ? 'explicativo' : nVarsRec === 2 ? 'correlacional' : 'descriptivo';
     ENFOQUES.forEach(e=>{
       const def = enfoqueDefs[e] || {};
       const tooltipHtml = def.tooltip
         ? `<div class="badge-enfoque-tooltip">${def.tooltip}</div>`
         : '';
+      const isRec = state.modoExploracion && e === enfoqueRec;
+      const recBadge = isRec
+        ? `<div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#065F46;background:#ECFDF5;border:0.5px solid #A7F3D0;border-radius:5px;padding:1px 6px;margin-bottom:5px">
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Recomendado para tu perfil
+          </div>`
+        : '';
       h+=`<button class="badge ${state.enfoque===e?'active':''}" onclick="selectEnfoque('${e}')">
+        ${recBadge}
         <div class="badge-title">${e}</div>
         <div class="badge-desc">${def.desc||''}</div>
         ${tooltipHtml}
       </button>`;
     });
     h+=`</div>`;
-    if(state.modoExploracion && state.explorationProfile && !state.enfoque) {
-      const nVarsHint = state.variables.filter(v=>v!=='otro').length;
-      const nivelRec = nVarsHint >= 3 ? 'explicativo' : nVarsHint === 2 ? 'correlacional' : 'descriptivo';
-      const disenoRec = 'no experimental transversal';
-      const tecnicaRec = nVarsHint >= 3 ? 'regresión múltiple o mediación' : nVarsHint === 2 ? 'correlación o regresión simple' : 'estadística descriptiva';
-      h+=`<div class="hint-exploracion" style="margin-top:6px">
-        💡 Para tu perfil recomendamos:<br>
-        <strong>Enfoque:</strong> cuantitativo ·
-        <strong>Nivel:</strong> ${nivelRec} ·
-        <strong>Diseño:</strong> ${disenoRec} ·
-        <strong>Técnica:</strong> ${tecnicaRec}<br>
-        <span style="font-size:12px;opacity:.8">Puedes ajustar cualquier opción según tus objetivos.</span>
+    if(state.modoExploracion && state.explorationProfile) {
+      h+=`<div class="hint-exploracion" style="margin-top:6px;font-size:12px">
+        Las opciones marcadas en verde son las más comunes para tu perfil. Puedes elegir cualquier otra.
       </div>`;
     }
 
@@ -3642,8 +3668,19 @@ function renderContent(){
       h+=sectionLabel("¿Qué nivel de investigación buscas?", "El nivel indica qué tan profundo quieres llegar: explorar un tema nuevo, describirlo, buscar relaciones entre variables, o explicar causas.");
       h+=`<div class="options">`;
       NIVELES.forEach(n=>{
-        const esc=n.id.replace(/'/g,"\\'");
-        h+=badgeWithDesc(n.label, n.desc, n.hint, state.nivel===n.id, `selectNivel('${esc}')`);
+        const esc=n.id.replace(/'/g,"\'");
+        const isNivelRec = state.modoExploracion && n.id === nivelRec;
+        const nivelRecBadge = isNivelRec
+          ? `<div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#065F46;background:#ECFDF5;border:0.5px solid #A7F3D0;border-radius:5px;padding:1px 6px;margin-bottom:5px">
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Recomendado para tu perfil
+            </div>` : '';
+        h+=`<button class="badge ${state.nivel===n.id?'active':''}" onclick="selectNivel('${esc}')">
+          ${nivelRecBadge}
+          <div class="badge-title">${n.label}</div>
+          <div class="badge-desc">${n.desc||''}</div>
+          ${n.hint?`<div class="badge-hint">${n.hint}</div>`:''}
+        </button>`;
       });
       h+=`</div>`;
       if(state.diseno === 'cuasiexperimental' && state.nivel !== 'explicativo') {
@@ -3842,8 +3879,23 @@ function renderContent(){
           const _noLocalConflicts = Object.keys(_localConflicts).length === 0;
           const _isMulticolSuggestion = /multicolineal|multicolinear|correlacion|solapamiento|similar/i.test(val.sugerencia_clave);
           if(!(_noLocalConflicts && _isMulticolSuggestion)) {
+            const sug = val.sugerencia_clave;
+            const sugLow = sug.toLowerCase();
+            // Detect action type to show inline button
+            const esAgregarVar = /agregar|añadir|incluir.*variable|variable.*control|una variable más/i.test(sug);
+            const esCambiarTecnica = /cambiar.*técnica|técnica.*cambiar|usar.*regresión|usar.*mediación|usar.*correlación|cambiar a/i.test(sug);
+            const esCambiarNivel = /cambiar.*nivel|nivel.*explicativo|nivel.*correlacional/i.test(sug);
+            let actionBtn = '';
+            if(esAgregarVar) {
+              actionBtn = `<button onclick="state.step=2;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir al paso de variables y agregar una más</button>`;
+            } else if(esCambiarTecnica) {
+              actionBtn = `<button onclick="state.step=3;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir a metodología para cambiar la técnica</button>`;
+            } else if(esCambiarNivel) {
+              actionBtn = `<button onclick="state.step=3;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir a metodología para cambiar el nivel</button>`;
+            }
             validationHtml += `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:8px 10px;border-radius:6px;margin-top:6px;border-left:3px solid #3B82F6">
-              💡 <strong>Sugerencia:</strong> ${val.sugerencia_clave}
+              💡 <strong>Sugerencia:</strong> ${sug}
+              ${actionBtn}
             </div>`;
           }
         }
@@ -5231,7 +5283,7 @@ Responde SOLO con JSON:
   "titulo": "frase de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza concreta 1","fortaleza concreta 2"],
   "alertas": ["alerta SOLO si hay error real — si todo es coherente devuelve []"],
-  "sugerencia_clave": "Sugerencia específica de máximo 20 palabras indicando exactamente qué cambiar (ej: qué variable eliminar, qué diseño usar). NO menciones pasos — el usuario puede ajustar directamente."
+  "sugerencia_clave": "Sugerencia en lenguaje sencillo, sin tecnicismos, máximo 20 palabras. Explica QUÉ hacer y POR QUÉ en términos que un estudiante sin experiencia entienda. Ejemplos buenos: 'Agrega una variable que pueda explicar qué causa los cambios en tu resultado principal', 'Cambia la técnica a regresión múltiple porque tienes más de 2 predictores', 'Elimina Estrés o Ansiedad — miden lo mismo y confundirán el análisis'. Evita: 'variable de control', 'VIF', 'multicolinealidad', 'covariable', términos estadísticos sin explicación."
 }`;
 
   try {
