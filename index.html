@@ -2333,7 +2333,8 @@ const stateDefaults = {
   guidedAIOptions: {},     // {qId:[...AI generated options]}
   guidedAILoading: {},     // {qId:bool}
   guidedRegenCount: {},    // {qId:number}
-  _verTodasAreas: false    // step 0: show all areas override
+  _verTodasAreas: false,   // step 0: show all areas override
+  _perfilAddingVar: false  // perfil screen: inline add variable
 };
 if(savedState) {
   // Ensure edited has all new fields
@@ -2400,7 +2401,8 @@ let state = savedState || {
   guidedAIOptions: {},     // {qId:[...AI generated options]}
   guidedAILoading: {},     // {qId:bool}
   guidedRegenCount: {},    // {qId:number}
-  _verTodasAreas: false    // step 0: show all areas override
+  _verTodasAreas: false,   // step 0: show all areas override
+  _perfilAddingVar: false  // perfil screen: inline add variable
 };
 
 // GUARDAR ESTADO AUTOMÁTICAMENTE
@@ -2785,7 +2787,8 @@ function renderObGuided() {
   const REGEN_GUIDED_MAX = 5;
   const canRegenMore = regenUsed < REGEN_GUIDED_MAX;
 
-  return `<div class="ob-wrap" style="padding-bottom:80px">
+  return `<div class="ob-wrap">
+    <button class="ob-back" onclick="guidedBack(${qi})">← ${qi===0?'Volver':'Anterior'}</button>
     <div class="ob-prog">${dots}</div>
     <div class="ob-big-q">${q.texto}</div>
     ${q.opciones.map(o=>`<button class="ob-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
@@ -2817,10 +2820,7 @@ function renderObGuided() {
       </div>
     ` : ''}
 
-    <div style="position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);border-top:0.5px solid #F3F4F6;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:10;max-width:500px;margin:0 auto">
-      <button onclick="guidedBack(${qi})" style="background:none;border:0.5px solid #E5E7EB;border-radius:10px;padding:11px 18px;font-size:13px;color:#6B7280;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='#4F46E5';this.style.color='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB';this.style.color='#6B7280'">← ${qi===0?'Volver':'Anterior'}</button>
-      <button onclick="selectGuidedAnswer('${q.id}',null,${qi})" style="background:none;border:none;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">No lo tengo claro aún</button>
-    </div>
+    <div class="ob-skip"><button class="ob-skip-btn" onclick="selectGuidedAnswer('${q.id}',null,${qi})">No lo tengo claro aún</button></div>
   </div>`;
 }
 
@@ -2851,8 +2851,19 @@ function renderObPerfil() {
     <div class="perfil-blk">
       <div class="perfil-blk-label">Variables que podrías estudiar</div>
       <div class="perfil-vars">
-        ${vars.map((v,i)=>`<button class="${selVars.includes(v)?'pvar-on':'pvar-off'}" onclick="togglePerfilVar('${v.replace(/'/g,"\'")}','${p.areaId||''}')">${selVars.includes(v)?'✓ ':''} ${v}</button>`).join('')}
-        <button class="pvar-add" onclick="iniciarRutaC()">＋ Agregar</button>
+        ${vars.map((v,i)=>{const enc=encodeURIComponent(v);return `<button class="${selVars.includes(v)?'pvar-on':'pvar-off'}" data-v="${enc}" onclick="togglePerfilVar(decodeURIComponent(this.dataset.v))">${selVars.includes(v)?'✓ ':''} ${v}</button>`;}).join('')}
+        ${state._perfilAddingVar
+          ? `<span style="display:inline-flex;align-items:center;gap:5px">
+              <input id="pvar-new-input" type="text" placeholder="Nueva variable…" autofocus
+                style="font-size:12px;border:1px solid #4F46E5;border-radius:10px;padding:4px 10px;font-family:inherit;outline:none;width:150px"
+                onkeydown="if(event.key==='Enter'){agregarPerfilVar(this.value)}if(event.key==='Escape'){state._perfilAddingVar=false;renderOnboarding(document.getElementById('content'))}">
+              <button onclick="agregarPerfilVar(document.getElementById('pvar-new-input').value)"
+                style="background:#4F46E5;color:white;border:none;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit">✓</button>
+              <button onclick="state._perfilAddingVar=false;renderOnboarding(document.getElementById('content'))"
+                style="background:none;border:none;font-size:13px;color:#9CA3AF;cursor:pointer">✕</button>
+            </span>`
+          : `<button class="pvar-add" onclick="state._perfilAddingVar=true;renderOnboarding(document.getElementById('content'))">＋ Agregar</button>`
+        }
       </div>
     </div>
     <div style="margin-top:18px">
@@ -2941,7 +2952,21 @@ function selectGuidedAnswer(qId, answer, qi) {
   saveState();
 }
 
-function togglePerfilVar(v, areaId) {
+function agregarPerfilVar(v) {
+  v = (v||'').trim();
+  if(!v) { state._perfilAddingVar=false; renderOnboarding(document.getElementById('content')); return; }
+  const p = state.explorationProfile;
+  if(!p) return;
+  if(!p.variables) p.variables = [];
+  if(!p.selectedVars) p.selectedVars = [...(p.variables||[])];
+  if(!p.variables.includes(v)) p.variables.push(v);
+  if(!p.selectedVars.includes(v)) p.selectedVars.push(v);
+  state._perfilAddingVar = false;
+  saveState();
+  renderOnboarding(document.getElementById('content'));
+}
+
+function togglePerfilVar(v) {
   const p = state.explorationProfile;
   if(!p) return;
   if(!p.selectedVars) p.selectedVars = [...(p.variables||[]).slice(0,3)];
