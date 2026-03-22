@@ -2303,10 +2303,12 @@ function getMiniCoherence() {
       alerts.push('Nivel correlacional requiere al menos 2 variables');
     if (state.nivel === 'explicativo' && nv < 3)
       alerts.push('Nivel explicativo recomienda 3 o más variables');
-    if (state.tecnica === 'mediacion' && nv !== 3)
-      alerts.push(`Mediación simple requiere exactamente 3 variables (tienes ${nv})`);
-    if (state.tecnica === 'moderacion' && nv < 3)
-      alerts.push(`Moderación requiere 3 variables: X, W y Y (tienes ${nv})`);
+    if ((state.tecnica === 'mediacion' || state.tecnica === 'sem-mediacion') && nv !== 3)
+      alerts.push(`Mediación ${state.tecnica === 'sem-mediacion' ? 'SEM' : 'simple'} requiere exactamente 3 variables: X, M (mediador) e Y. Tienes ${nv}.`);
+    if ((state.tecnica === 'moderacion' || state.tecnica === 'sem-moderacion') && nv < 3)
+      alerts.push(`Moderación requiere exactamente 3 variables: X (predictor), W (moderador) e Y (criterio). Tienes ${nv}.`);
+    if ((state.tecnica === 'moderacion' || state.tecnica === 'sem-moderacion') && nv > 3)
+      alerts.push(`Moderación simple: requiere exactamente 3 variables (X, W, Y). Tienes ${nv}. Elimina una, o cambia a Mediación moderada (4 vars), Regresión múltiple, Path Analysis o SEM completo.`);
     if (state.tecnica === 'mediacion-moderada' && nv < 4)
       alerts.push(`Mediación moderada requiere 4 variables (tienes ${nv})`);
     if (state.tecnica === 'regresion-multiple' && nv < 3)
@@ -2891,7 +2893,15 @@ function renderContent(){
             'mediación': '<span class="alerta-termino">mediación<span class="alerta-termino-tooltip">Ocurre cuando una variable M explica el mecanismo por el que X afecta a Y. Por ejemplo: estrés (X) → rumiación (M) → depresión (Y). Se analiza con Hayes PROCESS Modelo 4.</span></span>',
             'moderación': '<span class="alerta-termino">moderación<span class="alerta-termino-tooltip">Ocurre cuando una variable W cambia la fuerza o dirección del efecto de X sobre Y. Por ejemplo: el efecto del estrés sobre la depresión es mayor en personas con baja autoestima. Se analiza con Hayes PROCESS Modelo 1.</span></span>',
           };
-          validationHtml += val.alertas.map(a => {
+          // Suppress AI multicollinearity alerts when local detection finds no conflicts
+          const _alertVarsSel = state.variables.filter(v => v !== 'otro');
+          const _alertLocalConf = detectarMulticolinealidad(_alertVarsSel);
+          const _alertNoConf = Object.keys(_alertLocalConf).length === 0;
+
+          validationHtml += val.alertas.filter(a => {
+            if(_alertNoConf && /multicolineal|multicolinear|correlaci.n.*variable|solapamiento|variables.*similar/i.test(a)) return false;
+            return true;
+          }).map(a => {
             let aEnriquecida = a;
             Object.keys(glosario).forEach(term => {
               const regex = new RegExp(term, 'gi');
@@ -2903,9 +2913,16 @@ function renderContent(){
           }).join('');
         }
         if(val.sugerencia_clave) {
-          validationHtml += `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:8px 10px;border-radius:6px;margin-top:6px;border-left:3px solid #3B82F6">
-            💡 <strong>Sugerencia:</strong> ${val.sugerencia_clave}
-          </div>`;
+          // Suppress AI multicollinearity suggestion if local detection found no conflicts
+          const _varsSel = state.variables.filter(v => v !== 'otro');
+          const _localConflicts = detectarMulticolinealidad(_varsSel);
+          const _noLocalConflicts = Object.keys(_localConflicts).length === 0;
+          const _isMulticolSuggestion = /multicolineal|multicolinear|correlacion|solapamiento|similar/i.test(val.sugerencia_clave);
+          if(!(_noLocalConflicts && _isMulticolSuggestion)) {
+            validationHtml += `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:8px 10px;border-radius:6px;margin-top:6px;border-left:3px solid #3B82F6">
+              💡 <strong>Sugerencia:</strong> ${val.sugerencia_clave}
+            </div>`;
+          }
         }
         validationHtml += `</div>`;
       } else if(!state.aiValidation) {
@@ -3161,7 +3178,15 @@ function renderContent(){
           <button onclick="state.aiValidation=null;renderContent()" style="font-size:11px;background:none;border:none;cursor:pointer;color:#9CA3AF;padding:2px">✕</button>
         </div>
         ${pv.alertas&&pv.alertas.length?pv.alertas.map(a=>`<div style="font-size:12px;color:#92400E;background:#FEF3C7;padding:5px 8px;border-radius:6px;margin-bottom:4px">⚠️ ${a}</div>`).join(''):''}
-        ${pv.sugerencia_clave?`<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:7px 10px;border-radius:6px;border-left:3px solid #3B82F6;margin-top:4px">💡 ${pv.sugerencia_clave}</div>`:''}
+        ${(()=>{
+          if(!pv.sugerencia_clave) return '';
+          const _pvVars = state.variables.filter(v=>v!=='otro');
+          const _pvConf = detectarMulticolinealidad(_pvVars);
+          const _pvNoConf = Object.keys(_pvConf).length === 0;
+          const _pvIsMulticol = /multicolineal|multicolinear|correlacion|solapamiento|similar/i.test(pv.sugerencia_clave);
+          if(_pvNoConf && _pvIsMulticol) return '';
+          return `<div style="font-size:12px;color:#1D4ED8;background:#EFF6FF;padding:7px 10px;border-radius:6px;border-left:3px solid #3B82F6;margin-top:4px">💡 ${pv.sugerencia_clave}</div>`;
+        })()}
       </div>`;
     }
 
@@ -3644,7 +3669,8 @@ function getWarnings(variablesList, tecnica, nivel, enfoque) {
   }
   // Moderación necesita exactamente 3 variables (X, W, Y)
   if(tecnica === 'moderacion' || tecnica === 'sem-moderacion') {
-    if(nv < 3) warnings.push(`⚠️ La moderación requiere 3 variables: X (predictor), W (moderador) e Y (criterio). Actualmente tienes ${nv}.`);
+    if(nv < 3) warnings.push(`⚠️ La moderación requiere exactamente 3 variables: X (predictor), W (moderador) e Y (criterio). Actualmente tienes ${nv}.`);
+    if(nv > 3) warnings.push(`⚠️ La moderación simple (${tecnica === 'sem-moderacion' ? 'SEM con latentes — LMS' : 'PROCESS Modelo 1'}) requiere exactamente 3 variables: X (predictor), W (moderador) e Y (criterio). Tienes ${nv} — la variable extra NO será incluida en el modelo. Opciones: (a) elimina una variable, (b) cambia a Mediación moderada si quieres 4 roles (X, M, W, Y), (c) cambia a Path Analysis o Regresión múltiple si las variables son observadas, o (d) SEM completo si son latentes.`);
   }
   // Mediación moderada necesita 4 variables
   if(tecnica === 'mediacion-moderada') {
