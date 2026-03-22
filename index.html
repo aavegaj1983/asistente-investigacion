@@ -5283,7 +5283,7 @@ Responde SOLO con JSON:
   "titulo": "frase de 5 palabras máximo evaluando el perfil",
   "fortalezas": ["fortaleza concreta 1","fortaleza concreta 2"],
   "alertas": ["alerta SOLO si hay error real — si todo es coherente devuelve []"],
-  "sugerencia_clave": "Sugerencia en lenguaje sencillo, sin tecnicismos, máximo 20 palabras. Explica QUÉ hacer y POR QUÉ en términos que un estudiante sin experiencia entienda. Ejemplos buenos: 'Agrega una variable que pueda explicar qué causa los cambios en tu resultado principal', 'Cambia la técnica a regresión múltiple porque tienes más de 2 predictores', 'Elimina Estrés o Ansiedad — miden lo mismo y confundirán el análisis'. Evita: 'variable de control', 'VIF', 'multicolinealidad', 'covariable', términos estadísticos sin explicación."
+  "sugerencia_clave": "Sugerencia en lenguaje sencillo, sin tecnicismos, máximo 20 palabras. Explica QUÉ hacer y POR QUÉ en términos que un estudiante sin experiencia entienda. REGLAS ESTRICTAS: (1) NUNCA sugieras agregar 'variables de control' o 'covariables' — eso requiere justificación teórica avanzada que el estudiante no tiene. (2) Si la técnica es regresión simple con 2 variables, es válida — no sugieras agregar más. (3) Si hay 3+ variables, sugiere regresión múltiple o mediación según el rol de las variables. Ejemplos buenos: 'Cambia la técnica a regresión múltiple porque tienes 3 variables predictoras', 'Elimina Estrés o Ansiedad — miden lo mismo y confundirán el análisis', 'El diseño longitudinal sería más adecuado si quieres ver cambios en el tiempo'. Evita siempre: 'variable de control', 'VIF', 'multicolinealidad', 'covariable', 'parsimonia', términos estadísticos sin explicación."
 }`;
 
   try {
