@@ -2334,6 +2334,8 @@ const stateDefaults = {
   guidedAILoading: {},     // {qId:bool}
   guidedRegenCount: {},    // {qId:number}
   _verTodasAreas: false,   // step 0: show all areas override
+  _perfilRegenVars: 0,     // how many times vars have been regenerated
+  _perfilRegenLoading: false,
   _perfilAddingVar: false  // perfil screen: inline add variable
 };
 if(savedState) {
@@ -2849,7 +2851,18 @@ function renderObPerfil() {
       <div class="perfil-row"><span class="perfil-val">${p.poblacion||'—'}</span><button class="perfil-edit-btn" onclick="iniciarRutaC()">Cambiar →</button></div>
     </div>
     <div class="perfil-blk">
-      <div class="perfil-blk-label">Variables que podrías estudiar</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="perfil-blk-label" style="margin-bottom:0">Variables / categorías sugeridas</div>
+        ${state._perfilRegenLoading
+          ? `<span style="font-size:11px;color:#6B7280;display:flex;align-items:center;gap:4px"><span style="animation:ob-bounce .8s ease infinite;display:inline-block">✦</span> Generando…</span>`
+          : state._perfilRegenVars < 5
+            ? `<button onclick="regenPerfilVars()" style="font-size:11px;font-weight:600;color:#4F46E5;background:none;border:0.5px solid #C7D2FE;border-radius:7px;padding:3px 9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px">
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M10 6a4 4 0 1 1-1-2.65" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 2v2.5H7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Otras sugerencias <span style="opacity:.6">(${5 - state._perfilRegenVars} restante${5-state._perfilRegenVars===1?'':'s'})</span>
+              </button>`
+            : `<span style="font-size:11px;color:#9CA3AF">Límite alcanzado</span>`
+        }
+      </div>
       <div class="perfil-vars">
         ${vars.map((v,i)=>{
           const enc=encodeURIComponent(v);
@@ -2965,6 +2978,45 @@ function selectGuidedAnswer(qId, answer, qi) {
     renderOnboarding(document.getElementById('content'));
   }
   saveState();
+}
+
+async function regenPerfilVars() {
+  const p = state.explorationProfile;
+  if(!p || state._perfilRegenVars >= 5) return;
+  state._perfilRegenLoading = true;
+  renderOnboarding(document.getElementById('content'));
+
+  const fenomeno = p.fenomeno || '';
+  const area = p.area || '';
+  const poblacion = p.poblacion || '';
+  const enfoque = state.enfoque || 'cuantitativo';
+  const existing = (p.variables||[]).join(', ');
+  const isQual = enfoque.toLowerCase() === 'cualitativo';
+  const tipo = isQual ? 'categorías de análisis cualitativo' : 'variables psicológicas cuantitativas';
+
+  const prompt = `Sugiere exactamente 4 ${tipo} para estudiar "${fenomeno}" en "${poblacion}" (${area}).
+Variables ya mostradas (NO repetir): ${existing}
+Devuelve SOLO un array JSON: ["var1","var2","var3","var4"]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:150,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content)||(data.content?.map(b=>b.text||'').join(''))||'';
+    let parsed = null;
+    try { parsed = safeParseJSON(text); } catch(e) {}
+    if(Array.isArray(parsed) && parsed.length > 0) {
+      const newVars = parsed.filter(v => !(p.variables||[]).includes(v));
+      p.variables = [...(p.variables||[]), ...newVars];
+      if(!p.selectedVars) p.selectedVars = [...(p._originalVars||[]).slice(0,3)];
+      state._perfilRegenVars = (state._perfilRegenVars||0) + 1;
+    }
+  } catch(e) { console.warn('regenPerfilVars failed:', e); }
+  state._perfilRegenLoading = false;
+  saveState();
+  renderOnboarding(document.getElementById('content'));
 }
 
 function restaurarVarsOriginales() {
@@ -5354,6 +5406,30 @@ Responde SOLO con JSON:
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
     let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
+    // Post-process: if local multicollinearity found, degrade coherencia from 'alta' to 'media'
+    if(parsed && parsed.nivel_coherencia === 'alta') {
+      const _mcVars = state.variables.filter(v => v !== 'otro');
+      const _mcConf = detectarMulticolinealidad(_mcVars);
+      if(Object.keys(_mcConf).length > 0) {
+        parsed.nivel_coherencia = 'media';
+        // Also inject the multicollinearity conflict as an alert if not already there
+        const _mcPairs = [];
+        const _seen = new Set();
+        _mcVars.forEach(v => {
+          if(_mcConf[v]) _mcConf[v].forEach(v2 => {
+            const pk = [v,v2].sort().join('||');
+            if(!_seen.has(pk)){ _seen.add(pk); _mcPairs.push([v,v2]); }
+          });
+        });
+        _mcPairs.forEach(([a,b]) => {
+          const alertMsg = `"${a}" y "${b}" miden aspectos muy similares — considera usar solo una para evitar confusión en el análisis.`;
+          if(!parsed.alertas) parsed.alertas = [];
+          if(!parsed.alertas.some(al => al.includes(a) && al.includes(b))) {
+            parsed.alertas.unshift(alertMsg);
+          }
+        });
+      }
+    }
     state.aiValidation = parsed;
   } catch(e) {
     state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
