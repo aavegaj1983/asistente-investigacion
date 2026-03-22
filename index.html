@@ -653,44 +653,37 @@ function sanitizeJSON(str) {
 }
 
 function repairJSON(str) {
-  // Attempt to repair common Groq/LLM JSON issues:
-  // 1. Unescaped newlines inside strings
-  // 2. Trailing commas before } or ]
-  // 3. Single quotes instead of double quotes
-  // 4. Missing closing brackets
-  var out = '';
-  var inStr = false, esc = false;
+  // Step 1: fix unescaped control chars inside strings + trailing commas
+  var out = '', inStr = false, esc = false;
   for (var i = 0; i < str.length; i++) {
     var ch = str[i], code = str.charCodeAt(i);
     if (esc) { out += ch; esc = false; continue; }
     if (ch === '\\') { esc = true; out += ch; continue; }
     if (ch === '"') { inStr = !inStr; out += ch; continue; }
     if (inStr) {
-      // Inside string: escape raw newlines/tabs, keep everything else as-is (including UTF-8)
       if (code === 10) { out += '\\n'; continue; }
       if (code === 13) { out += '\\r'; continue; }
       if (code === 9)  { out += '\\t'; continue; }
       out += ch;
     } else {
-      // Outside string: fix trailing commas before ] or }
-      if (ch === ',' ) {
-        var rest = str.slice(i+1).trimStart();
-        if (rest[0] === ']' || rest[0] === '}') continue; // skip trailing comma
+      if (ch === ',') {
+        var j2 = i + 1;
+        while (j2 < str.length && (str[j2] === ' ' || str[j2] === '\n' || str[j2] === '\r' || str[j2] === '\t')) j2++;
+        if (str[j2] === ']' || str[j2] === '}') continue;
       }
       out += ch;
     }
   }
-  // Close any unclosed array/object
-  var opens = 0, inS = false, es = false;
-  var stack = [];
-  for (var j = 0; j < out.length; j++) {
-    var c = out[j];
-    if (es) { es = false; continue; }
-    if (c === '\\') { es = true; continue; }
-    if (c === '"') { inS = !inS; continue; }
-    if (!inS) {
-      if (c === '[' || c === '{') stack.push(c === '[' ? ']' : '}');
-      if (c === ']' || c === '}') stack.pop();
+  // Step 2: close unclosed brackets/braces
+  var stack = [], inS2 = false, es2 = false;
+  for (var k = 0; k < out.length; k++) {
+    var ck = out[k];
+    if (es2) { es2 = false; continue; }
+    if (ck === '\\') { es2 = true; continue; }
+    if (ck === '"') { inS2 = !inS2; continue; }
+    if (!inS2) {
+      if (ck === '[' || ck === '{') stack.push(ck === '[' ? ']' : '}');
+      else if ((ck === ']' || ck === '}') && stack.length) stack.pop();
     }
   }
   while (stack.length) out += stack.pop();
@@ -703,11 +696,15 @@ function safeParseJSON(text) {
   try { return JSON.parse(clean); } catch(e1) {}
   // Attempt 2: repair then parse
   try { return JSON.parse(repairJSON(clean)); } catch(e2) {}
-  // Attempt 3: extract just the array portion and parse
+  // Attempt 3: extract array/object substring and parse
   try {
-    var m = clean.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    if (m) return JSON.parse(m[0]);
+    var m = clean.match(/\[\s*[\s\S]*?\s*\]/);
+    if (m) { var r = repairJSON(m[0]); return JSON.parse(r); }
   } catch(e3) {}
+  try {
+    var m2 = clean.match(/\{[\s\S]*\}/);
+    if (m2) { return JSON.parse(repairJSON(m2[0])); }
+  } catch(e4) {}
   // All attempts failed
   throw new Error('JSON parse failed after repair attempts');
 }
@@ -1696,7 +1693,7 @@ Responde SOLO con un array JSON de 7 strings:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length >= 2) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
@@ -1768,7 +1765,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiInstruments = parsed;
     }
@@ -1985,7 +1982,7 @@ Responde SOLO con JSON sin texto adicional:
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length > 0){
       state.aiReferencias = parsed;
     } else {
@@ -2947,104 +2944,111 @@ function renderContent(){
         const alertas5 = (state.aiValidation && state.aiValidation.alertas) || [];
         const sugerencia5 = (state.aiValidation && state.aiValidation.sugerencia_clave) || '';
         const alertaTexto = alertas5.join(' ').toLowerCase();
-        const necesitaVariables = alertaTexto.includes('variable') || alertaTexto.includes('categoría') || alertaTexto.includes('multicolineal') || alertaTexto.includes('número');
-        const necesitaNivel    = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional');
-        const necesitaDiseno   = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal');
-        const mostrarTodo = !necesitaVariables && !necesitaNivel && !necesitaDiseno;
+        const necesitaNivel  = alertaTexto.includes('nivel') || alertaTexto.includes('explicativo') || alertaTexto.includes('correlacional');
+        const necesitaDiseno = alertaTexto.includes('diseño') || alertaTexto.includes('longitudinal') || alertaTexto.includes('transversal');
 
-        const guiaHtml = '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">' +
-          '<strong>¿Qué ajustar?</strong><ul style="margin:4px 0 0 16px;padding:0">' +
-          alertas5.map(function(a){ return '<li style="margin-bottom:3px">' + a + '</li>'; }).join('') +
-          (sugerencia5 ? '<li style="color:#1D4ED8;margin-top:4px">💡 ' + sugerencia5 + '</li>' : '') +
-          '</ul></div>';
+        // ── Detectar pares multicolineales entre las variables seleccionadas ──
+        const varsSel5 = state.variables.filter(v => v !== 'otro');
+        const conflictos5 = detectarMulticolinealidad(varsSel5);
+        const hayMulticol5 = Object.keys(conflictos5).length > 0;
 
-        var varsHtml5 = '';
-        if(necesitaVariables || mostrarTodo) {
-          var staticVars5 = state.problema !== 'otro' && VARIABLES[state.problema] ? VARIABLES[state.problema] : [];
-          var aiVars5 = state.aiVars.length > 0 ? state.aiVars.map(function(v){ return typeof v === 'object' ? v.nombre : v; }) : [];
-          var allVars5 = staticVars5.concat(aiVars5).filter(function(v,i,a){ return v && a.indexOf(v)===i; });
-          var conflictos5 = detectarMulticolinealidad(state.variables.filter(function(v){ return v !== 'otro'; }));
-          var hayConflictos5 = Object.keys(conflictos5).length > 0;
-          if(allVars5.length > 0) {
-            var chipsHtml5 = allVars5.map(function(v) {
-              var sel = state.variables.includes(v);
-              var enConflicto = sel && conflictos5[v] && conflictos5[v].length > 0;
-              var ve = v.replace(/'/g, "\\'");
-              var sty = '', prefix = '', tip = '';
-              if(sel && enConflicto) {
-                sty = ' style="border-color:#DC2626!important;background:#FEF2F2!important;color:#991B1B!important"';
-                prefix = '🔴 ';
-                tip = ' title="Colisiona con: ' + conflictos5[v].join(', ') + '"';
-              } else if(sel) {
-                sty = ' style="border-color:#059669!important;background:#ECFDF5!important;color:#065F46!important"';
-                prefix = '🟢 ';
-              }
-              return '<button class="cambios-chip ' + (sel ? 'sel' : '') + '"' + sty + tip + ' onclick="toggleVar(\'' + ve + '\');renderContent()">' + prefix + v + (sel ? ' ✓' : '') + '</button>';
-            }).join('');
-            var leyenda5 = hayConflictos5 ? '<div style="font-size:11px;color:#6B7280;margin-bottom:8px">🔴 Colisiona con otra variable &nbsp;🟢 Sin conflicto — Deselecciona una de las 🔴</div>' : '';
-            var labelExtra5 = hayConflictos5 ? ' <span style="font-size:10px;color:#DC2626;font-weight:600">← las rojas colisionan entre sí</span>' : '';
-            varsHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Aspectos / Variables' + labelExtra5 + '</div>' + leyenda5 + '<div class="cambios-chip-group">' + chipsHtml5 + '</div></div>';
-          }
+        // Build unique conflict pairs
+        const pares5 = [];
+        const vis5 = new Set();
+        varsSel5.forEach(v => {
+          if(conflictos5[v]) conflictos5[v].forEach(v2 => {
+            const pk = [v,v2].sort().join('||');
+            if(!vis5.has(pk)){ vis5.add(pk); pares5.push([v,v2]); }
+          });
+        });
+
+        // Preview: vars after resolving all conflicts (start from current selection)
+        // We'll compute it live in JS for the preview section
+        const varsPreview5 = [...varsSel5]; // Will be shown as current state with conflict markers
+
+        // ── Sección 1: Resolución de multicolinealidad (si aplica) ──
+        let multicolHtml5 = '';
+        if(hayMulticol5) {
+          multicolHtml5 = '<div style="margin-bottom:14px">' +
+            '<div style="font-size:11px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Conflictos a resolver</div>';
+
+          pares5.forEach(([a, b]) => {
+            const ae = a.replace(/'/g, "\'"), be = b.replace(/'/g, "\'");
+            multicolHtml5 +=
+              '<div style="background:#FFF7ED;border:1px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
+                '<div style="font-size:11px;color:#92400E;font-weight:600;margin-bottom:10px">⚠ Posible solapamiento conceptual</div>' +
+                '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch">' +
+                  // Variable A
+                  '<div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:8px;padding:10px 12px;text-align:center">' +
+                    '<div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:6px">' + a + '</div>' +
+                    '<button onclick="removeVar(this.dataset.v);renderContent()" data-v="' + ae + '" style="width:100%;padding:5px 0;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;color:#DC2626;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Eliminar esta</button>' +
+                  '</div>' +
+                  // VS
+                  '<div style="display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#9CA3AF;padding:0 4px">VS</div>' +
+                  // Variable B
+                  '<div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:8px;padding:10px 12px;text-align:center">' +
+                    '<div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:6px">' + b + '</div>' +
+                    '<button onclick="removeVar(this.dataset.v);renderContent()" data-v="' + be + '" style="width:100%;padding:5px 0;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;color:#DC2626;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Eliminar esta</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+          });
+          multicolHtml5 += '</div>';
         }
 
+        // ── Sección 2: Vista previa en tiempo real ──
+        const confNombres5 = new Set(Object.keys(conflictos5));
+        const previewHtml5 = (() => {
+          const allPreview = state.variables.filter(v => v !== 'otro');
+          const manualPreview = (state.variablesOtro||'').split(',').map(v=>v.trim()).filter(Boolean)
+            .filter(v => !allPreview.map(s=>s.toLowerCase()).includes(v.toLowerCase()));
+          const total = [...allPreview, ...manualPreview];
+          if(!total.length) return '<div style="font-size:12px;color:#9CA3AF;font-style:italic">Sin variables seleccionadas</div>';
+          return total.map(v => {
+            const enConf = confNombres5.has(v);
+            const bg = enConf ? '#FEF2F2' : '#ECFDF5';
+            const border = enConf ? '#FECACA' : '#A7F3D0';
+            const color = enConf ? '#991B1B' : '#065F46';
+            const icon = enConf ? '⚠' : '✓';
+            return `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;font-size:12px;font-weight:600;background:${bg};border:1px solid ${border};color:${color};margin:2px">${icon} ${v}</span>`;
+          }).join('');
+        })();
+
+        const conflictCount5 = pares5.length;
+        const previewLabel5 = conflictCount5 > 0
+          ? `<span style="font-size:10px;color:#DC2626;font-weight:600;margin-left:6px">${conflictCount5} conflicto${conflictCount5>1?'s':''} por resolver</span>`
+          : `<span style="font-size:10px;color:#059669;font-weight:600;margin-left:6px">✓ Sin conflictos</span>`;
+
+        const previewSectionHtml5 = '<div style="margin-bottom:14px">' +
+          '<div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Vista previa · cómo quedarán tus variables' + previewLabel5 + '</div>' +
+          '<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:4px;min-height:40px">' +
+            previewHtml5 +
+          '</div>' +
+        '</div>';
+
+        // ── Sección 3: Nivel y Diseño (solo si necesario) ──
         var nivelHtml5 = '';
-        if((necesitaNivel || mostrarTodo) && state.enfoque !== 'Cualitativo') {
-          nivelHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Nivel de investigación</div><div class="cambios-chip-group">' +
-            NIVELES.map(function(n){ return '<button class="cambios-chip ' + (state.nivel===n.id ? 'sel' : '') + '" onclick="selectNivel(\'' + n.id + '\');renderContent()">' + n.label + (state.nivel===n.id ? ' ✓' : '') + '</button>'; }).join('') +
+        if((necesitaNivel) && state.enfoque !== 'Cualitativo') {
+          nivelHtml5 = '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Nivel de investigación</div><div class="cambios-chip-group">' +
+            NIVELES.map(function(n){ return '<button class="cambios-chip ' + (state.nivel===n.id ? 'sel' : '') + '" onclick="selectNivel(this.dataset.v);renderContent()" data-v="' + n.id + '">' + n.label + (state.nivel===n.id ? ' ✓' : '') + '</button>'; }).join('') +
             '</div></div>';
         }
 
         var disenoHtml5 = '';
-        if(necesitaDiseno || mostrarTodo) {
+        if(necesitaDiseno) {
           var disenos5 = DISENOS[enfoqueKey5] || [];
           if(disenos5.length > 0) {
-            disenoHtml5 = '<div class="cambios-section"><div class="cambios-section-label">Diseño</div><div class="cambios-chip-group">' +
-              disenos5.map(function(d){ var de = d.id.replace(/'/g, "\\'"); return '<button class="cambios-chip ' + (state.diseno===d.id ? 'sel' : '') + '" onclick="selectDiseno(\'' + de + '\');renderContent()">' + d.label + (state.diseno===d.id ? ' ✓' : '') + '</button>'; }).join('') +
+            disenoHtml5 = '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Diseño</div><div class="cambios-chip-group">' +
+              disenos5.map(function(d){ return '<button class="cambios-chip ' + (state.diseno===d.id ? 'sel' : '') + '" onclick="selectDiseno(this.dataset.v);renderContent()" data-v="' + d.id + '">' + d.label + (state.diseno===d.id ? ' ✓' : '') + '</button>'; }).join('') +
               '</div></div>';
           }
         }
 
-        // ── Campo "Otro" con verificación en tiempo real ─────────────
-        var currentVarsForCheck = state.variables.filter(function(v){ return v !== 'otro'; });
-        var otroConflictos = {};
-        if(state.variablesOtro && state.variablesOtro.trim()) {
-          var otroVarsList = state.variablesOtro.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
-          // Check each manually entered var against selected vars + other manual vars
-          var allForCheck = currentVarsForCheck.concat(otroVarsList);
-          var allConflictos = detectarMulticolinealidad(allForCheck);
-          otroVarsList.forEach(function(v) {
-            if(allConflictos[v]) otroConflictos[v] = allConflictos[v];
-          });
-        }
-
-        var otroFieldHtml = '<div class="cambios-section">' +
-          '<div class="cambios-section-label">Agregar variable/categoría manualmente</div>' +
-          '<div style="font-size:11px;color:#6B7280;margin-bottom:6px">Escribe separadas por comas. Se verificará multicolinealidad en tiempo real.</div>' +
-          '<input type="text" class="otro-input" style="width:100%;box-sizing:border-box" ' +
-            'placeholder="Ej: Satisfacción con la vida, Bienestar subjetivo" ' +
-            'value="' + (state.variablesOtro||'') + '" ' +
-            'oninput="cambiosOtroInput(this.value)" />';
-
-        if(state.variablesOtro && state.variablesOtro.trim()) {
-          var otroVarsList2 = state.variablesOtro.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
-          if(otroVarsList2.length > 0) {
-            otroFieldHtml += '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">';
-            otroVarsList2.forEach(function(v) {
-              var tieneConflicto = otroConflictos[v] && otroConflictos[v].length > 0;
-              var styOtro = tieneConflicto
-                ? 'background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:12px;padding:3px 10px;font-size:11px'
-                : 'background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:12px;padding:3px 10px;font-size:11px';
-              var tipOtro = tieneConflicto ? ' title="Colisiona con: ' + otroConflictos[v].join(', ') + '"' : '';
-              otroFieldHtml += '<span style="' + styOtro + '"' + tipOtro + '>' + (tieneConflicto ? '🔴 ' : '🟢 ') + v + '</span>';
-            });
-            otroFieldHtml += '</div>';
-          }
-        }
-        otroFieldHtml += '</div>';
-
         cambiosPanelHtml = '<div class="cambios-panel">' +
-          '<div class="cambios-panel-title">✏️ ¿Qué puedes ajustar?</div>' +
-          guiaHtml + varsHtml5 + otroFieldHtml + nivelHtml5 + disenoHtml5 +
+          '<div class="cambios-panel-title">✏️ Resolver conflictos antes de generar</div>' +
+          previewSectionHtml5 +
+          multicolHtml5 +
+          nivelHtml5 + disenoHtml5 +
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn-aplicar" onclick="state._showCambiosPanel=false;state.aiValidation=null;state._validationAttempted=false;validateCoherence();renderContent()">✓ Aplicar y re-verificar</button>' +
             '<button class="btn-cancelar-cambios" onclick="state._showCambiosPanel=false;renderContent()">Cerrar</button>' +
@@ -3491,7 +3495,7 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b=>b.text||'').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     state.editValidation = parsed;
   } catch(e) {
     state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
@@ -3723,7 +3727,7 @@ Responde SOLO con JSON:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.aiVarDefinitions = parsed;
     }
@@ -3842,7 +3846,7 @@ Responde SOLO con array JSON de 5 strings texto plano sin HTML:
     if(!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
       saveState();
@@ -3910,7 +3914,7 @@ Responde SOLO con JSON:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     if(Array.isArray(parsed) && parsed.length > 0) {
       state.otroVarsValidation = parsed;
     }
@@ -4263,7 +4267,7 @@ Responde SOLO con JSON:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
     state.aiValidation = parsed;
   } catch(e) {
     state.aiValidation = { nivel_coherencia: 'error', emoji: '⚠️', titulo: 'No se pudo validar', fortalezas: [], alertas: [], sugerencia_clave: '' };
@@ -4915,7 +4919,10 @@ Responde ÚNICAMENTE con el JSON, sin texto previo, sin markdown, sin explicacio
     
     const data=await res.json();
     const text=(data.choices?.[0]?.message?.content)||(data.content?.map(b=>b.text||"").join(""))||"";
-    const parsed=safeParseJSON(text);
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
+    if(!parsed || typeof parsed !== 'object') {
+      throw new Error('La IA no devolvió una propuesta válida. Intenta de nuevo.');
+    }
     
     if(!parsed.hipotesis) {
       parsed.hipotesis = tecInstr ? tecInstr.hipotesis
