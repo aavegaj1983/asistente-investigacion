@@ -260,6 +260,37 @@ textarea{min-height:70px;resize:vertical}
 .var-error{color:#991B1B;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:4px 8px;margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .var-validating{color:#6B7280;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:6px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:8px}
 
+/* ── SELECTED VARS BOX ──────────────────────────────────────────── */
+.sel-vars-box{
+  margin-top:14px;border:1.5px solid #C7D2FE;border-radius:var(--radius-md);
+  background:#F8FAFF;padding:10px 12px;
+  animation:fadeInUp .25s ease;
+}
+.sel-vars-title{
+  font-size:10px;font-weight:700;color:#4F46E5;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.sel-vars-list{display:flex;flex-wrap:wrap;gap:6px}
+.sel-var-tag{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 10px;
+  border-radius:16px;font-size:12px;font-weight:600;
+  border:1.5px solid #818CF8;background:#EEF2FF;color:#3730A3;
+  transition:all .15s;
+}
+.sel-var-tag.multicol{
+  border-color:#D97706;background:#FFFBEB;color:#92400E;
+}
+.sel-var-tag .remove-btn{
+  background:none;border:none;cursor:pointer;padding:0;line-height:1;
+  color:inherit;opacity:.6;font-size:13px;display:flex;align-items:center;
+  transition:opacity .15s;
+}
+.sel-var-tag .remove-btn:hover{opacity:1}
+.sel-var-tag .multicol-badge{
+  font-size:9px;background:#D97706;color:#fff;border-radius:8px;
+  padding:1px 5px;font-weight:700;cursor:help;
+}
+
 /* ── NAV BUTTONS ─────────────────────────────────────────────────── */
 .nav{
   display:flex;justify-content:space-between;align-items:center;
@@ -2454,7 +2485,7 @@ function renderContent(){
       // CHIP-PUCP (2017); Hernández & Mendoza (2018, cap. 3)
       h+=sectionLabel(
         "¿Qué aspectos del fenómeno quieres estudiar?",
-        "Según el enfoque que elijas en el siguiente paso serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
+        "Según el enfoque seleccionado en el siguiente paso, estos aspectos serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
       );
       // Auto-trigger AI vars if not loaded and not loading.
       // Reset aiVarsError so stale errors from localStorage don't block retries.
@@ -2496,26 +2527,7 @@ function renderContent(){
           });
           h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
           h+=`</div>`;
-          // Show multicollinearity hint during loading too
-          const nvLoad = state.variables.filter(v => v !== 'otro').length;
-          if(nvLoad > 0) {
-            const confLoad = detectarMulticolinealidad(state.variables.filter(v => v !== 'otro'));
-            if(Object.keys(confLoad).length > 0) {
-              const pares = [];
-              const vis = new Set();
-              state.variables.filter(v=>v!=='otro').forEach(v => {
-                if(confLoad[v]) confLoad[v].forEach(v2 => {
-                  const p = [v,v2].sort().join('|');
-                  if(!vis.has(p)){vis.add(p);pares.push([v,v2]);}
-                });
-              });
-              h+=`<div class="hint warning" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E">
-                ⚠️ <strong>Posible multicolinealidad:</strong> ${pares.map(([a,b]) => `<em>${a}</em> y <em>${b}</em>`).join('; ')}. Considera usar solo una de cada par.
-              </div>`;
-            } else {
-              h+=`<div class="hint">${NIVEL_HINT[nvLoad] || '💡 Con '+nvLoad+' aspectos tienes un perfil sólido.'}</div>`;
-            }
-          }
+          // Selected vars box is rendered at the end of the section
         }
       } else if(state.aiVars.length > 0){
         const regenLeft = REGEN_MAX - (state.regenCount||0);
@@ -2530,9 +2542,9 @@ function renderContent(){
               ? `<span style="font-size:11px;color:#6B7280;background:#F3F4F6;border:1px solid #E5E7EB;border-radius:4px;padding:3px 8px">
                   ✓ Has visto todas las sugerencias disponibles
                 </span>`
-              : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.aiVarsError=false;state.variables=[];renderContent();setTimeout(()=>prefetchAIVars(true),50)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
+              : `<button onclick="state.aiVars=[];state.aiVarsLoading=false;state.aiVarsError=false;renderContent();setTimeout(()=>prefetchAIVars(true),50)" style="font-size:11px;background:none;border:1px solid var(--green);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit">🔄 Otras sugerencias <span style="opacity:.7">(${regenLeft} restante${regenLeft===1?'':'s'})</span></button>`
             }
-            <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
+            <button onclick="state.aiVars=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
           </div>
         </div>`;
       }
@@ -2571,37 +2583,8 @@ function renderContent(){
         });
         h+=`<button class="chip ${state.variables.includes('otro')?'active':''}" onclick="toggleVar('otro')">Otro</button>`;
         h+=`</div>`;
-        const nv=state.variables.filter(v => v !== 'otro').length;
-        if(nv===0 && vars.length>0){
-          h+=`<div class="hint" style="color:#DC2626;background:#FEF2F2;border-color:#FECACA">
-            👆 Selecciona al menos un aspecto para poder continuar
-          </div>`;
-        }
-        if(nv>0){
-          // Detección de multicolinealidad en tiempo real en paso 3
-          const varsSelStep3 = state.variables.filter(v => v !== 'otro');
-          const conflictosStep3 = detectarMulticolinealidad(varsSelStep3);
-          const hayConflictosStep3 = Object.keys(conflictosStep3).length > 0;
-
-          if(hayConflictosStep3) {
-            const paresConflicto = [];
-            const vistos = new Set();
-            varsSelStep3.forEach(v => {
-              if(conflictosStep3[v]) {
-                conflictosStep3[v].forEach(v2 => {
-                  const par = [v,v2].sort().join('|');
-                  if(!vistos.has(par)) { vistos.add(par); paresConflicto.push([v,v2]); }
-                });
-              }
-            });
-            h+=`<div class="hint warning" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E">
-              ⚠️ <strong>Posible multicolinealidad:</strong> ${paresConflicto.map(([a,b]) => `<em>${a}</em> y <em>${b}</em>`).join('; ')} miden aspectos muy similares. Considera conservar solo una o elegir constructos más distintos.
-            </div>`;
-          } else {
-            // Hint neutro de cantidad
-            h+=`<div class="hint">${NIVEL_HINT[nv] || '💡 Con '+nv+' aspectos tienes un perfil sólido. Define el enfoque en el siguiente paso para ver las opciones metodológicas.'}</div>`;
-          }
-        }
+        // No inline multicollinearity hints or count hints here anymore — 
+        // they are all shown in the selected vars box below
         if(state.variables.includes('otro')){
           // Enfoque aún no definido en este paso — placeholder neutro
           const placeholderOtro = 'Especifica los aspectos que quieres estudiar, separados por comas';
@@ -2633,6 +2616,56 @@ function renderContent(){
           ? 'Escribe las categorías de análisis separadas por comas (Ej: Identidad cultural, Cohesión grupal, Resignificación)'
           : 'Escribe las variables separadas por comas (Ej: Identidad comunitaria, Cohesion social, Participacion)';
         h+=`<textarea placeholder="${placeholderTxt}" oninput="state.variablesOtro=this.value;setVarsFromText(this.value);saveState()">${state.variablesOtro}</textarea>`;
+      }
+
+      // ── SELECTED VARS BOX ─────────────────────────────────────────
+      // Build the full list: chip-selected + manual (from variablesOtro)
+      {
+        const selChip = state.variables.filter(v => v !== 'otro');
+        const selManual = (state.variablesOtro||'').split(',').map(v=>v.trim()).filter(Boolean)
+          .filter(v => !selChip.map(s=>s.toLowerCase()).includes(v.toLowerCase()));
+        const allSel = [...selChip, ...selManual];
+
+        if(allSel.length > 0) {
+          const conflictosSel = detectarMulticolinealidad(allSel);
+          const varConflicto = new Set(Object.keys(conflictosSel));
+
+          h += `<div class="sel-vars-box">
+            <div class="sel-vars-title">
+              <span>✔</span>
+              <span>${allSel.length} aspecto${allSel.length===1?'':'s'} seleccionado${allSel.length===1?'':'s'}</span>
+              ${Object.keys(conflictosSel).length>0
+                ? `<span style="margin-left:auto;font-size:10px;color:#D97706;font-weight:600;background:#FEF3C7;padding:1px 7px;border-radius:8px;">⚠ Revisa multicolinealidad</span>`
+                : `<span style="margin-left:auto;font-size:10px;color:#059669;font-weight:600">✓ Sin conflictos</span>`}
+            </div>
+            <div class="sel-vars-list">`;
+
+          allSel.forEach(v => {
+            const hasConflict = varConflicto.has(v);
+            const conflictosCon = (conflictosSel[v]||[]).join(', ');
+            const escV = v.replace(/'/g,"\'").replace(/"/g,'&quot;');
+            h += `<span class="sel-var-tag${hasConflict?' multicol':''}">
+              <span>${v}</span>
+              ${hasConflict
+                ? `<span class="multicol-badge" title="Posible solapamiento con: ${conflictosCon}">⚠</span>`
+                : ''}
+              <button class="remove-btn" onclick="removeVar('${escV}')" title="Eliminar">✕</button>
+            </span>`;
+          });
+
+          h += `</div>`;
+
+          if(allSel.length === 0) {
+            h += `<p style="font-size:11px;color:#9CA3AF;margin:6px 0 0">Selecciona al menos un aspecto para continuar.</p>`;
+          }
+          h += `</div>`;
+
+        } else if(!state.aiVarsLoading) {
+          // Empty state hint
+          h += `<div class="hint" style="color:#DC2626;background:#FEF2F2;border-color:#FECACA;margin-top:10px">
+            👆 Selecciona al menos un aspecto para poder continuar
+          </div>`;
+        }
       }
     }
     el.innerHTML=h;
@@ -3367,6 +3400,17 @@ function toggleVar(v){
   updateNav();renderContent();saveState();
 }
 function getAIVarName(item){ return typeof item === 'object' ? (item.nombre||'') : String(item||''); }
+function removeVar(v) {
+  const i = state.variables.indexOf(v);
+  if(i > -1) state.variables.splice(i, 1);
+  // If it was a manual var, also remove from variablesOtro
+  if(state.variablesOtro) {
+    const parts = state.variablesOtro.split(',').map(s=>s.trim()).filter(Boolean);
+    const idx = parts.findIndex(p => p.toLowerCase() === v.toLowerCase());
+    if(idx > -1) { parts.splice(idx,1); state.variablesOtro = parts.join(', '); }
+  }
+  updateNav(); renderContent(); saveState();
+}
 function setVarsFromText(val){
   const vars = val.split(",").map(v=>v.trim()).filter(Boolean);
   state.variables = vars;
