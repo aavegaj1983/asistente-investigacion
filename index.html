@@ -2773,11 +2773,8 @@ function renderObGuided() {
   const ans = state.guidedAnswers[q.id];
   const expanded = state.guidedExpanded[q.id];
   const dots = PREGUNTAS_GUIADAS.map((_,i)=>`<div class="ob-prog-dot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
-  const backAction = qi===0
-    ? `state.paso0Mode=null;renderOnboarding(document.getElementById('content'))`
-    : `state.guidedStep=${qi-1};renderOnboarding(document.getElementById('content'))`;
   return `<div class="ob-wrap">
-    <button class="ob-back" onclick="${backAction}">← ${qi===0?'Volver':'Anterior'}</button>
+    <button class="ob-back" onclick="guidedBack(${qi})">← ${qi===0?'Volver':'Anterior'}</button>
     <div class="ob-prog">${dots}</div>
     <div class="ob-big-q">${q.texto}</div>
     ${q.opciones.map(o=>`<button class="ob-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
@@ -2833,6 +2830,16 @@ function renderObPerfil() {
       <button class="ob-btn-skip" onclick="iniciarRutaC()" style="margin-top:8px;display:block;text-align:center">Empezar desde cero manualmente</button>
     </div>
   </div>`;
+}
+
+function guidedBack(qi) {
+  if(qi === 0) {
+    state.paso0Mode = null;
+    renderOnboarding(document.getElementById('content'));
+  } else {
+    state.guidedStep = qi - 1;
+    renderOnboarding(document.getElementById('content'));
+  }
 }
 
 function selectGuidedAnswer(qId, answer, qi) {
@@ -3013,8 +3020,9 @@ function confirmarPerfil() {
   if(selVars.length) {
     state.variables = selVars;
   }
-  // Go to step 0 (Area)
-  state.step = 0;
+  // Skip steps 0-2 — area, población and variables are already set from profile
+  // Go directly to step 3 (Metodología)
+  state.step = 3;
   saveState();
   render();
 }
