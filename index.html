@@ -2330,6 +2330,9 @@ const stateDefaults = {
   guidedStep: 0,           // Ruta B: 0-3
   guidedAnswers: {},       // {q1,q2,q3,q4}
   guidedExpanded: {},      // {q1:bool, q2:bool, ...}
+  guidedAIOptions: {},     // {qId:[...AI generated options]}
+  guidedAILoading: {},     // {qId:bool}
+  guidedRegenCount: {},    // {qId:number}
   _verTodasAreas: false    // step 0: show all areas override
 };
 if(savedState) {
@@ -2394,6 +2397,9 @@ let state = savedState || {
   guidedStep: 0,           // Ruta B: 0-3
   guidedAnswers: {},       // {q1,q2,q3,q4}
   guidedExpanded: {},      // {q1:bool, q2:bool, ...}
+  guidedAIOptions: {},     // {qId:[...AI generated options]}
+  guidedAILoading: {},     // {qId:bool}
+  guidedRegenCount: {},    // {qId:number}
   _verTodasAreas: false    // step 0: show all areas override
 };
 
@@ -2773,24 +2779,48 @@ function renderObGuided() {
   const ans = state.guidedAnswers[q.id];
   const expanded = state.guidedExpanded[q.id];
   const dots = PREGUNTAS_GUIADAS.map((_,i)=>`<div class="ob-prog-dot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
-  return `<div class="ob-wrap">
-    <button class="ob-back" onclick="guidedBack(${qi})">← ${qi===0?'Volver':'Anterior'}</button>
+  const aiExtra = state.guidedAIOptions && state.guidedAIOptions[q.id];
+  const aiLoading = state.guidedAILoading && state.guidedAILoading[q.id];
+  const regenUsed = (state.guidedRegenCount && state.guidedRegenCount[q.id]) || 0;
+  const REGEN_GUIDED_MAX = 5;
+  const canRegenMore = regenUsed < REGEN_GUIDED_MAX;
+
+  return `<div class="ob-wrap" style="padding-bottom:80px">
     <div class="ob-prog">${dots}</div>
     <div class="ob-big-q">${q.texto}</div>
     ${q.opciones.map(o=>`<button class="ob-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
-    ${expanded ? `
-      <div style="height:0.5px;background:var(--gray-100);margin:6px 0 10px"></div>
-      ${q.extra.map(o=>`<button class="ob-extra-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
-      <div class="ob-free-sep"></div>
-      <div class="ob-free-label">¿No está la tuya? Escríbela.</div>
+
+    ${aiLoading ? `
+      <div style="padding:12px 14px;display:flex;align-items:center;gap:8px;background:#F5F3FF;border-radius:10px;margin-top:6px;font-size:13px;color:#6B7280">
+        <span style="animation:ob-bounce 1s ease infinite;display:inline-block">✦</span> Generando más opciones…
+      </div>
+    ` : aiExtra && aiExtra.length > 0 ? `
+      <div style="height:0.5px;background:var(--gray-100);margin:8px 0 8px"></div>
+      ${aiExtra.map(o=>`<button class="ob-extra-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
+      ${canRegenMore ? `
+        <button class="ob-more" style="margin-top:6px" onclick="generarOpcionesGuiadas('${q.id}',${qi})">
+          ✦ Otras sugerencias <span style="font-size:11px;opacity:.6">(${REGEN_GUIDED_MAX - regenUsed} restante${REGEN_GUIDED_MAX-regenUsed===1?'':'s'})</span>
+        </button>` : `
+        <div style="font-size:11px;color:var(--gray-400);text-align:center;margin:6px 0">Has visto todas las sugerencias disponibles</div>`}
+    ` : `
+      <button class="ob-more" onclick="generarOpcionesGuiadas('${q.id}',${qi})">＋ Ver más opciones</button>
+    `}
+
+    ${expanded || (aiExtra && aiExtra.length > 0) ? `
+      <div style="height:0.5px;background:var(--gray-100);margin:8px 0 8px"></div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:6px">¿No está la tuya? Escríbela.</div>
       <div class="ob-free-wrap">
-        <input class="ob-free-input" type="text" id="ob-free-${q.id}" placeholder="Escribe tu respuesta…" value="${typeof ans==='string'&&!q.opciones.includes(ans)&&!q.extra.includes(ans)?ans:''}" onkeypress="if(event.key==='Enter'){selectGuidedAnswer('${q.id}',this.value,${qi})}">
+        <input class="ob-free-input" type="text" id="ob-free-${q.id}" placeholder="Escribe tu respuesta…" value="${typeof ans==='string'&&!q.opciones.includes(ans)&&!(aiExtra||[]).includes(ans)?ans:''}" onkeypress="if(event.key==='Enter'){selectGuidedAnswer('${q.id}',this.value,${qi})}">
         <button class="ob-free-send" onclick="selectGuidedAnswer('${q.id}',document.getElementById('ob-free-${q.id}').value,${qi})">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
-    ` : `<button class="ob-more" onclick="state.guidedExpanded['${q.id}']=true;renderOnboarding(document.getElementById('content'))">＋ Ver más opciones</button>`}
-    <div class="ob-skip"><button class="ob-skip-btn" onclick="selectGuidedAnswer('${q.id}',null,${qi})">No lo tengo claro aún</button></div>
+    ` : ''}
+
+    <div style="position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);border-top:0.5px solid #F3F4F6;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:10;max-width:500px;margin:0 auto">
+      <button onclick="guidedBack(${qi})" style="background:none;border:0.5px solid #E5E7EB;border-radius:10px;padding:11px 18px;font-size:13px;color:#6B7280;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='#4F46E5';this.style.color='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB';this.style.color='#6B7280'">← ${qi===0?'Volver':'Anterior'}</button>
+      <button onclick="selectGuidedAnswer('${q.id}',null,${qi})" style="background:none;border:none;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">No lo tengo claro aún</button>
+    </div>
   </div>`;
 }
 
@@ -2830,6 +2860,54 @@ function renderObPerfil() {
       <button class="ob-btn-skip" onclick="iniciarRutaC()" style="margin-top:8px;display:block;text-align:center">Empezar desde cero manualmente</button>
     </div>
   </div>`;
+}
+
+async function generarOpcionesGuiadas(qId, qi) {
+  if(!state.guidedAILoading) state.guidedAILoading = {};
+  if(!state.guidedRegenCount) state.guidedRegenCount = {};
+  if(!state.guidedAIOptions) state.guidedAIOptions = {};
+  const regenUsed = state.guidedRegenCount[qId] || 0;
+  if(regenUsed >= 5) return;
+  state.guidedAILoading[qId] = true;
+  state.guidedExpanded = state.guidedExpanded || {};
+  state.guidedExpanded[qId] = true;
+  renderOnboarding(document.getElementById('content'));
+
+  // Build context from previous answers
+  const prevAnswers = Object.entries(state.guidedAnswers||{})
+    .filter(([k,v]) => v && k !== qId)
+    .map(([k,v]) => v).join(', ');
+  const qTexto = PREGUNTAS_GUIADAS[qi]?.texto || '';
+  const existing = [
+    ...(PREGUNTAS_GUIADAS[qi]?.opciones||[]),
+    ...(PREGUNTAS_GUIADAS[qi]?.extra||[]),
+    ...(state.guidedAIOptions[qId]||[])
+  ];
+  const prompt = `El usuario está respondiendo una pregunta para definir su tema de investigación en psicología.
+Pregunta: "${qTexto}"
+Contexto previo: ${prevAnswers||'ninguno'}
+Opciones ya mostradas: ${existing.join(', ')}
+
+Genera exactamente 4 opciones NUEVAS y DISTINTAS a las ya mostradas, en español sencillo (sin tecnicismos), que respondan la pregunta. Sé específico y concreto.
+Devuelve SOLO un array JSON: ["opción 1","opción 2","opción 3","opción 4"]`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:200,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content)||(data.content?.map(b=>b.text||'').join(''))||'';
+    let parsed = null;
+    try { parsed = safeParseJSON(text); } catch(e) {}
+    if(Array.isArray(parsed) && parsed.length > 0) {
+      state.guidedAIOptions[qId] = parsed.filter(o => !existing.includes(o));
+      state.guidedRegenCount[qId] = regenUsed + 1;
+    }
+  } catch(e) { console.warn('AI guided options failed:', e.message); }
+  state.guidedAILoading[qId] = false;
+  saveState();
+  renderOnboarding(document.getElementById('content'));
 }
 
 function guidedBack(qi) {
@@ -3050,7 +3128,10 @@ function renderContent(){
       areasAMostrar = top4Ids.map(id=>AREAS.find(a=>a.id===id)).filter(Boolean);
     }
     if(state.modoExploracion && state.explorationProfile) {
-      h += `<div class="hint-exploracion">💡 Preseleccioné el área más probable para tu idea. Puedes cambiarla si no encaja.</div>`;
+      h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="hint-exploracion" style="margin-bottom:0;flex:1">💡 Preseleccioné el área más probable para tu idea. Puedes cambiarla si no encaja.</div>
+        <button onclick="state.step=-1;state.paso0Mode=null;state.modoExploracion=false;state.explorationProfile=null;saveState();render()" style="flex-shrink:0;background:none;border:0.5px solid #E5E7EB;border-radius:8px;padding:7px 12px;font-size:12px;color:#6B7280;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s" onmouseover="this.style.borderColor='#818CF8';this.style.color='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB';this.style.color='#6B7280'">← Volver al inicio</button>
+      </div>`;
     }
     h+=sectionLabel("¿Qué área de la psicología te interesa?");
     h+=`<div class="grid3">`;
@@ -3437,7 +3518,18 @@ function renderContent(){
     });
     h+=`</div>`;
     if(state.modoExploracion && state.explorationProfile && !state.enfoque) {
-      h+=`<div class="hint-exploracion" style="margin-top:6px">💡 Basándonos en tus variables, el enfoque <strong>cuantitativo</strong> es el más común para este tipo de investigación. Puedes elegir el que mejor se adapte a tus objetivos.</div>`;
+      const nVarsHint = state.variables.filter(v=>v!=='otro').length;
+      const nivelRec = nVarsHint >= 3 ? 'explicativo' : nVarsHint === 2 ? 'correlacional' : 'descriptivo';
+      const disenoRec = 'no experimental transversal';
+      const tecnicaRec = nVarsHint >= 3 ? 'regresión múltiple o mediación' : nVarsHint === 2 ? 'correlación o regresión simple' : 'estadística descriptiva';
+      h+=`<div class="hint-exploracion" style="margin-top:6px">
+        💡 Para tu perfil recomendamos:<br>
+        <strong>Enfoque:</strong> cuantitativo ·
+        <strong>Nivel:</strong> ${nivelRec} ·
+        <strong>Diseño:</strong> ${disenoRec} ·
+        <strong>Técnica:</strong> ${tecnicaRec}<br>
+        <span style="font-size:12px;opacity:.8">Puedes ajustar cualquier opción según tus objetivos.</span>
+      </div>`;
     }
 
     // ── Nivel (cuantitativo/mixto) | directo al diseño (cualitativo) ──
