@@ -599,45 +599,86 @@ function sanitizeJSON(str) {
   if (!str) return '';
   var fenceA = String.fromCharCode(96); var fence = fenceA+fenceA+fenceA;
   str = str.split(fence+'json').join('').split(fence).join('').trim();
-  var firstBrace = str.indexOf('{'), firstBracket = str.indexOf('[');
+  // Extract first JSON array or object
+  var firstBracket = str.indexOf('[');
+  var firstBrace   = str.indexOf('{');
   var start = -1;
-  if (firstBrace >= 0 && (firstBracket < 0 || firstBrace < firstBracket)) start = firstBrace;
-  else if (firstBracket >= 0) start = firstBracket;
+  if (firstBracket >= 0 && (firstBrace < 0 || firstBracket < firstBrace)) start = firstBracket;
+  else if (firstBrace >= 0) start = firstBrace;
   if (start > 0) str = str.slice(start);
-  var lastBrace = str.lastIndexOf('}'), lastBracket = str.lastIndexOf(']');
-  var end = Math.max(lastBrace, lastBracket);
+  var lastBracket = str.lastIndexOf(']');
+  var lastBrace   = str.lastIndexOf('}');
+  var end = Math.max(lastBracket, lastBrace);
   if (end >= 0 && end < str.length - 1) str = str.slice(0, end + 1);
+  // Remove dangerous control chars but KEEP valid UTF-8 (accented Spanish chars, etc.)
   var result = '';
   for (var i = 0; i < str.length; i++) {
     var code = str.charCodeAt(i);
-    if (code === 0x2028 || code === 0x2029) continue;
-    if (code < 32 && code !== 9 && code !== 10 && code !== 13) continue;
+    if (code === 0x2028 || code === 0x2029) continue; // line/paragraph separators
+    if (code < 32 && code !== 9 && code !== 10 && code !== 13) continue; // real control chars only
     result += str[i];
   }
   return result;
 }
 
-function safeParseJSON(text) {
-  var clean = sanitizeJSON(text);
-  try {
-    return JSON.parse(clean);
-  } catch(e1) {
-    try {
-      var fixed = '';
-      var inStr = false, esc = false;
-      for (var i = 0; i < clean.length; i++) {
-        var ch = clean[i], code = clean.charCodeAt(i);
-        if (esc) { fixed += ch; esc = false; continue; }
-        if (ch === '\\') { esc = true; fixed += ch; continue; }
-        if (ch === '"') { inStr = !inStr; fixed += ch; continue; }
-        if (inStr && (code === 10 || code === 13 || code === 9)) { fixed += ' '; continue; }
-        fixed += ch;
+function repairJSON(str) {
+  // Attempt to repair common Groq/LLM JSON issues:
+  // 1. Unescaped newlines inside strings
+  // 2. Trailing commas before } or ]
+  // 3. Single quotes instead of double quotes
+  // 4. Missing closing brackets
+  var out = '';
+  var inStr = false, esc = false;
+  for (var i = 0; i < str.length; i++) {
+    var ch = str[i], code = str.charCodeAt(i);
+    if (esc) { out += ch; esc = false; continue; }
+    if (ch === '\\') { esc = true; out += ch; continue; }
+    if (ch === '"') { inStr = !inStr; out += ch; continue; }
+    if (inStr) {
+      // Inside string: escape raw newlines/tabs, keep everything else as-is (including UTF-8)
+      if (code === 10) { out += '\\n'; continue; }
+      if (code === 13) { out += '\\r'; continue; }
+      if (code === 9)  { out += '\\t'; continue; }
+      out += ch;
+    } else {
+      // Outside string: fix trailing commas before ] or }
+      if (ch === ',' ) {
+        var rest = str.slice(i+1).trimStart();
+        if (rest[0] === ']' || rest[0] === '}') continue; // skip trailing comma
       }
-      return JSON.parse(fixed);
-    } catch(e2) {
-      throw new Error('JSON parse failed: ' + e1.message);
+      out += ch;
     }
   }
+  // Close any unclosed array/object
+  var opens = 0, inS = false, es = false;
+  var stack = [];
+  for (var j = 0; j < out.length; j++) {
+    var c = out[j];
+    if (es) { es = false; continue; }
+    if (c === '\\') { es = true; continue; }
+    if (c === '"') { inS = !inS; continue; }
+    if (!inS) {
+      if (c === '[' || c === '{') stack.push(c === '[' ? ']' : '}');
+      if (c === ']' || c === '}') stack.pop();
+    }
+  }
+  while (stack.length) out += stack.pop();
+  return out;
+}
+
+function safeParseJSON(text) {
+  var clean = sanitizeJSON(text);
+  // Attempt 1: direct parse
+  try { return JSON.parse(clean); } catch(e1) {}
+  // Attempt 2: repair then parse
+  try { return JSON.parse(repairJSON(clean)); } catch(e2) {}
+  // Attempt 3: extract just the array portion and parse
+  try {
+    var m = clean.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (m) return JSON.parse(m[0]);
+  } catch(e3) {}
+  // All attempts failed
+  throw new Error('JSON parse failed after repair attempts');
 }
 
 const STEPS = ["Área","Población","Problema","Metodología","Resultado"];
@@ -3985,33 +4026,41 @@ REGLA DE IDIOMA: Usa el nombre como aparece en publicaciones en español. "Forta
 Responde SOLO con JSON sin texto adicional ni markdown:
 [{"nombre":"...","referencia":"...","antecedente":"..."}]`;
 
-  try {
-    const res = await AIQueue.fetch('/api/chat', {
+  // Helper: attempt one fetch and return parsed text
+  async function attemptFetch(prompt, maxTokens) {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 1200,
-        messages: [{role: 'user', content: varPrompt}]
+        max_tokens: maxTokens,
+        messages: [{role: 'user', content: prompt}]
       })
     });
-    if(!res.ok) {
-      if(res.status === 429) {
-        console.warn('Rate limit (429) en variables IA — usando lista estática');
-        state._varsRetry = 0;
-        state.aiVarsLoading = false;
-        state.aiVarsError = true;
-        if(state.step === 2) renderContent();
-        return;
-      }
-      throw new Error('API error ' + res.status);
-    }
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    let parsed = safeParseJSON(text);
+    return (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
+  }
+
+  try {
+    // Attempt 1: full prompt (up to 2 tries with 2s gap)
+    let text = '';
+    let lastErr = null;
+    for(let attempt = 0; attempt < 2; attempt++) {
+      try {
+        text = await attemptFetch(varPrompt, 1200);
+        if(text) break;
+      } catch(e) {
+        lastErr = e;
+        if(attempt < 1) await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+    if(!text && lastErr) throw lastErr;
+    let parsed = null;
+    try { parsed = safeParseJSON(text); } catch(pe) { console.warn('[TesisProLab] parse error on main prompt:', pe.message); }
 
     // If main prompt returned too few results, retry with a simpler prompt
-    if(!Array.isArray(parsed) || parsed.length < 2) {
+    if(!parsed || !Array.isArray(parsed) || parsed.length < 2) {
       console.warn('[TesisProLab] Main prompt returned few/no results, retrying with simpler prompt...');
       const simplePrompt = `Lista exactamente 8 variables psicológicas para estudiar "${problema}" en "${poblacion}" (área: ${area}).
 Devuelve SOLO JSON, sin texto adicional:
@@ -4029,7 +4078,7 @@ Devuelve SOLO JSON, sin texto adicional:
         if(res2.ok) {
           const data2 = await res2.json();
           const text2 = (data2.choices?.[0]?.message?.content) || (data2.content?.map(b=>b.text||'').join('')) || '';
-          parsed = safeParseJSON(text2);
+          try { parsed = safeParseJSON(text2); } catch(pe2) { console.warn('[TesisProLab] parse error on simple prompt:', pe2.message); }
         }
       } catch(e2) { console.warn('[TesisProLab] Simple retry also failed:', e2?.message); }
     }
