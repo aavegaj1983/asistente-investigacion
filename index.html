@@ -2415,8 +2415,13 @@ function renderContent(){
         "¿Qué aspectos del fenómeno quieres estudiar?",
         "Según el enfoque que elijas en el siguiente paso serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
       );
-      // Auto-trigger AI vars if not loaded, not loading, no error, and problem is set
-      if(state.problema && state.problema !== 'otro' && state.aiVars.length === 0 && !state.aiVarsLoading && !state.aiVarsError) {
+      // Auto-trigger AI vars if not loaded and not loading.
+      // Reset aiVarsError so stale errors from localStorage don't block retries.
+      if(state.problema && state.problema !== 'otro' && state.aiVars.length === 0 && !state.aiVarsLoading) {
+        if(state.aiVarsError) {
+          // Clear stale error from previous session before retrying
+          state.aiVarsError = false;
+        }
         clearTimeout(window._varsTimer);
         window._varsTimer = setTimeout(() => prefetchAIVars(), 300);
       }
@@ -4003,7 +4008,32 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     }
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    const parsed = safeParseJSON(text);
+    let parsed = safeParseJSON(text);
+
+    // If main prompt returned too few results, retry with a simpler prompt
+    if(!Array.isArray(parsed) || parsed.length < 2) {
+      console.warn('[TesisProLab] Main prompt returned few/no results, retrying with simpler prompt...');
+      const simplePrompt = `Lista exactamente 8 variables psicológicas para estudiar "${problema}" en "${poblacion}" (área: ${area}).
+Devuelve SOLO JSON, sin texto adicional:
+[{"nombre":"Variable 1"},{"nombre":"Variable 2"},{"nombre":"Variable 3"},{"nombre":"Variable 4"},{"nombre":"Variable 5"},{"nombre":"Variable 6"},{"nombre":"Variable 7"},{"nombre":"Variable 8"}]`;
+      try {
+        const res2 = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 400,
+            messages: [{role: 'user', content: simplePrompt}]
+          })
+        });
+        if(res2.ok) {
+          const data2 = await res2.json();
+          const text2 = (data2.choices?.[0]?.message?.content) || (data2.content?.map(b=>b.text||'').join('')) || '';
+          parsed = safeParseJSON(text2);
+        }
+      } catch(e2) { console.warn('[TesisProLab] Simple retry also failed:', e2?.message); }
+    }
+
     if(Array.isArray(parsed) && parsed.length >= 2) {
       // Accept both old string format and new object format
       state.aiVars = parsed.map(v => {
@@ -4015,11 +4045,20 @@ Responde SOLO con JSON sin texto adicional ni markdown:
       state._varsHistorial.push(state.aiVars.map(v => v.nombre));
     }
   } catch(e) {
+    console.error('[TesisProLab] prefetchAIVars error:', e?.message || e);
     state.aiVarsError = true;
   } finally {
+    // If AI returned nothing useful, mark error so we don't infinite-loop
+    if(!state.aiVarsError && state.aiVars.length === 0) {
+      state.aiVarsError = true;
+    }
     state.aiVarsLoading = false;
     if(state.step === 2) renderContent();
+    // Save state but WITHOUT aiVarsError — so a page reload always retries fresh
+    const errorBackup = state.aiVarsError;
+    state.aiVarsError = false;
     saveState();
+    state.aiVarsError = errorBackup;
   }
 }
 
