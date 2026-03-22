@@ -3653,7 +3653,7 @@ function renderContent(){
       const recCualId = state.modoExploracion
         ? (fenomLow.includes('experiencia')||fenomLow.includes('vivencia')||fenomLow.includes('significado') ? 'fenomenologico'
           : fenomLow.includes('cultura')||fenomLow.includes('comunidad')||fenomLow.includes('grupo') ? 'etnografico'
-          : 'tematico')
+          : 'analisis-tematico')
         : null;
       DISENOS.cualitativo.forEach(d=>{
         const esc=d.id.replace(/'/g,"\'");
@@ -3678,10 +3678,33 @@ function renderContent(){
       h+=`<div class="hint" style="background:#EEF2FF;border-color:#C7D2FE;color:#3730A3">
         📌 En investigación <strong>mixta</strong>, el nivel (correlacional, explicativo…) aplica al <strong>componente cuantitativo</strong> y está implícito en el diseño que elijas. Selecciona el diseño que mejor describa cómo integrarás ambos métodos.
       </div>`;
+      // Recommend mixto diseño based on profile
+      // - secuencial-explicativo: when they have clear quant variables + want to understand why
+      // - convergente-paralelo: when they want both at same time
+      // - secuencial-exploratorio: when topic is new/exploratory
+      const recMixtoId = state.modoExploracion ? (() => {
+        const nv = state.variables.filter(v=>v!=='otro').length;
+        const fen = (state.explorationProfile?.fenomeno||'').toLowerCase();
+        const explorar = fen.includes('explorar')||fen.includes('desconoce')||fen.includes('poco conocido')||nv<=1;
+        const comprenderPor = fen.includes('por qué')||fen.includes('causa')||fen.includes('explica');
+        return explorar ? 'secuencial-exploratorio'
+          : comprenderPor ? 'secuencial-explicativo'
+          : 'secuencial-explicativo'; // default: most common for pregrado
+      })() : null;
+
       h+=`<div class="options">`;
       DISENOS.mixto.forEach(d=>{
         const esc=d.id.replace(/'/g,"\'");
-        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+        const isRecM = recMixtoId && d.id === recMixtoId;
+        const recBadgeM = isRecM
+          ? `<div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#065F46;background:#ECFDF5;border:0.5px solid #A7F3D0;border-radius:5px;padding:1px 6px;margin-bottom:5px"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Sugerido para tu perfil</div>`
+          : '';
+        h+=`<button class="badge ${state.diseno===d.id?'active':''}" onclick="selectDiseno('${esc}')">
+          ${recBadgeM}
+          <div class="badge-title">${d.label}</div>
+          <div class="badge-desc">${d.desc||''}</div>
+          ${d.hint?`<div class="badge-hint">${d.hint}</div>`:''}
+        </button>`;
       });
       h+=`</div>`;
 
@@ -3887,7 +3910,10 @@ function renderContent(){
           const _alertNoConf = Object.keys(_alertLocalConf).length === 0;
 
           validationHtml += val.alertas.filter(a => {
-            if(_alertNoConf && /multicolineal|multicolinear|correlaci.n.*variable|solapamiento|variables.*similar/i.test(a)) return false;
+            // Only suppress multicollinearity alerts when local detection finds no conflicts
+            // Be specific: only suppress if the alert is ONLY about multicollinearity
+            // Don't suppress legitimate technique/design alerts that mention correlación
+            if(_alertNoConf && /multicolineal|multicolinear|solapamiento conceptual|variables.*miden lo mismo|variables.*similares/i.test(a)) return false;
             return true;
           }).map(a => {
             let aEnriquecida = a;
@@ -3905,7 +3931,7 @@ function renderContent(){
           const _varsSel = state.variables.filter(v => v !== 'otro');
           const _localConflicts = detectarMulticolinealidad(_varsSel);
           const _noLocalConflicts = Object.keys(_localConflicts).length === 0;
-          const _isMulticolSuggestion = /multicolineal|multicolinear|correlacion|solapamiento|similar/i.test(val.sugerencia_clave);
+          const _isMulticolSuggestion = /multicolineal|multicolinear|solapamiento conceptual|variables.*miden lo mismo/i.test(val.sugerencia_clave);
           if(!(_noLocalConflicts && _isMulticolSuggestion)) {
             const sug = val.sugerencia_clave;
             const sugLow = sug.toLowerCase();
