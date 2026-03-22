@@ -1625,7 +1625,7 @@ Responde SOLO con un array JSON de 7 strings:
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
     const parsed = safeParseJSON(text);
-    if(Array.isArray(parsed) && parsed.length >= 4) {
+    if(Array.isArray(parsed) && parsed.length >= 2) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
   } catch(e) {
@@ -2246,6 +2246,23 @@ function getMiniCoherence() {
       alerts.push('SEM / Path Analysis requieren nivel explicativo');
     if (state.tecnica === 'correlacion' && nv > 2)
       tips.push(`Con ${nv} variables considera regresión múltiple o matriz de correlaciones`);
+    // Multicollinearity check: if detected, it counts as an alert (lowers coherence)
+    if (nv >= 2 && state.enfoque !== 'Cualitativo') {
+      const conflictos = detectarMulticolinealidad(vars);
+      if (Object.keys(conflictos).length > 0) {
+        const pares = [];
+        const vis = new Set();
+        vars.forEach(v => {
+          if(conflictos[v]) conflictos[v].forEach(v2 => {
+            const p = [v,v2].sort().join('|');
+            if(!vis.has(p)){vis.add(p);pares.push([v,v2]);}
+          });
+        });
+        pares.forEach(([a,b]) => {
+          alerts.push(`Posible multicolinealidad: "${a}" y "${b}" miden aspectos muy similares. Considera usar solo una.`);
+        });
+      }
+    }
   }
   if (state.diseno === 'cuasiexperimental' && state.nivel && state.nivel !== 'explicativo')
     alerts.push('El diseño cuasi-experimental requiere nivel explicativo');
@@ -2398,6 +2415,12 @@ function renderContent(){
         "¿Qué aspectos del fenómeno quieres estudiar?",
         "Según el enfoque que elijas en el siguiente paso serán <strong>variables</strong> (cuantitativo), <strong>categorías de análisis</strong> (cualitativo) o <strong>ambas</strong> (mixto)."
       );
+      // Auto-trigger AI vars if not loaded, not loading, no error, and problem is set
+      if(state.problema && state.problema !== 'otro' && state.aiVars.length === 0 && !state.aiVarsLoading && !state.aiVarsError) {
+        clearTimeout(window._varsTimer);
+        window._varsTimer = setTimeout(() => prefetchAIVars(), 300);
+      }
+
       // Merge static vars with AI-generated vars (AI vars take priority if available)
       const rawStaticVars = state.problema!=="otro"&&VARIABLES[state.problema]?VARIABLES[state.problema]:[];
       // Sort static vars by population relevance
@@ -2465,6 +2488,14 @@ function renderContent(){
             }
             <button onclick="state.aiVars=[];state.variables=[];renderContent()" style="font-size:11px;background:none;border:1px solid var(--gray-400);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--gray-500);font-family:inherit">Ver estáticas</button>
           </div>
+        </div>`;
+      }
+
+      // Show error UI with retry when AI vars failed
+      if(state.aiVarsError) {
+        h+=`<div class="hint warning" style="font-size:12px;padding:8px 12px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <span>⚠️ No se pudieron generar sugerencias con IA. Mostrando variables estándar.</span>
+          <button onclick="state.aiVarsError=false;state.aiVars=[];state.aiVarsLoading=false;renderContent();setTimeout(()=>prefetchAIVars(),100)" style="font-size:11px;background:none;border:1px solid #D97706;border-radius:4px;padding:3px 8px;cursor:pointer;color:#D97706;font-weight:600;font-family:inherit">🔄 Reintentar IA</button>
         </div>`;
       }
 
@@ -3973,7 +4004,7 @@ Responde SOLO con JSON sin texto adicional ni markdown:
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
     const parsed = safeParseJSON(text);
-    if(Array.isArray(parsed) && parsed.length >= 4) {
+    if(Array.isArray(parsed) && parsed.length >= 2) {
       // Accept both old string format and new object format
       state.aiVars = parsed.map(v => {
         if(typeof v === 'string') return {nombre: v.trim(), referencia: '', antecedente: ''};
