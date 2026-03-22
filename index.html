@@ -3625,9 +3625,22 @@ function renderContent(){
     });
     h+=`</div>`;
     if(state.modoExploracion && state.explorationProfile) {
-      h+=`<div class="hint-exploracion" style="margin-top:6px;font-size:12px">
-        Las opciones marcadas en verde son las más comunes para tu perfil. Puedes elegir cualquier otra.
-      </div>`;
+      if(!state.enfoque || state.enfoque === 'Cuantitativo') {
+        h+=`<div class="hint-exploracion" style="margin-top:6px;font-size:12px">
+          Las opciones marcadas en verde son las más comunes para tu perfil. Puedes elegir cualquier otra.
+        </div>`;
+      } else if(state.enfoque === 'Cualitativo') {
+        const fenomeno = state.explorationProfile.fenomeno || 'tu fenómeno';
+        h+=`<div class="hint-exploracion" style="margin-top:6px;font-size:12px">
+          💡 Elegiste el enfoque <strong>cualitativo</strong> — en lugar de medir variables, explorarás las experiencias y significados de las personas en torno a <em>${fenomeno}</em>. Las variables que seleccionaste se convertirán en <strong>categorías de análisis</strong>.<br>
+          <span style="opacity:.8">Elige el diseño que mejor describa cómo quieres recoger esa información.</span>
+        </div>`;
+      } else if(state.enfoque === 'Mixto') {
+        h+=`<div class="hint-exploracion" style="margin-top:6px;font-size:12px">
+          💡 Elegiste el enfoque <strong>mixto</strong> — combinarás mediciones numéricas con exploración de experiencias. Es más complejo pero permite una comprensión más completa.<br>
+          <span style="opacity:.8">Elige el diseño que mejor describa cómo integrarás ambos métodos.</span>
+        </div>`;
+      }
     }
 
     // ── Nivel (cuantitativo/mixto) | directo al diseño (cualitativo) ──
@@ -3636,9 +3649,24 @@ function renderContent(){
       h+=sectionLabel("¿Qué diseño de investigación utilizarás?",
         "El diseño define el método de recolección y análisis, y determina el tipo de pregunta cualitativa apropiada (Pistrang & Barker, 2012; CHIP-PUCP, 2017).");
       h+=`<div class="options">`;
+      const fenomLow = (state.explorationProfile?.fenomeno||'').toLowerCase();
+      const recCualId = state.modoExploracion
+        ? (fenomLow.includes('experiencia')||fenomLow.includes('vivencia')||fenomLow.includes('significado') ? 'fenomenologico'
+          : fenomLow.includes('cultura')||fenomLow.includes('comunidad')||fenomLow.includes('grupo') ? 'etnografico'
+          : 'tematico')
+        : null;
       DISENOS.cualitativo.forEach(d=>{
-        const esc=d.id.replace(/'/g,"\\'");
-        h+=badgeWithDesc(d.label, d.desc, d.hint, state.diseno===d.id, `selectDiseno('${esc}')`);
+        const esc=d.id.replace(/'/g,"\'");
+        const isRecD = recCualId && d.id === recCualId;
+        const recBadgeD = isRecD
+          ? `<div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#065F46;background:#ECFDF5;border:0.5px solid #A7F3D0;border-radius:5px;padding:1px 6px;margin-bottom:5px"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Sugerido para tu tema</div>`
+          : '';
+        h+=`<button class="badge ${state.diseno===d.id?'active':''}" onclick="selectDiseno('${esc}')">
+          ${recBadgeD}
+          <div class="badge-title">${d.label}</div>
+          <div class="badge-desc">${d.desc||''}</div>
+          ${d.hint?`<div class="badge-hint">${d.hint}</div>`:''}
+        </button>`;
       });
       h+=`</div>`;
 
