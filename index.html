@@ -579,8 +579,8 @@ textarea{min-height:70px;resize:vertical}
 
 /* ── TABLET (≤768px) ─────────────────────────────────────────────── */
 @media (max-width:768px){
-  body{padding:14px 10px 36px}
-  .card{padding:22px 18px;border-radius:var(--radius-lg)}
+  body{padding:8px 10px 16px}
+  .card{padding:16px 16px;border-radius:var(--radius-lg)}
   h2{font-size:18px}
   .steps{gap:0}
   .step-circle{width:30px;height:30px;font-size:12px}
@@ -3547,26 +3547,15 @@ function renderObLanding() {
   }
 
   // Default: choice screen — 3 equal cards
-  return `<div style="max-width:380px;margin:0 auto;padding:44px 22px 32px">
-    <div style="font-size:26px;font-weight:500;color:var(--gray-900);line-height:1.3;margin-bottom:10px">¿Cómo quieres empezar?</div>
-    <div style="font-size:14px;color:var(--gray-500);line-height:1.65;margin-bottom:36px">Elige según tu momento — puedes ajustar en cualquier punto.</div>
+  return `<div style="max-width:380px;margin:0 auto;padding:16px 4px 16px">
+    <div style="font-size:24px;font-weight:500;color:var(--gray-900);line-height:1.3;margin-bottom:8px">¿Cómo quieres empezar?</div>
+    <div style="font-size:13px;color:var(--gray-500);line-height:1.5;margin-bottom:20px">Elige según tu momento — puedes ajustar en cualquier punto.</div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <button onclick="state.paso0Mode='A-input';renderOnboarding(document.getElementById('content'))" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h4l2-5 3 10 2-5h4" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">Tengo una idea que necesito pulir</div>
-          <div style="font-size:12px;color:#9CA3AF;line-height:1.4">La IA la analiza y propone enfoques concretos</div>
-        </div>
-        <div style="color:#D1D5DB;font-size:16px">→</div>
-      </button>
+    <div style="display:flex;flex-direction:column;gap:8px">
 
       <button onclick="iniciarRutaB()" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#E5E7EB'">
         <div style="width:36px;height:36px;border-radius:9px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="#059669" stroke-width="1.2"/><path d="M6 9h6M9 6v6" stroke="#059669" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="8" r="1.8" stroke="#059669" stroke-width="1.3"/><path d="M9 10v2.5" stroke="#059669" stroke-width="1.3" stroke-linecap="round"/><path d="M9 13.5v.5" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="9" r="7" stroke="#059669" stroke-width="1.2"/></svg>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">No sé por dónde empezar</div>
@@ -3575,9 +3564,20 @@ function renderObLanding() {
         <div style="color:#D1D5DB;font-size:16px">→</div>
       </button>
 
+      <button onclick="state.paso0Mode='A-input';renderOnboarding(document.getElementById('content'))" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB'">
+        <div style="width:36px;height:36px;border-radius:9px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3C6.8 3 5 4.8 5 7c0 1.4.7 2.6 1.8 3.4V12h4.4v-1.6C12.3 9.6 13 8.4 13 7c0-2.2-1.8-4-4-4z" stroke="#4F46E5" stroke-width="1.3" stroke-linejoin="round"/><line x1="6.8" y1="12" x2="11.2" y2="12" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="13.5" x2="10.5" y2="13.5" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="9" y1="3" x2="9" y2="1.5" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="13.5" y1="4.5" x2="14.5" y2="3.5" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/><line x1="4.5" y1="4.5" x2="3.5" y2="3.5" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">Tengo una idea que necesito pulir</div>
+          <div style="font-size:12px;color:#9CA3AF;line-height:1.4">La IA la analiza y propone enfoques concretos</div>
+        </div>
+        <div style="color:#D1D5DB;font-size:16px">→</div>
+      </button>
+
       <button onclick="iniciarRutaC()" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#6B7280'" onmouseout="this.style.borderColor='#E5E7EB'">
         <div style="width:36px;height:36px;border-radius:9px;background:#F9FAFB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3.5" y="3.5" width="11" height="11" rx="2" stroke="#6B7280" stroke-width="1.2"/><path d="M6 7h6M6 10.5h4" stroke="#6B7280" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l3.5 3.5L14 5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">Ya sé qué quiero investigar</div>
@@ -5302,7 +5302,7 @@ function updateNav(){
     return;
   }
   bb.style.display = "block";
-  bb.disabled = state.step === 0;
+  bb.disabled = false;
   nb.disabled = !canNext();
   nb.style.display = state.step === 4 ? "none" : "block";
   // En paso 4 (Metodología): "Verificar y continuar" si hubo alertas previas
@@ -5357,6 +5357,15 @@ function abrirCambiosPanel() {
 }
 
 function prevStep(){
+  if(state.step===0){
+    state.step=-1;
+    state.paso0Mode=null;
+    state.modoExploracion=false;
+    state.explorationProfile=null;
+    saveState();
+    render();
+    return;
+  }
   if(state.step>0){
     if(state.step===4) {
       state._showCambiosPanel=false;
