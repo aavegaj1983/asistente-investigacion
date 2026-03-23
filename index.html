@@ -3355,9 +3355,13 @@ function sectionLabel(t, tooltip=""){
 function renderStepsBar(){
   if(state.step === -1) {
     document.getElementById("steps-bar").innerHTML = "";
+    document.getElementById("steps-bar").style.display = "none";
     document.getElementById("step-label").textContent = "";
+    document.getElementById("step-label").style.display = "none";
     return;
   }
+  document.getElementById("steps-bar").style.display = "";
+  document.getElementById("step-label").style.display = "";
   let h="";
   STEPS.forEach((name,i)=>{
     const done=i<state.step;
@@ -3515,6 +3519,7 @@ function renderContextStrip() {
 }
 
 function renderOnboarding(el) {
+  window.scrollTo(0, 0);
   const mode = state.paso0Mode;
   if(!mode) {
     el.innerHTML = renderObLanding();
@@ -3942,6 +3947,7 @@ function iniciarRutaC() {
   state.step = 0;
   saveState();
   render();
+  window.scrollTo(0, 0);
 }
 
 async function procesarRutaA() {
