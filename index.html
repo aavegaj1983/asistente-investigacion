@@ -3772,25 +3772,31 @@ function renderBreadcrumb() {
 
   const parts = [];
 
+  const esRutaB = state.modoExploracion || state.paso0Mode === 'B' || state.paso0Mode === 'perfil';
+
   // step 1 = Población, step 2 = Fenómeno, step 3 = Variables, step 4+ = resultado
-  if(s >= 1) {
+  // En modo exploración (ruta B) no hay paso de Área — empieza desde Población
+  if(s >= 1 && !esRutaB) {
     const areaLabel = state.area && state.area !== 'otro'
       ? (typeof AREAS !== 'undefined' ? (AREAS.find(a=>a.id===state.area)||{label:state.area}).label : state.area)
       : state.areaOtro || '';
     if(areaLabel) parts.push(chipArea(areaLabel));
   }
 
-  if(s >= 2) {
+  // Población: en ruta B desde step 1 (pre-seteada por IA), en ruta normal desde step 2
+  if(s >= (esRutaB ? 1 : 2)) {
     const pobLabel = state.poblacion && state.poblacion !== 'otro' ? state.poblacion : state.poblacionOtro || '';
     if(pobLabel) parts.push(chipPob(pobLabel));
   }
 
-  if(s >= 3) {
+  // Fenómeno: en ruta B desde step 2, en ruta normal desde step 3
+  if(s >= (esRutaB ? 2 : 3)) {
     const probLabel = state.problema && state.problema !== 'otro' ? state.problema : state.problemaOtro || '';
     if(probLabel) parts.push(chipProb(probLabel));
   }
 
-  if(s >= 4) {
+  // Variables: en ruta B desde step 3, en ruta normal desde step 4
+  if(s >= (esRutaB ? 3 : 4)) {
     const vars = state.variables.filter(v => v !== 'otro');
     if(vars.length) parts.push(chipVars(vars.join(' · ')));
   }
@@ -3965,9 +3971,21 @@ function renderObGuided() {
   const REGEN_GUIDED_MAX = 999;
   const canRegenMore = true;
 
+  // Chips acumulativos del flujo guiado
+  const chipPobG  = (t) => `<span style="display:inline-flex;align-items:center;gap:4px;background:#F0FDF4;border:1px solid #A7F3D0;border-radius:20px;padding:3px 10px;font-size:11px;color:#065F46;font-weight:500">${t}</span>`;
+  const chipCtxG  = (t) => `<span style="display:inline-flex;align-items:center;gap:4px;background:#FEF2F2;border:1.5px solid #DC2626;border-radius:20px;padding:3px 10px;font-size:11px;color:#991B1B;font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:#DC2626;flex-shrink:0"></span>${t}</span>`;
+  const chipFenG  = (t) => `<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF2FF;border:1.5px solid #4F46E5;border-radius:20px;padding:3px 10px;font-size:11px;color:#3730A3;font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:#4F46E5;flex-shrink:0"></span>${t}</span>`;
+  const sepG = '<span style="color:#C7D2FE;font-size:11px">›</span>';
+  const gParts = [];
+  if(qi >= 1 && state.guidedAnswers.q1) gParts.push(chipPobG(state.guidedAnswers.q1));
+  if(qi >= 2 && state.guidedAnswers.q2) gParts.push(chipCtxG(state.guidedAnswers.q2));
+  if(qi >= 3 && state.guidedAnswers.q3) gParts.push(chipFenG(state.guidedAnswers.q3));
+  const guidedBreadcrumb = gParts.length ? `<div style="background:#F8FAFF;border:1px solid #E0E7FF;border-radius:10px;padding:7px 12px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center"><span style="font-size:10px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Tu selección</span><span style="color:#C7D2FE;font-size:11px">·</span>${gParts.join(sepG)}</div>` : '';
+
   return `<div class="ob-wrap">
     <button class="ob-back" onclick="guidedBack(${qi})">← ${qi===0?'Volver':'Anterior'}</button>
     <div class="ob-prog">${dots}</div>
+    ${guidedBreadcrumb}
     <div class="ob-big-q">${q.texto}</div>
     ${q.opciones.map(o=>`<button class="ob-opt ${ans===o?'chosen':''}" onclick="selectGuidedAnswer('${q.id}','${o.replace(/'/g,"\'")}',${qi})">${o}</button>`).join('')}
 
@@ -4537,7 +4555,6 @@ function renderContent(){
       h+=`</div>`;
     }
     if(state.problema==="otro"){
-    if(state.problema==="otro"){
       h+=`<input type="text" class="otro-input" id="prob-otro-input" placeholder="Especifica tu problema/fenomeno" value="${state.problemaOtro}" oninput="state.problemaOtro=this.value;updateNav();saveState();clearTimeout(window._probTimer);var btn=document.getElementById('prob-otro-btn');if(btn){btn.style.display=this.value.trim().length>=5?'flex':'none';}window._probTimer=setTimeout(function(){var b=document.getElementById('prob-otro-btn');if(b&&document.getElementById('prob-otro-input').value.trim().length>=5){b.style.display='flex';}},800);"/>`;
       h+=`<button id="prob-otro-btn" onclick="if(state.problemaOtro.trim().length>=5){if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}}" style="display:${state.problemaOtro.trim().length>=5?'flex':'none'};margin-top:10px;width:100%;align-items:center;justify-content:center;gap:8px;padding:11px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .18s" onmouseover="this.style.background='var(--brand-dark)'" onmouseout="this.style.background='var(--brand)'">Validar y continuar →</button>`;
     }
@@ -4759,7 +4776,13 @@ function renderContent(){
           </div>`;
         }
       }
-    }
+
+      // Botón continuar explícito en paso de variables
+      const selChipCont = state.variables.filter(v => v !== 'otro');
+      const tieneSel = selChipCont.length > 0 || (state.variablesOtro||'').trim().length > 0;
+      if(tieneSel && !state.variables.includes('otro')) {
+        h += `<button onclick="state.step=4;render();window.scrollTo(0,0);saveState();" style="margin-top:16px;width:100%;padding:13px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .18s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.background='var(--brand-dark)'" onmouseout="this.style.background='var(--brand)'">Continuar →</button>`;
+      }
     el.innerHTML=h;
   }
 
