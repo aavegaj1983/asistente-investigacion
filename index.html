@@ -58,7 +58,7 @@ body{
   flex-shrink:0;box-shadow:0 2px 8px rgba(79,70,229,.3);
   overflow:hidden;
 }
-.product-logo svg{width:22px;height:28px;display:block}
+.product-logo svg{width:48px;height:48px;display:block}
 h2{
   font-size:20px;font-weight:800;color:var(--gray-900);
   letter-spacing:-0.5px;line-height:1.2;
@@ -791,7 +791,7 @@ function safeParseJSON(text) {
   throw new Error('JSON parse failed after repair attempts');
 }
 
-const STEPS = ["Área","Población","Problema","Metodología","Resultado"];
+const STEPS = ["Área","Población","Problema","Variables","Metodología","Resultado"];
 
 const AREAS = [
   {id:"clinica", label:"Psicología clínica", keywords:"clinica psicopatologia trastornos mental", icon:`<svg version="1.0" style="width:48px;height:48px" xmlns="http://www.w3.org/2000/svg"
@@ -2787,7 +2787,7 @@ async function generateAIInstruments(varsList) {
 
   state.aiInstrumentsLoading = true;
   state.aiInstruments = null;
-  if(state.step === 4 && state.result) renderContent();
+  if(state.step === 5 && state.result) renderContent();
 
   const targetVars = isQual ? varsList : sinInstrumento;
   const instrPrompt = `Eres un experto en psicometría y evaluación psicológica en el contexto peruano y latinoamericano.
@@ -2843,7 +2843,7 @@ Responde SOLO con JSON sin texto adicional:
     state.aiInstruments = [];
   } finally {
     state.aiInstrumentsLoading = false;
-    if(state.step === 4 && state.result) renderContent();
+    if(state.step === 5 && state.result) renderContent();
     saveState();
   }
 }
@@ -2981,7 +2981,7 @@ function renderReferenciasHtml() {
 async function generateAIReferencias() {
   if(state.aiReferenciasLoading || state.aiReferencias) return;
   state.aiReferenciasLoading = true;
-  if(state.step === 4 && state.result) renderContent();
+  if(state.step === 5 && state.result) renderContent();
 
   let vars = state.variables.filter(v => v !== 'otro');
   if(state.variables.includes('otro') && state.variablesOtro.trim())
@@ -3073,7 +3073,7 @@ Responde SOLO con JSON sin texto adicional:
     state.aiReferencias = [];
   } finally {
     state.aiReferenciasLoading = false;
-    if(state.step === 4 && state.result) renderContent();
+    if(state.step === 5 && state.result) renderContent();
     saveState();
   }
 }
@@ -3296,38 +3296,33 @@ function canNext(){
     return state.poblacion!=="";
   }
   if(s===2){
-    // Si problema es "otro", necesita problema especificado Y variables
-    if(state.problema==="otro") {
-      return state.problemaOtro.trim()!=="" && state.variablesOtro.trim()!=="";
-    }
-    // Si seleccionó "otro" en variables, necesita variables especificadas
+    // Solo necesita problema confirmado
+    if(state.problema==="otro") return state.problemaOtro.trim().length>=5;
+    return state.problema!=="";
+  }
+  if(s===3){
+    // Variables step: need at least one variable or variablesOtro filled
     if(state.variables.includes('otro')) {
       return state.variables.length>0 && state.variablesOtro.trim()!=="";
     }
-    // Caso normal: problema seleccionado y al menos una variable seleccionada
-    // También válido si hay variables de texto libre
     const tieneVarsTexto = state.variablesOtro && state.variablesOtro.trim().length > 0;
-    return state.problema!=="" && (state.variables.length>0 || tieneVarsTexto);
+    return state.variables.length>0 || tieneVarsTexto;
   }
-  if(s===3){
-    // Cualitativo y Mixto: solo necesitan diseño (no nivel)
+  if(s===4){
+    // Metodología step
     if(state.enfoque === "Cualitativo" || state.enfoque === "Mixto") {
       return state.diseno !== "";
     }
     if(!state.enfoque || !state.nivel || !state.diseno) return false;
     if(state.enfoque==="Cuantitativo"){
-      // Experimental/cuasi: no requieren técnica del menú
       if(state.diseno==='experimental' || state.diseno==='cuasiexperimental') return true;
-      // Correlacional + longitudinal: advertencia, puede continuar sin técnica
       if(state.nivel==='correlacional' && state.diseno==='no-experimental-longitudinal') return true;
-      // Exploratorio/descriptivo: no requieren técnica avanzada
       if(state.nivel==='exploratorio' || state.nivel==='descriptivo') return true;
-      // Correlacional/explicativo transversal: requieren técnica
       if(state.nivel==="correlacional" || state.nivel==="explicativo") return state.tecnica !== "";
     }
     return true;
   }
-  if(s===4) return true; // step 4 ahora es Resultado
+  if(s===5) return true; // step 5 es Resultado
   return true;
 }
 
@@ -3589,7 +3584,7 @@ function renderObLanding() {
   return `<div style="max-width:380px;margin:0 auto;padding:16px 4px 16px">
     <button onclick="state.paso0Mode=null;render()" style="background:none;border:none;font-size:12px;color:#9CA3AF;cursor:pointer;font-family:inherit;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;transition:color .15s" onmouseover="this.style.color='#4F46E5'" onmouseout="this.style.color='#9CA3AF'">← Atrás</button>
     <div style="font-size:24px;font-weight:500;color:var(--gray-900);line-height:1.3;margin-bottom:8px">¿Cómo quieres empezar?</div>
-    <div style="font-size:13px;color:var(--gray-500);line-height:1.5;margin-bottom:20px">Elige según tu momento, puedes cambiar después.</div>
+    <div style="font-size:13px;color:var(--gray-500);line-height:1.5;margin-bottom:20px">Elige ahora, cambia cuando quieras.</div>
 
     <div style="display:flex;flex-direction:column;gap:8px">
 
@@ -3605,8 +3600,8 @@ function renderObLanding() {
       </button>
 
       <button onclick="state.paso0Mode='A-input';renderOnboarding(document.getElementById('content'))" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E5E7EB'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3C6.8 3 5 4.8 5 7c0 1.4.7 2.6 1.8 3.4V12h4.4v-1.6C12.3 9.6 13 8.4 13 7c0-2.2-1.8-4-4-4z" stroke="#4F46E5" stroke-width="1.3" stroke-linejoin="round"/><line x1="6.8" y1="12" x2="11.2" y2="12" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="13.5" x2="10.5" y2="13.5" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="9" y1="3" x2="9" y2="1.5" stroke="#4F46E5" stroke-width="1.3" stroke-linecap="round"/><line x1="13.5" y1="4.5" x2="14.5" y2="3.5" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/><line x1="4.5" y1="4.5" x2="3.5" y2="3.5" stroke="#4F46E5" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <div style="width:64px;height:64px;border-radius:12px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 932 932" width="48" height="48"><g transform="translate(0,932) scale(0.1,-0.1)" fill="#4F46E5" stroke="none"><path d="M1855 8192 c-19 -12 -111 -135 -241 -323 -116 -167 -295 -425 -399 -574 -103 -148 -280 -403 -393 -565 -113 -162 -254 -363 -313 -446 -59 -83 -114 -165 -123 -182 -21 -41 -20 -80 3 -117 17 -28 391 -484 932 -1136 129 -156 433 -522 674 -814 241 -291 502 -606 580 -700 78 -93 251 -303 385 -465 134 -162 341 -412 460 -555 300 -362 635 -765 768 -926 62 -75 124 -141 138 -148 32 -14 76 -14 109 1 15 7 156 167 313 357 158 190 428 514 599 721 198 237 313 383 313 397 0 22 -127 176 -141 171 -4 -2 -193 -226 -420 -498 -227 -272 -416 -496 -420 -498 -5 -2 95 303 221 678 127 375 230 693 230 707 0 94 -120 149 -190 86 -27 -25 -55 -99 -231 -623 -111 -327 -228 -677 -261 -777 -32 -101 -62 -183 -66 -183 -4 0 -249 724 -545 1608 -297 884 -608 1813 -693 2066 -85 252 -154 462 -154 467 0 5 609 9 1395 9 904 0 1395 -3 1395 -10 0 -5 -7 -27 -15 -47 -49 -128 -285 -839 -285 -859 0 -33 24 -79 52 -98 28 -20 90 -20 128 -1 20 11 35 31 50 72 23 62 320 933 320 939 0 2 448 4 995 4 593 0 995 -4 995 -9 0 -5 -22 -36 -48 -68 -65 -78 -1004 -1210 -1159 -1396 -68 -81 -123 -154 -123 -161 0 -14 145 -156 159 -156 3 0 101 114 217 253 234 281 897 1079 1068 1286 61 74 141 171 178 215 73 88 93 134 79 183 -5 18 -52 92 -104 165 -51 73 -202 288 -334 478 -132 190 -370 532 -528 760 -159 228 -333 479 -387 558 -61 87 -110 148 -128 157 -26 13 -328 15 -2527 15 -2407 0 -2499 -1 -2528 -18z m2275 -229 c0 -5 -84 -118 -187 -253 -102 -135 -263 -346 -357 -470 -94 -124 -226 -297 -293 -385 -68 -88 -193 -252 -279 -365 -86 -113 -161 -205 -166 -205 -7 0 -196 420 -433 965 -152 350 -205 470 -240 545 -20 44 -45 101 -56 128 l-19 47 1015 0 c558 0 1015 -3 1015 -7z m2496 -90 c-96 -218 -373 -848 -437 -993 -37 -85 -106 -243 -154 -350 -48 -107 -91 -207 -97 -222 -5 -16 -13 -28 -18 -28 -8 0 -204 256 -890 1160 -210 278 -387 511 -393 518 -7 9 196 12 1011 12 l1021 0 -43 -97z m-1849 -494 c211 -277 503 -660 648 -851 146 -190 265 -351 265 -357 0 -8 -383 -11 -1310 -11 -720 0 -1310 2 -1310 5 0 3 194 261 432 573 762 1000 815 1070 844 1111 16 22 33 39 38 38 6 -2 182 -230 393 -508z m2453 -34 c184 -264 441 -634 572 -822 131 -188 238 -347 238 -353 0 -7 -307 -10 -950 -10 -715 0 -950 3 -950 12 0 6 22 61 49 122 108 243 496 1128 641 1459 34 78 46 95 55 85 7 -7 162 -229 345 -493z m-5281 380 c27 -61 97 -220 156 -355 127 -290 335 -763 446 -1013 43 -98 79 -182 79 -187 0 -6 -347 -10 -955 -10 -525 0 -955 3 -955 6 0 3 67 101 148 217 307 438 900 1290 971 1395 23 35 47 62 52 60 5 -2 32 -53 58 -113z m795 -1827 c8 -18 134 -391 281 -828 870 -2592 1064 -3174 1061 -3178 -5 -4 -380 446 -1406 1688 -338 409 -783 946 -1209 1460 -162 195 -336 405 -386 465 -50 61 -145 175 -211 255 -66 80 -124 151 -128 158 -6 9 195 12 989 12 l996 0 13 -32z"/><path d="M5760 4658 c-157 -141 -750 -703 -748 -708 3 -7 536 -572 1039 -1100 121 -127 230 -232 249 -242 19 -9 134 -35 255 -57 l220 -41 62 -62 62 -62 -94 -97 c-100 -103 -125 -152 -125 -245 0 -118 82 -232 195 -273 33 -12 80 -29 103 -37 93 -34 294 -212 422 -373 29 -35 95 -128 148 -205 153 -223 278 -342 437 -416 97 -46 160 -60 267 -60 101 0 191 21 288 68 101 49 239 185 293 289 102 195 101 399 -2 608 -73 146 -179 261 -416 450 -267 213 -458 447 -499 611 -22 85 -47 134 -92 178 -57 55 -115 79 -193 79 -89 0 -146 -26 -242 -113 -42 -39 -82 -70 -87 -70 -6 0 -36 29 -68 65 l-57 66 -29 137 c-15 75 -38 179 -49 229 l-21 93 -136 142 c-75 79 -319 332 -542 562 -223 231 -447 464 -499 518 -51 54 -96 98 -100 98 -3 0 -22 -15 -41 -32z m521 -800 c266 -277 508 -528 536 -558 l52 -56 46 -219 c27 -131 53 -229 63 -242 9 -12 48 -56 86 -98 l69 -76 -31 -32 -32 -32 -81 87 c-44 48 -87 89 -97 92 -9 3 -123 26 -252 51 l-234 45 -42 42 c-57 60 -752 793 -901 952 -116 124 -122 131 -105 148 80 78 428 398 432 398 4 0 224 -226 491 -502z m1382 -1145 c8 -10 22 -45 31 -79 9 -34 23 -78 31 -98 15 -36 15 -37 -9 -46 -59 -22 -59 -72 -2 -186 88 -176 213 -340 401 -527 182 -181 462 -391 521 -391 28 0 33 -4 37 -30 3 -17 0 -55 -5 -85 -31 -175 -181 -323 -353 -350 -87 -13 -115 -6 -115 31 0 39 -27 90 -131 243 -125 186 -238 322 -380 460 -145 141 -272 238 -385 296 -69 35 -86 40 -110 32 -16 -5 -35 -21 -42 -36 l-13 -26 -52 23 c-29 12 -76 31 -105 40 -54 18 -78 48 -66 79 4 12 474 467 644 625 49 45 78 52 103 25z m188 -380 c109 -151 250 -288 529 -513 51 -41 119 -108 151 -149 59 -73 117 -171 101 -171 -5 0 -42 23 -83 51 -250 172 -519 441 -664 664 -68 104 -118 205 -102 205 3 0 33 -39 68 -87z m-588 -479 c150 -76 399 -301 571 -514 73 -92 269 -381 262 -388 -3 -2 -29 9 -58 25 -73 39 -191 159 -272 278 -179 261 -333 440 -484 563 -67 55 -71 62 -19 36z"/><path d="M7431 2201 c-6 -11 -11 -27 -11 -35 0 -9 84 -105 188 -214 103 -108 293 -310 422 -447 324 -345 344 -365 367 -365 29 0 57 34 49 62 -3 13 -215 246 -472 518 -416 443 -469 495 -499 498 -25 2 -36 -2 -44 -17z"/></g></svg>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">Tengo una idea que necesito pulir</div>
@@ -3616,8 +3611,8 @@ function renderObLanding() {
       </button>
 
       <button onclick="iniciarRutaC()" style="border:1px solid #E5E7EB;border-radius:14px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:13px;background:#fff;width:100%;text-align:left;font-family:inherit;transition:border-color .18s" onmouseover="this.style.borderColor='#6B7280'" onmouseout="this.style.borderColor='#E5E7EB'">
-        <div style="width:36px;height:36px;border-radius:9px;background:#F9FAFB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l3.5 3.5L14 5" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="width:64px;height:64px;border-radius:12px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 934 934" width="48" height="48"><g transform="translate(0,934) scale(0.1,-0.1)" fill="#DC2626" stroke="none"><path d="M1320 8455 c-172 -35 -316 -113 -444 -240 -141 -140 -226 -308 -256 -500 -7 -49 -10 -903 -8 -2820 l3 -2750 23 -75 c52 -170 139 -305 263 -409 132 -111 280 -172 460 -191 139 -14 3500 -14 3551 0 80 23 106 119 49 182 l-29 33 -1814 5 -1813 5 -58 22 c-137 52 -230 124 -305 237 -71 106 -97 195 -97 331 0 139 26 226 100 335 134 197 382 297 610 246 33 -7 81 -19 106 -26 56 -16 93 -8 130 30 l29 28 0 2191 0 2191 3053 -2 3052 -3 5 -1648 5 -1649 33 -29 c47 -43 102 -41 148 5 l34 34 0 1716 c0 1887 4 1758 -60 1791 -26 13 -380 15 -3150 15 l-3120 0 0 446 0 446 -34 34 -34 34 -183 -1 c-108 0 -211 -6 -249 -14z m270 -2782 l0 -2578 -128 3 c-102 3 -144 0 -213 -17 -142 -33 -261 -96 -360 -188 l-49 -46 2 2434 3 2434 23 65 c70 190 177 317 337 397 102 51 182 69 318 72 l67 1 0 -2577z"/><path d="M3065 6720 c-11 -4 -31 -20 -45 -35 -25 -26 -25 -28 -31 -278 -4 -139 -12 -286 -18 -327 -23 -155 -89 -367 -151 -491 -112 -221 -319 -428 -524 -525 -46 -22 -62 -35 -73 -63 -31 -74 8 -148 84 -158 32 -4 53 2 114 32 41 21 93 51 117 67 l42 29 0 -361 0 -360 -147 0 c-127 0 -152 -3 -179 -19 -81 -49 -65 -165 29 -200 18 -7 152 -11 368 -11 l339 0 0 -472 c0 -455 1 -474 20 -506 11 -18 32 -37 47 -43 16 -6 140 -9 326 -7 l299 3 29 33 29 32 0 480 0 480 1110 0 1110 0 0 -469 c0 -281 4 -480 10 -495 5 -14 24 -35 42 -46 31 -19 47 -20 335 -18 l303 3 27 28 28 27 3 485 3 485 337 0 c200 0 352 4 374 10 80 23 106 119 49 182 l-29 33 -156 3 -156 3 0 355 c0 195 3 354 6 354 4 0 32 -15 63 -34 90 -54 158 -86 185 -86 70 0 121 56 112 123 -5 48 -27 72 -91 105 -207 105 -406 305 -514 519 -121 241 -181 534 -181 886 0 265 12 257 -375 257 -385 0 -375 7 -375 -242 0 -434 -67 -708 -230 -947 -148 -219 -408 -397 -667 -457 -89 -20 -271 -24 -368 -8 -207 35 -403 135 -564 289 -102 98 -153 162 -219 281 -118 209 -172 475 -172 852 0 110 -4 150 -16 173 -28 55 -54 59 -361 58 -153 0 -287 -4 -298 -9z m453 -1862 l-3 -1643 -147 -3 -148 -3 0 1646 0 1645 150 0 150 0 -2 -1642z m2967 4 c0 -899 -3 -1638 -6 -1643 -3 -6 -68 -8 -150 -7 l-144 3 -3 1643 -2 1643 152 -3 153 -3 0 -1633z m-2695 552 c45 -72 173 -209 266 -285 l74 -60 0 -410 0 -409 -192 2 -193 3 -3 608 c-1 334 1 607 5 607 5 -1 24 -26 43 -56z m2170 -559 l0 -605 -195 0 -195 0 0 408 0 408 86 70 c90 72 213 204 261 280 16 24 31 44 36 44 4 0 7 -272 7 -605z m-2970 -20 l0 -585 -170 0 -170 0 0 383 0 383 108 110 c65 66 130 145 167 202 33 50 61 92 62 92 2 0 3 -263 3 -585z m3745 565 c14 -43 155 -218 243 -302 l92 -87 -2 -378 -3 -378 -177 -3 -178 -2 0 585 c0 542 4 631 25 565z m-2270 -496 c55 -19 138 -41 185 -48 l85 -12 3 -297 2 -297 -192 2 -193 3 -3 343 c-1 188 1 342 5 342 5 0 53 -16 108 -36z m885 -309 l0 -345 -192 2 -193 3 -3 289 c-3 315 -4 306 54 306 43 0 212 44 265 68 24 11 50 21 57 21 9 1 12 -74 12 -344z"/><path d="M8717 3828 c-21 -6 -52 -24 -70 -42 -29 -28 -556 -603 -697 -761 -64 -71 -708 -783 -1046 -1155 -127 -140 -242 -267 -255 -282 l-24 -28 -390 406 c-230 240 -405 414 -427 425 -44 22 -115 25 -161 5 -18 -7 -100 -83 -183 -167 -152 -155 -174 -187 -174 -254 1 -49 48 -110 231 -300 106 -110 371 -384 588 -610 217 -226 412 -421 433 -434 29 -17 53 -23 92 -23 93 1 80 -11 442 391 314 349 409 455 624 691 180 198 366 403 816 901 122 134 319 352 439 484 120 132 224 254 231 272 20 48 17 104 -8 149 -13 22 -88 103 -168 181 -170 164 -194 177 -293 151z"/></g></svg>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:500;color:var(--gray-900);margin-bottom:2px">Ya sé qué quiero investigar</div>
@@ -4218,7 +4213,8 @@ function renderContent(){
     }
 
     if(state.poblacion==="otro"){
-      h+=`<input type="text" class="otro-input" placeholder="Especifica tu poblacion (ej: Adultos mayores del CAM EsSalud, Cusco)" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState()"/>`;
+      h+=`<input type="text" class="otro-input" id="pob-otro-input" placeholder="Especifica tu poblacion (ej: Adultos mayores del CAM EsSalud, Cusco)" value="${state.poblacionOtro}" oninput="state.poblacionOtro=this.value;updateNav();saveState();clearTimeout(window._pobTimer);var btn=document.getElementById('pob-otro-btn');if(btn){btn.style.display=this.value.trim().length>=5?'flex':'none';}window._pobTimer=setTimeout(function(){var b=document.getElementById('pob-otro-btn');if(b&&document.getElementById('pob-otro-input').value.trim().length>=5){b.style.display='flex';}},800);"/>`;
+      h+=`<button id="pob-otro-btn" onclick="if(state.poblacionOtro.trim().length>=5){if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}}" style="display:${state.poblacionOtro.trim().length>=5?'flex':'none'};margin-top:10px;width:100%;align-items:center;justify-content:center;gap:8px;padding:11px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .18s" onmouseover="this.style.background='var(--brand-dark)'" onmouseout="this.style.background='var(--brand)'">Validar y continuar →</button>`;
     }
     el.innerHTML=h;
   }
@@ -4260,14 +4256,20 @@ function renderContent(){
       h+=`</div>`;
     }
     if(state.problema==="otro"){
-      h+=`<input type="text" class="otro-input" placeholder="Especifica tu problema/fenomeno" value="${state.problemaOtro}" oninput="state.problemaOtro=this.value;updateNav();saveState()" onblur="renderContent()" onkeypress="if(event.key==='Enter'){renderContent()}"/>`;
+    if(state.problema==="otro"){
+      h+=`<input type="text" class="otro-input" id="prob-otro-input" placeholder="Especifica tu problema/fenomeno" value="${state.problemaOtro}" oninput="state.problemaOtro=this.value;updateNav();saveState();clearTimeout(window._probTimer);var btn=document.getElementById('prob-otro-btn');if(btn){btn.style.display=this.value.trim().length>=5?'flex':'none';}window._probTimer=setTimeout(function(){var b=document.getElementById('prob-otro-btn');if(b&&document.getElementById('prob-otro-input').value.trim().length>=5){b.style.display='flex';}},800);"/>`;
+      h+=`<button id="prob-otro-btn" onclick="if(state.problemaOtro.trim().length>=5){if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}}" style="display:${state.problemaOtro.trim().length>=5?'flex':'none'};margin-top:10px;width:100%;align-items:center;justify-content:center;gap:8px;padding:11px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .18s" onmouseover="this.style.background='var(--brand-dark)'" onmouseout="this.style.background='var(--brand)'">Validar y continuar →</button>`;
     }
-    
-    // Mostrar campo de variables solo si ya confirmó el problema (tiene al menos 3 caracteres Y no está vacío después de trim)
-    const problemaConfirmado = state.problema === "otro" && state.problemaOtro.trim().length >= 3;
-    const mostrarVariables = (state.problema && state.problema !== "otro") || problemaConfirmado;
-    
-    if(mostrarVariables){
+    el.innerHTML=h;
+  }
+
+  else if(s===3){
+    // Variables step
+    const pobRecordatorio3 = getPoblacionCompleta();
+    const probLabel3 = state.problema==="otro" ? state.problemaOtro : state.problema;
+    let h = '';
+    if(pobRecordatorio3) h+=`<div style="display:inline-flex;align-items:center;gap:6px;background:#F0FDF4;border:1px solid #A7F3D0;border-radius:20px;padding:4px 12px;font-size:12px;color:#065F46;font-weight:500;margin-bottom:8px"><span>👥</span><span>Trabajando con: <strong>${pobRecordatorio3}</strong></span></div>`;
+    if(probLabel3) h+=`<div style="display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:20px;padding:4px 12px;font-size:12px;color:#3730A3;font-weight:500;margin-bottom:12px;margin-left:6px"><span>🔬</span><span>Fenómeno: <strong>${probLabel3}</strong></span></div>`;
       // En este paso el enfoque aún no está definido → lenguaje neutro
       // CHIP-PUCP (2017); Hernández & Mendoza (2018, cap. 3)
       // Context strip for modoExploracion
@@ -4386,11 +4388,12 @@ function renderContent(){
         if(state.variables.includes('otro')){
           // Enfoque aún no definido en este paso — placeholder neutro
           const placeholderOtro = 'Especifica los aspectos que quieres estudiar, separados por comas';
-          h+=`<input type="text" class="otro-input" placeholder="${placeholderOtro}"
+          h+=`<input type="text" class="otro-input" id="vars-otro-input" placeholder="${placeholderOtro}"
             value="${state.variablesOtro}"
-            oninput="state.variablesOtro=this.value;state.otroVarsValidation=null;state.otroVarsValidating=false;updateNav();saveState()"
+            oninput="state.variablesOtro=this.value;state.otroVarsValidation=null;state.otroVarsValidating=false;updateNav();saveState();clearTimeout(window._varsOtroTimer);var vbtn=document.getElementById('vars-otro-btn');if(vbtn){vbtn.style.display=this.value.trim().length>=5?'flex':'none';}window._varsOtroTimer=setTimeout(function(){var vb=document.getElementById('vars-otro-btn');if(vb&&document.getElementById('vars-otro-input').value.trim().length>=5){vb.style.display='flex';}},800);"
             onblur="validateOtroVars()"
             onkeypress="if(event.key==='Enter'){this.blur()}"/>`;
+          h+=`<button id="vars-otro-btn" onclick="if(state.variablesOtro.trim().length>=5){if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}}" style="display:${state.variablesOtro.trim().length>=5?'flex':'none'};margin-top:10px;width:100%;align-items:center;justify-content:center;gap:8px;padding:11px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .18s" onmouseover="this.style.background='var(--brand-dark)'" onmouseout="this.style.background='var(--brand)'">Validar y continuar →</button>`;
           // Show validation feedback
           if(state.otroVarsValidating) {
             h+=`<div class="var-validating"><span style="animation:spin 1s linear infinite;display:inline-block">⏳</span> Verificando ${isQualOtro ? 'categorías' : 'variables'}...</div>`;
@@ -4495,7 +4498,7 @@ function renderContent(){
     el.innerHTML=h;
   }
 
-  else if(s===3){
+  else if(s===4){
     let h=`<div class="gap20">`;
     if(state.modoExploracion && state.explorationProfile) h += renderContextStrip();
 
@@ -4786,7 +4789,7 @@ function renderContent(){
     h+=`</div>`;
     el.innerHTML=h;
   }
-  else if(s===4){
+  else if(s===5){
     if(state.loading){
       el.innerHTML=`<div class="loading"><div class="icon">⏳</div><p>Generando tu propuesta de investigacion...</p></div>`;
       return;
@@ -4893,7 +4896,7 @@ function renderContent(){
             const esCambiarNivel = /cambiar.*nivel|nivel.*explicativo|nivel.*correlacional/i.test(sug);
             let actionBtn = '';
             if(esAgregarVar) {
-              actionBtn = `<button onclick="state.step=2;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir al paso de variables y agregar una más</button>`;
+              actionBtn = `<button onclick="state.step=3;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir al paso de variables y agregar una más</button>`;
             } else if(esCambiarTecnica) {
               actionBtn = `<button onclick="state.step=3;saveState();render()" style="margin-top:8px;width:100%;padding:7px;background:#1D4ED8;color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">→ Ir a metodología para cambiar la técnica</button>`;
             } else if(esCambiarNivel) {
@@ -5345,9 +5348,9 @@ function updateNav(){
   bb.style.display = "block";
   bb.disabled = false;
   nb.disabled = !canNext();
-  nb.style.display = state.step === 4 ? "none" : "block";
+  nb.style.display = (state.step === 5 || state.step === 0 || state.step === 1 || state.step === 2) ? "none" : "block";
   // En paso 4 (Metodología): "Verificar y continuar" si hubo alertas previas
-  if(state.step===3) {
+  if(state.step===4) {
     const tieneAlertas = state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0;
     const coherenciaBaja = state.aiValidation && state.aiValidation.nivel_coherencia !== 'alta';
     nb.textContent = (tieneAlertas || coherenciaBaja) ? 'Verificar y continuar →' : 'Siguiente →';
@@ -5363,13 +5366,13 @@ function render(){
 }
 
 function nextStep(){
-  if(canNext()&&state.step<4){
+  if(canNext()&&state.step<5){
     state.step++;
     render();
     window.scrollTo(0,0);
     saveState();
     // Validate at step 4: always re-run if coming from step 3 with prior alerts
-    if(state.step===4) {
+    if(state.step===5) {
       const tieneAlertasPrevias = state.aiValidation && (
         state.aiValidation.alertas?.length > 0 ||
         state.aiValidation.nivel_coherencia !== 'alta'
@@ -5435,8 +5438,8 @@ function filterAreas(q){
   });
   if(empty)empty.style.display=visible===0?'block':'none';
 }
-function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}
+function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();if(v!=="otro"){setTimeout(()=>{if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}},180);}}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);if(v!=="otro"){setTimeout(()=>{if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}},180);}}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
@@ -5555,7 +5558,7 @@ Si no hay problemas, "problemas" debe ser un array vacío [].`;
     state.editValidation = { coherencia_global:'error', emoji:'⚠️', resumen:'No se pudo verificar', problemas:[], aciertos:[] };
   } finally {
     state.editValidating = false;
-    if(state.step === 4 && state.result) renderContent();
+    if(state.step === 5 && state.result) renderContent();
     saveState();
   }
 }
@@ -5750,7 +5753,7 @@ async function generateVarDefinitions() {
   if(vars.length === 0) return;
 
   state.aiVarDefinitionsLoading = true;
-  if(state.step === 4 && state.result) renderContent();
+  if(state.step === 5 && state.result) renderContent();
 
   const isQual = state.enfoque === 'Cualitativo';
   const area = efectiveArea() || 'Psicología';
@@ -5800,7 +5803,7 @@ Responde SOLO con JSON:
     console.error('generateVarDefinitions error:', e);
   } finally {
     state.aiVarDefinitionsLoading = false;
-    if(state.step === 4 && state.result) renderContent();
+    if(state.step === 5 && state.result) renderContent();
     saveState();
   }
 }
@@ -5914,7 +5917,7 @@ Responde SOLO con array JSON de 5 strings texto plano sin HTML:
     if(Array.isArray(parsed) && parsed.length >= 3) {
       state.aiNextSteps = parsed;
       saveState();
-      if(state.step === 4 && state.result) renderContent();
+      if(state.step === 5 && state.result) renderContent();
     }
   } catch(e) {
     console.error('generateNextSteps error:', e);
