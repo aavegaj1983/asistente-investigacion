@@ -1612,6 +1612,15 @@ const POBLACIONES = {
   digital:["Adolescentes usuarios intensivos de redes sociales","Jóvenes gamers (18-30 años)","Niños con acceso temprano a dispositivos","Adultos mayores con brecha digital","Trabajadores con hiperconectividad laboral","Estudiantes universitarios y redes sociales","Influencers y creadores de contenido","Personas con uso problemático de pornografía online","Usuarios de apps de citas","Comunidades virtuales y fandoms"],
   emergencias:["Sobrevivientes de desastres naturales","Primeros respondientes (bomberos, policía, paramédicos)","Personal de salud en emergencias","Personas desplazadas por violencia","Comunidades post-conflicto","Personas que perdieron seres queridos súbitamente","Sobrevivientes de accidentes de tránsito","Personas afectadas por desastres tecnológicos","Niños y adolescentes expuestos a emergencias","Voluntarios en zonas de desastre"],
   transcultural:["Migrantes latinoamericanos en el exterior","Migrantes venezolanos en Perú","Comunidades indígenas amazónicas","Comunidades indígenas andinas","Estudiantes internacionales en universidades","Hijos de migrantes (segunda generación)","Personas afroperuanas","Refugiados y solicitantes de asilo","Familias interculturales","Profesionales en contextos multiculturales"],
+  "salud-mental-com":["Comunidades en situación de vulnerabilidad","Personas con trastornos mentales graves","Familias de personas con enfermedad mental","Líderes y promotores comunitarios de salud","Trabajadores de centros de salud comunitarios","Adolescentes en riesgo psicosocial","Personas en situación de calle","Poblaciones rurales con escaso acceso a salud","Adultos mayores en comunidades marginadas","Cuidadores de personas con trastorno mental"],
+  "politicas-salud":["Tomadores de decisión en salud pública","Profesionales de salud mental del sector público","Gestores de programas de salud mental","Legisladores y funcionarios públicos","Organizaciones de la sociedad civil en salud","Directores de centros de salud","Trabajadores del primer nivel de atención","Académicos e investigadores en salud pública","Usuarios de servicios públicos de salud mental","Personal de ministerios de salud"],
+  comunitaria:["Comunidades urbano-marginales","Organizaciones vecinales y juntas comunales","Líderes comunitarios y dirigentes","Jóvenes en zonas de riesgo social","Mujeres en comunidades vulnerables","Adultos mayores en comunidades locales","Comunidades rurales andinas","Comunidades afectadas por conflicto","Grupos de apoyo mutuo comunitario","Comunidades receptoras de migrantes"],
+  politica:["Jóvenes votantes (18-29 años)","Militantes y activistas políticos","Ciudadanos en contexto electoral","Funcionarios y representantes públicos","Estudiantes universitarios con participación política","Líderes de movimientos sociales","Personas en contextos de polarización","Adultos en democracias emergentes","Periodistas y comunicadores políticos","Poblaciones en regímenes autoritarios"],
+  "paz-conflictos":["Sobrevivientes de conflicto armado","Excombatientes en proceso de reintegración","Comunidades en post-conflicto","Desplazados internos por violencia","Niños y adolescentes en zonas de conflicto","Familias de víctimas de violencia política","Personal de organizaciones humanitarias","Mediadores y facilitadores de paz","Comunidades indígenas en contextos de conflicto","Personas en proceso de reconciliación"],
+  gerontologia:["Adultos mayores autónomos (60-74 años)","Adultos mayores dependientes (75+)","Adultos mayores institucionalizados","Cuidadores formales de adultos mayores","Cuidadores informales familiares","Adultos mayores en situación de pobreza","Adultos mayores con deterioro cognitivo leve","Adultos mayores en programas de envejecimiento activo","Familiares de adultos mayores con demencia","Adultos mayores en contextos rurales"],
+  publicidad:["Adolescentes expuestos a publicidad digital (13-18)","Jóvenes adultos consumidores de medios (18-30)","Niños en edad escolar como público objetivo","Adultos mayores y su relación con medios","Usuarios de redes sociales con alta exposición publicitaria","Consumidores de publicidad televisiva","Madres con hijos pequeños como público objetivo","Estudiantes universitarios de marketing","Personas en contextos de consumo masivo","Profesionales del marketing y publicidad"],
+  psicobiologia:["Estudiantes universitarios de psicología y neurociencias","Adultos sanos para estudios de línea base","Pacientes con trastornos relacionados al estrés","Personas con trastornos del sueño","Atletas de alto rendimiento","Personas con enfermedades psicosomáticas","Adultos mayores para estudios de envejecimiento cerebral","Personas con antecedentes familiares de trastornos mentales","Pacientes en tratamiento farmacológico","Personal de salud expuesto a estrés crónico"],
+  experimental:["Estudiantes universitarios como participantes en laboratorio","Adultos jóvenes en estudios experimentales (18-35)","Niños en estudios de desarrollo cognitivo","Adultos mayores en estudios de cognición","Personas con trastornos atencionales (TDAH)","Pacientes neurológicos en rehabilitación","Profesionales en tareas de alta demanda cognitiva","Deportistas en estudios de rendimiento mental","Personas en contextos de toma de decisiones","Participantes en estudios de memoria y aprendizaje"],
   otro:[],
 };
 
@@ -4110,9 +4119,8 @@ function confirmarPerfil() {
   if(selVars.length) {
     state.variables = selVars;
   }
-  // Skip steps 0-2 — area, población and variables are already set from profile
-  // Go directly to step 3 (Metodología)
-  state.step = 3;
+  // Variables already set from profile — skip to step 4 (Metodología)
+  state.step = 4;
   saveState();
   render();
 }
@@ -5345,7 +5353,7 @@ function updateNav(){
   bb.style.display = "block";
   bb.disabled = false;
   nb.disabled = !canNext();
-  nb.style.display = (state.step === 5 || state.step === 0 || state.step === 1 || state.step === 2) ? "none" : "block";
+  nb.style.display = (state.step === 5 || state.step === 0 || state.step === 1 || state.step === 2 || state.step === -1) ? "none" : "block";
   // En paso 4 (Metodología): "Verificar y continuar" si hubo alertas previas
   if(state.step===4) {
     const tieneAlertas = state.aiValidation && state.aiValidation.alertas && state.aiValidation.alertas.length > 0;
@@ -5450,7 +5458,7 @@ function filterAreas(q){
   if(empty)empty.style.display=visible===0?'block':'none';
 }
 function selectPoblacion(v){state.poblacion=v;state.poblacionOtro="";updateNav();renderContent();saveState();if(v!=="otro"){setTimeout(()=>{if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}},180);}}
-function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;updateNav();renderContent();saveState();clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);if(v!=="otro"){setTimeout(()=>{if(canNext()&&state.step<5){state.step++;render();window.scrollTo(0,0);saveState();}},180);}}
+function selectProblema(v){state.problema=v;state.problemaOtro="";state.variables=[];state.variablesOtro="";state.aiVars=[];state.aiVarsError=false;state.otroVarsValidation=null;state.otroVarsValidating=false;state._varsHistorial=[];state.regenCount=0;saveState();if(v!=="otro"){state.step++;render();window.scrollTo(0,0);clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}else{updateNav();renderContent();}}
 function selectEnfoque(v){state.enfoque=v;state.nivel="";state.diseno="";state.tecnica="";state.aiVars=[];state.aiVarsError=false;updateNav();renderContent();saveState();if(state.problema&&state.problema!=='otro'||state.problemaOtro.trim().length>=3){clearTimeout(window._varsTimer);window._varsTimer=setTimeout(()=>prefetchAIVars(),600);}}
 function selectNivel(v){state.nivel=v;state.diseno='';state.tecnica='';state.aiValidation=null;updateNav();renderContent();saveState();}
 function selectEpistemologia(v){state.epistemologia=v;state.diseno='';state.tecnica='';updateNav();renderContent();saveState();}
