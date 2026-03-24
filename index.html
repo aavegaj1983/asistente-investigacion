@@ -2959,10 +2959,6 @@ function findInstrumento(varName) {
 
 async function prefetchAIPoblaciones(manualRegen = false) {
   if(!state.area || state.area === 'otro' || state.aiPoblacionesLoading) return;
-  // Requires geographic context — don't run without it
-  const contexto = state.contexto ? state.contexto.trim() : '';
-  if(!contexto) return;
-  // Only guard manual re-triggers, not the auto first-load
   if (manualRegen) incrementRegen('poblaciones');
 
   state.aiPoblacionesLoading = true;
@@ -2970,28 +2966,26 @@ async function prefetchAIPoblaciones(manualRegen = false) {
   if(state.step === 1) renderContent();
 
   const area = efectiveArea();
+  const contexto = state.contexto ? state.contexto.trim() : '';
   const motivacion = state.motivacion ? state.motivacion.trim() : '';
   const problema = efectiveProblema() || '';
 
   const pobPrompt = `Eres un experto en investigación psicológica en el contexto peruano.
 
 Un estudiante de pregrado en psicología quiere investigar en el área de "${area}".
-Contexto geográfico declarado: "${contexto}"
+${contexto ? `Contexto geográfico: "${contexto}"` : ''}
 ${problema ? `Problema de interés: "${problema}"` : ''}
 ${motivacion ? `Motivación: "${motivacion}"` : ''}
 
-Genera exactamente 7 poblaciones de estudio ANCLADAS al contexto geográfico declarado. Cada población debe:
-1. Estar ubicada en "${contexto}" o una institución real de esa zona
-2. Ser viable y accesible para un tesista que vive o estudia en ese lugar
-3. Incluir características demográficas precisas (edad, condición, institución específica)
-4. Ser coherente con el área de "${area}"
-5. NO inventar regiones distintas al contexto declarado
-6. Cubrir variedad de grupos (distintas edades, condiciones, tipos de institución de la zona)
+Genera exactamente 8 poblaciones de estudio específicas y variadas. Cada población debe:
+1. Ser coherente con el área de "${area}"
+2. Incluir características demográficas precisas (edad, condición, tipo de institución)
+3. Ser viable y accesible para un tesista de pregrado en psicología
+4. Cubrir variedad de grupos (distintas edades, condiciones, contextos)
+${contexto ? `5. Estar ancladas al contexto geográfico "${contexto}"` : ''}
 
-REGLA CLAVE: si el contexto es "Lima, SJL" → TODAS las poblaciones deben ser de Lima/SJL o zonas cercanas. NO sugerir Cusco, Piura o Arequipa si el contexto es Lima.
-
-Responde SOLO con un array JSON de 7 strings:
-["Población 1 anclada al contexto","Población 2","Población 3","Población 4","Población 5","Población 6","Población 7"]`;
+Responde SOLO con un array JSON de 8 strings, sin texto adicional:
+["Población 1","Población 2","Población 3","Población 4","Población 5","Población 6","Población 7","Población 8"]`;
 
   try {
     const res = await AIQueue.fetch('/api/chat', {
@@ -3006,12 +3000,12 @@ Responde SOLO con un array JSON de 7 strings:
     if(!res.ok) throw new Error('API error');
     const data = await res.json();
     const text = (data.choices?.[0]?.message?.content) || (data.content?.map(b => b.text || '').join('')) || '';
-    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) { console.warn("[TesisProLab] JSON parse failed:", _pe.message); }
+    let parsed = null; try { parsed = safeParseJSON(text); } catch(_pe) {}
     if(Array.isArray(parsed) && parsed.length >= 2) {
       state.aiPoblaciones = parsed.map(p => String(p).trim()).filter(Boolean);
     }
   } catch(e) {
-    state.aiPoblacionesLoading = false; // silent fail — static list remains
+    state.aiPoblacionesLoading = false;
     if(state.step === 1) renderContent();
     return;
   }
@@ -3440,7 +3434,7 @@ if(savedState) {
   savedState = Object.assign({}, stateDefaults, savedState);
   // Show onboarding if no real progress (area not selected, no result)
   // This handles: fresh users, old saves at step 0, cleared cache
-  const hasProgress = savedState.area || savedState.result;
+  const hasProgress = savedState.area || savedState.result || savedState.modoExploracion;
   if(!hasProgress) {
     savedState.step = -1;
     savedState.paso0Mode = null;
@@ -3772,7 +3766,7 @@ function renderBreadcrumb() {
 
   const parts = [];
 
-  const esRutaB = state.modoExploracion || state.paso0Mode === 'B' || state.paso0Mode === 'perfil';
+  const esRutaB = state.modoExploracion === true;
 
   // step 1 = Población, step 2 = Fenómeno, step 3 = Variables, step 4+ = resultado
   // En modo exploración (ruta B) no hay paso de Área — empieza desde Población
@@ -5689,7 +5683,7 @@ function nextStep(){
     }
     // AI poblaciones: disabled auto-trigger to reduce API calls
     // If user arrives at step 4 with context filled → refresh AI poblaciones if not done yet
-    // setTimeout(() => prefetchAIPoblaciones(), 1000); // on-demand only via button
+    clearTimeout(window._pobTimer); window._pobTimer = setTimeout(() => prefetchAIPoblaciones(), 400);
   }
 }
 function cambiosOtroInput(val) {
