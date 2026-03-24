@@ -3772,22 +3772,24 @@ function renderBreadcrumb() {
 
   const parts = [];
 
-  const areaLabel = state.area && state.area !== 'otro'
-    ? (typeof AREAS !== 'undefined' ? (AREAS.find(a=>a.id===state.area)||{label:state.area}).label : state.area)
-    : state.areaOtro || '';
-  if(areaLabel) parts.push(chipArea(areaLabel));
-
   if(s >= 2) {
+    const areaLabel = state.area && state.area !== 'otro'
+      ? (typeof AREAS !== 'undefined' ? (AREAS.find(a=>a.id===state.area)||{label:state.area}).label : state.area)
+      : state.areaOtro || '';
+    if(areaLabel) parts.push(chipArea(areaLabel));
+  }
+
+  if(s >= 3) {
     const pobLabel = state.poblacion && state.poblacion !== 'otro' ? state.poblacion : state.poblacionOtro || '';
     if(pobLabel) parts.push(chipPob(pobLabel));
   }
 
-  if(s >= 3) {
+  if(s >= 4) {
     const probLabel = state.problema && state.problema !== 'otro' ? state.problema : state.problemaOtro || '';
     if(probLabel) parts.push(chipProb(probLabel));
   }
 
-  if(s >= 4) {
+  if(s >= 5) {
     const vars = state.variables.filter(v => v !== 'otro');
     if(vars.length) parts.push(chipVars(vars.join(' · ')));
   }
